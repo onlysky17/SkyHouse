@@ -1,0 +1,149 @@
+/* Typography pass: keep the luxury look, but prevent lines and blocks from visually colliding. */
+
+/* Landing hero */
+#top h1 {
+  font-size: clamp(52px, 8vw, 112px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.035em !important;
+}
+#top h1 br { display: none; }
+#top h1 i {
+  display: block;
+  margin-top: 0.16em;
+  line-height: 1.12;
+}
+#top h1 + p {
+  margin-top: 42px !important;
+  line-height: 1.9 !important;
+}
+
+/* Cinematic section headings */
+.copy {
+  padding-block: 18px;
+}
+.copy .kicker {
+  margin-bottom: 22px !important;
+}
+.copy h2 {
+  font-size: clamp(42px, 4.35vw, 68px) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+}
+.copy h2 br { display: none; }
+.copy h2 > span {
+  display: block;
+}
+.copy h2 > span + span {
+  margin-top: 0.20em;
+}
+.copy > p {
+  margin-top: 30px !important;
+  margin-bottom: 0 !important;
+  line-height: 1.95 !important;
+}
+.copy > p br { display: none; }
+.copy > p > span {
+  display: block;
+}
+.copy > p > span + span {
+  margin-top: 8px;
+}
+.featured {
+  margin-top: 34px !important;
+  padding-top: 24px !important;
+  align-items: flex-start !important;
+}
+.featured b {
+  margin-top: 8px !important;
+  line-height: 1.35;
+}
+.featured strong {
+  line-height: 1.15 !important;
+}
+.explore {
+  margin-top: 30px !important;
+}
+
+/* Keep the giant editorial word decorative, not competitive with the copy. */
+.watermark {
+  opacity: 0.025 !important;
+  font-size: min(20vw, 300px) !important;
+  transform: translateX(-8%);
+}
+
+/* Contact headline gets the same breathing room. */
+.contact h2 {
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em;
+}
+.contact h2 i {
+  display: inline-block;
+  margin-top: 0.14em;
+}
+.contact p {
+  margin-top: 30px;
+  line-height: 1.9 !important;
+}
+
+@media (max-width: 1100px) {
+  .copy h2 {
+    font-size: clamp(38px, 5vw, 58px) !important;
+  }
+  .featured {
+    flex-direction: column;
+    gap: 14px !important;
+  }
+  .featured strong {
+    margin-left: 0 !important;
+    white-space: normal !important;
+  }
+}
+
+@media (max-width: 767px) {
+  #top h1 {
+    font-size: clamp(48px, 13vw, 66px) !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.03em !important;
+  }
+  #top h1 i {
+    margin-top: 0.18em;
+  }
+  #top h1 + p {
+    margin-top: 30px !important;
+    line-height: 1.75 !important;
+  }
+  .copy {
+    padding: 26px 20px !important;
+  }
+  .copy .kicker {
+    margin-bottom: 18px !important;
+  }
+  .copy h2 {
+    font-size: clamp(38px, 11vw, 50px) !important;
+    line-height: 1.12 !important;
+  }
+  .copy h2 > span + span {
+    margin-top: 0.24em;
+  }
+  .copy > p {
+    margin-top: 24px !important;
+    line-height: 1.75 !important;
+  }
+  .featured {
+    margin-top: 28px !important;
+    padding-top: 20px !important;
+    gap: 12px !important;
+  }
+  .featured strong {
+    font-size: 25px !important;
+  }
+  .explore {
+    margin-top: 24px !important;
+  }
+  .watermark {
+    display: none !important;
+  }
+  .contact h2 {
+    line-height: 1.12 !important;
+  }
+}

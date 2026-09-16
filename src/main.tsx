@@ -4,6 +4,7 @@ import App from './App'
 import Admin from './Admin'
 import './index.css'
 import './mobile-fixes.css'
+import './typography-fixes.css'
 
 const root = document.getElementById('root')!
 const screen = location.pathname.startsWith('/admin') ? <Admin /> : <App />
