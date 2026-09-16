@@ -1,0 +1,1 @@
+Temporary repository-owned image data modules used to make product photos independent of retired Vercel preview URLs. These can later be migrated to Supabase Storage without changing product IDs.
