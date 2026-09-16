@@ -1,0 +1,101 @@
+/* Mobile readability overrides — loaded after index.css */
+:root{--sky-ink:#24160f;--sky-cream:#f7f0e5;--sky-orange:#d65c2c}
+
+@media(max-width:767px){
+  html{scroll-snap-type:y proximity!important}
+  body{font-size:16px}
+  header{padding:8px 8px 0!important}
+  .navshell{padding:9px 11px!important;gap:8px!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
+  .navshell>a:first-child{font-size:14px!important;letter-spacing:.09em!important;max-width:48vw;overflow:hidden;text-overflow:ellipsis}
+  .navshell a[href^="tel:"]{font-size:10px!important;padding:7px 9px!important}
+
+  .world{min-height:auto!important;padding-bottom:20px!important}
+  .worldInner{min-height:auto!important;padding:76px 14px 20px!important;gap:14px!important}
+  .productZone{width:100%!important;height:auto!important}
+  .productFloat{width:100%!important;height:auto!important;display:block!important}
+  .productFloat img{display:block!important;width:100%!important;height:auto!important;aspect-ratio:4/5!important;min-height:0!important;max-height:none!important;object-fit:cover!important;object-position:center!important;transform:none!important;border-radius:24px!important;filter:drop-shadow(0 18px 28px rgba(0,0,0,.24))!important}
+  .wm{right:10px!important;bottom:10px!important;font-size:8px!important;padding:5px 8px!important}
+
+  .copy{width:100%!important;margin-top:0!important;padding:20px 18px 18px!important;border-radius:22px!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
+  .world.dark .copy{background:rgba(9,5,4,.72)!important;border-color:rgba(255,255,255,.16)!important;box-shadow:0 14px 38px rgba(0,0,0,.22)!important}
+  .world.light .copy{background:rgba(255,249,239,.90)!important;border-color:rgba(42,24,16,.12)!important;box-shadow:0 14px 34px rgba(52,35,16,.16)!important}
+  .kicker{font-size:9px!important;letter-spacing:.22em!important;margin-bottom:10px!important;opacity:.74!important}
+  .copy h2{font-size:clamp(38px,10.8vw,50px)!important;line-height:1.01!important;letter-spacing:-.035em!important;margin-bottom:14px!important;text-wrap:balance}
+  .copy p{font-size:14px!important;line-height:1.62!important;margin:0!important;opacity:.94!important}
+  .featured{grid-template-columns:1fr!important;gap:7px!important;margin-top:18px!important;padding-top:15px!important}
+  .featured b{font-size:17px!important;line-height:1.25!important}
+  .featured strong{margin:0!important;font-size:clamp(25px,8vw,33px)!important;line-height:1.1!important;white-space:normal!important;overflow-wrap:anywhere}
+  .explore{margin-top:16px!important;font-size:9px!important;letter-spacing:.16em!important}
+  .watermark{display:none!important}
+
+  #top{padding:92px 18px 42px!important;min-height:100dvh!important}
+  #top h1{font-size:clamp(52px,16vw,78px)!important;line-height:.92!important;letter-spacing:-.05em!important;text-wrap:balance}
+  #top p{font-size:15px!important;line-height:1.65!important;margin-top:24px!important}
+  #top>div>div:last-child{gap:8px!important}
+  #top>div>div:last-child a{width:100%!important;max-width:340px!important;text-align:center!important}
+
+  .catalog{padding:72px 14px 86px!important}
+  .catalogHead{gap:18px!important;padding-bottom:26px!important}
+  .catalogHead h2{font-size:clamp(39px,11vw,52px)!important;line-height:.98!important;text-wrap:balance}
+  .catalogHead p{font-size:14px!important;line-height:1.62!important}
+  .tools{grid-template-columns:1fr!important}
+  .tools input,.tools select{width:100%!important;min-width:0!important}
+  .grid{grid-template-columns:1fr!important;gap:14px!important;margin-top:24px!important}
+  .card{border-radius:20px!important}
+  .cardImg{aspect-ratio:4/3!important}
+  .cardBody{padding:15px!important}
+  .cardBody h3{min-height:0!important;font-size:21px!important;line-height:1.12!important;margin:8px 0 12px!important}
+  .cardBottom{align-items:flex-start!important;gap:10px!important}
+  .cardBottom b{font-size:18px!important;line-height:1.2!important;overflow-wrap:anywhere}
+
+  .contact{min-height:auto!important;padding:68px 16px 88px!important;gap:24px!important}
+  .contact h2{font-size:clamp(42px,12vw,58px)!important;line-height:1!important;text-wrap:balance}
+  .contact p{font-size:14px!important;line-height:1.65!important;color:rgba(255,255,255,.76)!important}
+  .contactLinks a{padding:16px!important;border-radius:18px!important;gap:14px!important;align-items:center!important}
+  .contactLinks span{text-align:right!important}
+
+  .modal{padding:10px!important}
+  .modalCard{border-radius:22px!important;max-height:94dvh!important}
+  .modalCard>img{min-height:0!important;height:auto!important;aspect-ratio:4/3!important}
+  .modalCopy{padding:24px 18px!important}
+  .modalCopy h3{font-size:34px!important;line-height:1.02!important}
+  .modalPrice{font-size:28px!important;overflow-wrap:anywhere}
+}
+
+@media(max-width:380px){
+  .navshell>a:first-child{font-size:12px!important;letter-spacing:.07em!important}
+  .navshell a[href^="tel:"]{font-size:9px!important;padding:6px 8px!important}
+  .copy h2{font-size:36px!important}
+  #top h1{font-size:50px!important}
+}
+
+/* Admin */
+.adminPage{min-height:100dvh;background:linear-gradient(145deg,#f8f1e7,#efe0cd);color:var(--sky-ink);font-family:Inter,system-ui,sans-serif;padding:24px}
+.adminSetup,.adminLogin{width:min(100%,720px);margin:auto;background:rgba(255,255,255,.72);border:1px solid rgba(36,22,15,.09);border-radius:30px;padding:38px;box-shadow:0 24px 80px rgba(70,45,22,.12);backdrop-filter:blur(18px)}
+.adminPage:not(.adminDashboard){display:grid;place-items:center}
+.adminEyebrow{font-size:10px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:var(--sky-orange)}
+.adminSetup h1,.adminLogin h1{font-size:clamp(44px,7vw,76px);line-height:.96;letter-spacing:-.045em;margin:14px 0 20px}
+.adminSetup p,.adminLogin p{line-height:1.7;color:rgba(36,22,15,.66)}
+.adminChecklist{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:24px 0}
+.adminChecklist span{padding:12px 14px;border-radius:16px;background:#fff;border:1px solid rgba(36,22,15,.08);font-size:13px}
+.adminBack{display:inline-block;margin-top:18px;font-weight:800}
+.adminLogin{max-width:520px}
+.adminLogin label,.adminEditor label{display:grid;gap:7px;font-size:12px;font-weight:800;color:rgba(36,22,15,.72)}
+.adminLogin input,.adminEditor input,.adminEditor textarea,.adminListHead input{width:100%;border:1px solid rgba(36,22,15,.12);background:white;border-radius:14px;padding:12px 13px;outline:none;color:var(--sky-ink)}
+.adminLogin label+label{margin-top:14px}
+.adminLogin>button,.adminActions>button,.adminListHead>button{border:0;border-radius:999px;background:var(--sky-ink);color:white;padding:12px 18px;font-weight:800;cursor:pointer}
+.adminLogin>button{width:100%;margin-top:18px}
+.adminMessage{padding:11px 13px;border-radius:14px;background:#fff7df;color:#7e531e!important;border:1px solid #efd6a2}
+.adminDashboard{padding:18px;display:block}
+.adminTopbar{max-width:1500px;margin:0 auto 16px;display:flex;justify-content:space-between;gap:16px;align-items:center;background:rgba(255,255,255,.76);border:1px solid rgba(36,22,15,.09);border-radius:22px;padding:14px 16px;backdrop-filter:blur(16px)}
+.adminTopbar b{display:block;margin-top:3px;font-size:18px}
+.adminUser{display:flex;gap:10px;align-items:center;font-size:12px}.adminUser button{border:1px solid rgba(36,22,15,.15);background:transparent;border-radius:999px;padding:8px 12px;cursor:pointer;color:var(--sky-ink)}
+.adminLayout{max-width:1500px;margin:auto;display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start}
+.adminList,.adminEditor{background:rgba(255,255,255,.78);border:1px solid rgba(36,22,15,.09);border-radius:24px;box-shadow:0 18px 60px rgba(70,45,22,.08);backdrop-filter:blur(16px)}
+.adminList{overflow:hidden;position:sticky;top:18px}.adminListHead{display:grid;grid-template-columns:1fr auto;gap:8px;padding:14px;border-bottom:1px solid rgba(36,22,15,.08)}
+.adminItems{max-height:calc(100dvh - 130px);overflow:auto;padding:8px}.adminItems>button{width:100%;display:grid;grid-template-columns:54px 1fr;gap:10px;align-items:center;border:0;background:transparent;text-align:left;border-radius:14px;padding:8px;color:var(--sky-ink);cursor:pointer}.adminItems>button:hover,.adminItems>button.active{background:#f3e5d3}.adminItems>button>span{width:54px;height:54px;border-radius:12px;overflow:hidden;background:#eadbc7;display:grid;place-items:center}.adminItems img{width:100%;height:100%;object-fit:cover}.adminItems i{font-size:10px;opacity:.45}.adminItems b,.adminItems small{display:block}.adminItems b{font-size:13px}.adminItems small{font-size:10px;opacity:.58;margin-top:4px}
+.adminEditor{padding:24px}.adminEditorTitle{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:1px solid rgba(36,22,15,.08);padding-bottom:20px;margin-bottom:20px}.adminEditorTitle h2{font-size:42px;line-height:1;margin:8px 0 0}.danger{border:1px solid #e5b4aa;background:#fff3f0;color:#a33a2b;border-radius:999px;padding:9px 13px;cursor:pointer}
+.adminFormGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.adminFormGrid .wide{grid-column:1/-1}.adminEditor textarea{resize:vertical}.adminPreview{display:block;width:min(100%,460px);max-height:340px;object-fit:cover;border-radius:18px;margin:18px 0}.adminToggles{display:flex;gap:18px;flex-wrap:wrap;margin:20px 0}.adminToggles label{display:flex;align-items:center;gap:8px;font-size:13px}.adminActions{display:flex;gap:10px;flex-wrap:wrap}.adminActions .secondary{background:white;color:var(--sky-ink);border:1px solid rgba(36,22,15,.14)}
+
+@media(max-width:900px){.adminLayout{grid-template-columns:1fr}.adminList{position:static}.adminItems{max-height:360px}.adminTopbar{align-items:flex-start}.adminUser{align-items:flex-end;flex-direction:column}.adminFormGrid{grid-template-columns:1fr}.adminFormGrid .wide{grid-column:auto}}
+@media(max-width:560px){.adminPage{padding:10px}.adminSetup,.adminLogin{padding:24px 18px;border-radius:22px}.adminChecklist{grid-template-columns:1fr}.adminDashboard{padding:8px}.adminTopbar{border-radius:18px}.adminUser span{display:none}.adminEditor{padding:18px;border-radius:20px}.adminEditorTitle h2{font-size:34px}.adminList{border-radius:20px}.adminListHead{grid-template-columns:1fr}.adminListHead>button{width:100%}}
