@@ -1,0 +1,50 @@
+name: Import SkyHouse product images
+
+on:
+  push:
+    paths:
+      - 'incoming/SkyHouse_products_web.zip'
+
+permissions:
+  contents: write
+
+jobs:
+  import-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract optimized product images
+        run: |
+          test -f incoming/SkyHouse_products_web.zip
+          mkdir -p public/images
+          unzip -o incoming/SkyHouse_products_web.zip -d public/images
+          test "$(find public/images -maxdepth 1 -name 'product-*.webp' | wc -l)" -eq 111
+
+      - name: Point storefront at local Vercel assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/App.tsx')
+          s = p.read_text(encoding='utf-8')
+          old = "const ASSET_BASE='https://sky-house-ncay4f893-tiansky1917-7468s-projects.vercel.app'"
+          new = "const ASSET_BASE=''"
+          if old in s:
+              s = s.replace(old, new)
+          elif new not in s:
+              raise SystemExit('ASSET_BASE line not found; refusing to guess')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit generated web assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/images src/App.tsx
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit"
+            exit 0
+          fi
+          git commit -m "Publish 111 product images for Vercel"
+          git push
