@@ -1,0 +1,1 @@
+Stable repository-owned image modules for product thumbnails and cinematic hero images. These replace retired Vercel preview URLs and can later migrate to Supabase Storage without changing product IDs.
