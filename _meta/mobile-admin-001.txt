@@ -1,0 +1,5 @@
+SkyHouse mobile/admin checkpoint
+- Mobile readability overrides added
+- Supabase-ready admin dashboard added
+- Supabase schema and storage policies added
+- Vercel preview status verified success
