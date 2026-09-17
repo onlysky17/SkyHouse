@@ -1,0 +1,114 @@
+html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
+
+.adminOrdersTrigger{position:relative!important;display:inline-flex!important;align-items:center!important;gap:7px!important;border:1px solid rgba(36,22,15,.15)!important;background:#fff!important;color:var(--sky-ink)!important;border-radius:999px!important;padding:8px 11px!important;font-size:12px!important;font-weight:850!important;cursor:pointer!important}
+.adminOrdersTrigger b{display:grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#24160f;color:#fff;font-size:10px;line-height:1}
+.adminOrdersTrigger b[hidden]{display:none}
+.adminOrdersTrigger.hasNew{border-color:rgba(214,92,44,.28)!important;background:#fff7f0!important;color:#a53f1a!important}
+.adminOrdersTrigger.hasNew b{background:#d65c2c}
+
+.adminOrdersLayer{position:fixed;inset:0;z-index:220;display:none;place-items:stretch;padding:14px}
+.adminOrdersLayer.open{display:grid}
+.adminOrdersBackdrop{position:absolute;inset:0;border:0;background:rgba(20,12,8,.72);backdrop-filter:blur(8px);cursor:pointer}
+.adminOrdersPanel{position:relative;z-index:2;display:flex;flex-direction:column;width:min(100%,1480px);height:min(94dvh,980px);margin:auto;overflow:hidden;border:1px solid rgba(255,255,255,.14);border-radius:30px;background:#f8f1e7;color:#24160f;box-shadow:0 40px 120px rgba(0,0,0,.32)}
+.adminOrdersHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:24px 26px 18px;border-bottom:1px solid rgba(36,22,15,.09);background:rgba(255,255,255,.58)}
+.adminOrdersHeader small{display:block;color:#d65c2c;font-size:10px;font-weight:900;letter-spacing:.24em;text-transform:uppercase}
+.adminOrdersHeader h1{margin:6px 0 4px;font-size:48px;line-height:.95}
+.adminOrdersHeader p{margin:0;color:rgba(36,22,15,.58);font-size:13px}
+.adminOrdersHeaderActions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.adminOrdersHeaderActions button{min-height:40px;border:1px solid rgba(36,22,15,.12);border-radius:999px;background:#fff;color:#24160f;padding:8px 13px;font-weight:850;cursor:pointer}
+.adminOrdersHeaderActions button:last-child{width:40px;padding:0;font-size:22px}
+
+.adminOrderFilters{display:flex;gap:8px;padding:12px 18px;overflow:auto;border-bottom:1px solid rgba(36,22,15,.08);background:#f4eadc;scrollbar-width:none}
+.adminOrderFilters::-webkit-scrollbar{display:none}
+.adminOrderFilters button{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;border:1px solid rgba(36,22,15,.10);border-radius:999px;background:#fff;color:#4b3930;padding:8px 11px;font-size:11px;font-weight:850;cursor:pointer}
+.adminOrderFilters button b{display:grid;place-items:center;min-width:21px;height:21px;padding:0 6px;border-radius:999px;background:rgba(36,22,15,.08);font-size:10px}
+.adminOrderFilters button.active{background:#24160f;color:#fff;border-color:#24160f}
+.adminOrderFilters button.active b{background:rgba(255,255,255,.14)}
+
+.adminOrdersNotice{margin:10px 18px 0;padding:10px 12px;border:1px solid #ead2aa;border-radius:13px;background:#fff5df;color:#7e531e;font-size:12px;font-weight:750}
+.adminOrdersNotice.ok{border-color:#bfd6ae;background:#f0f7e9;color:#3f6431}
+.adminOrdersNotice.error{border-color:#e9b7ad;background:#fff1ee;color:#983b2c}
+
+.adminOrdersWorkspace{display:grid;grid-template-columns:minmax(320px,410px) minmax(0,1fr);min-height:0;flex:1;overflow:hidden}
+.adminOrdersList{min-height:0;overflow:auto;padding:12px;border-right:1px solid rgba(36,22,15,.08);background:rgba(255,255,255,.38)}
+.adminOrderRow{width:100%;display:grid;gap:9px;margin:0 0 9px;padding:13px;border:1px solid rgba(36,22,15,.08);border-radius:18px;background:#fff;color:#24160f;text-align:left;cursor:pointer;box-shadow:0 8px 22px rgba(68,43,23,.04);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.adminOrderRow:hover{transform:translateY(-1px);border-color:rgba(36,22,15,.16);box-shadow:0 12px 28px rgba(68,43,23,.08)}
+.adminOrderRow.active{border-color:#d65c2c;box-shadow:0 0 0 2px rgba(214,92,44,.08),0 12px 28px rgba(68,43,23,.08)}
+.adminOrderRowTop,.adminOrderRowMeta,.adminOrderRowBottom{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.adminOrderRowTop strong{font-size:13px;line-height:1.3;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adminOrderRowMeta{color:rgba(36,22,15,.52);font-size:10px}
+.adminOrderRowBottom{padding-top:8px;border-top:1px solid rgba(36,22,15,.07);font-size:11px}
+.adminOrderRowBottom b{color:#d65c2c;font-size:12px}
+
+.adminOrderStatus{display:inline-flex;align-items:center;justify-content:center;min-height:23px;padding:5px 8px;border-radius:999px;font-size:8px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.adminOrderStatus.new{background:#fff0de;color:#b65120}
+.adminOrderStatus.confirmed{background:#edf1ff;color:#495fa4}
+.adminOrderStatus.shipping{background:#e9f4fb;color:#327194}
+.adminOrderStatus.completed{background:#eaf5e2;color:#4f763a}
+.adminOrderStatus.cancelled{background:#f1efed;color:#756a63}
+
+.adminOrdersDetail{min-width:0;min-height:0;overflow:auto;padding:24px 26px 30px}
+.adminOrdersDetailEmpty,.adminOrdersEmpty{display:grid;place-items:center;min-height:160px;padding:24px;border:1px dashed rgba(36,22,15,.15);border-radius:18px;color:rgba(36,22,15,.48);font-size:12px;font-weight:750;text-align:center;background:rgba(255,255,255,.42)}
+.adminOrderDetailHead{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:20px;border-bottom:1px solid rgba(36,22,15,.08)}
+.adminOrderDetailHead small{display:block;color:#d65c2c;font-size:9px;font-weight:900;letter-spacing:.18em}
+.adminOrderDetailHead h2{margin:5px 0 4px;font-family:'Playfair Display',Georgia,serif;font-size:38px;line-height:1.05}
+.adminOrderDetailHead>div>span{color:rgba(36,22,15,.50);font-size:11px}
+
+.adminOrderCustomerGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.adminOrderCustomerGrid>div{padding:14px;border:1px solid rgba(36,22,15,.08);border-radius:16px;background:#fff}
+.adminOrderCustomerGrid .wide{grid-column:1/-1}
+.adminOrderCustomerGrid small{display:block;margin-bottom:5px;color:rgba(36,22,15,.47);font-size:9px;font-weight:850;letter-spacing:.09em;text-transform:uppercase}
+.adminOrderCustomerGrid strong{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+
+.adminOrderItemsBlock{margin-top:18px}
+.adminOrdersSectionTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px;color:#24160f;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.adminOrdersSectionTitle b{color:#d65c2c}
+.adminOrderItems{display:grid;gap:8px}
+.adminOrderItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:12px 14px;border:1px solid rgba(36,22,15,.08);border-radius:16px;background:#fff}
+.adminOrderItem small,.adminOrderItem span{display:block;color:rgba(36,22,15,.48);font-size:9px}
+.adminOrderItem strong{display:block;margin:3px 0;font-size:13px;line-height:1.35}
+.adminOrderItemPrice{text-align:right}
+.adminOrderItemPrice b{display:block;color:#24160f;font-size:14px}
+.adminOrderItemPrice span{margin-top:4px;color:#d65c2c;font-size:11px;font-weight:800}
+
+.adminOrderManage{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-top:20px;padding-top:18px;border-top:1px solid rgba(36,22,15,.08)}
+.adminOrderManage label{display:grid;gap:7px;min-width:220px;color:rgba(36,22,15,.62);font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
+.adminOrderManage select{min-height:44px;border:1px solid rgba(36,22,15,.12);border-radius:13px;background:#fff;color:#24160f;padding:9px 12px;font-weight:800;outline:none}
+.adminOrderContactActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.adminOrderContactActions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border:1px solid rgba(36,22,15,.13);border-radius:999px;background:#fff;color:#24160f;padding:9px 14px;font-size:11px;font-weight:850;text-decoration:none}
+.adminOrderContactActions a:last-child{background:#24160f;color:#fff;border-color:#24160f}
+.adminOrderPriceNotice{margin:14px 0 0;padding:11px 13px;border:1px solid #ead2aa;border-radius:13px;background:#fff5df;color:#7e531e;font-size:11px;font-weight:700;line-height:1.5}
+
+@media(max-width:900px){
+  .adminOrdersLayer{padding:6px}
+  .adminOrdersPanel{height:98dvh;border-radius:22px}
+  .adminOrdersWorkspace{grid-template-columns:1fr;overflow:auto}
+  .adminOrdersList{max-height:36dvh;border-right:0;border-bottom:1px solid rgba(36,22,15,.08)}
+  .adminOrdersDetail{overflow:visible;padding:18px}
+  .adminOrdersHeader h1{font-size:40px}
+}
+
+@media(max-width:560px){
+  .adminOrdersLayer{padding:0}
+  .adminOrdersPanel{width:100%;height:100dvh;border-radius:0;border:0}
+  .adminOrdersHeader{padding:16px 14px 12px;gap:12px}
+  .adminOrdersHeader h1{font-size:34px}
+  .adminOrdersHeader p{display:none}
+  .adminOrdersHeaderActions button:first-child{font-size:0;width:40px;padding:0}
+  .adminOrdersHeaderActions button:first-child::after{content:'↻';font-size:18px}
+  .adminOrderFilters{padding:9px 10px}
+  .adminOrdersNotice{margin:8px 10px 0}
+  .adminOrdersList{padding:9px;max-height:34dvh}
+  .adminOrderRow{padding:11px;border-radius:15px}
+  .adminOrdersDetail{padding:16px 12px 24px}
+  .adminOrderDetailHead h2{font-size:30px}
+  .adminOrderCustomerGrid{grid-template-columns:1fr}
+  .adminOrderCustomerGrid .wide{grid-column:auto}
+  .adminOrderItem{grid-template-columns:minmax(0,1fr) auto;padding:11px}
+  .adminOrderManage{align-items:stretch;flex-direction:column}
+  .adminOrderManage label{min-width:0}
+  .adminOrderContactActions{justify-content:stretch}
+  .adminOrderContactActions a{flex:1}
+  .adminOrdersTrigger span{display:none}
+  .adminOrdersTrigger{padding:8px!important}
+}

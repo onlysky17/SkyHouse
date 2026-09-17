@@ -1,12 +1,31 @@
+import { supabase } from './lib/supabase'
+
 type CustomerInfo = {
   name: string
   phone: string
   note: string
 }
 
-const CUSTOMER_INFO_KEY = 'skyhouse_customer_info_v1'
+type OrderItemSnapshot = {
+  name: string
+  category: string
+  qty: number
+  price: number | null
+  price_text: string
+  unit: string
+  image_url: string
+}
 
+type OrderSnapshot = {
+  items: OrderItemSnapshot[]
+  subtotal_known: number
+  has_contact_price: boolean
+}
+
+const CUSTOMER_INFO_KEY = 'skyhouse_customer_info_v1'
 const emptyInfo: CustomerInfo = { name: '', phone: '', note: '' }
+let lastSavedFingerprint = ''
+let lastSavedAt = 0
 
 function loadInfo(): CustomerInfo {
   try {
@@ -148,6 +167,73 @@ function copyOrderText(text: string) {
   return copiedSynchronously || Boolean(navigator.clipboard?.writeText)
 }
 
+function parseMoney(text: string) {
+  if (!text || /liên hệ/i.test(text)) return null
+  const match = text.match(/([\d][\d.,\s]*)\s*đ/i)
+  if (!match) return null
+  const digits = match[1].replace(/\D/g, '')
+  if (!digits) return null
+  const value = Number(digits)
+  return Number.isFinite(value) ? value : null
+}
+
+function parseUnit(text: string) {
+  const match = text.match(/đ\s*\/\s*(.+)$/i)
+  return match?.[1]?.trim() || ''
+}
+
+function collectOrderSnapshot(drawer: Element | null): OrderSnapshot {
+  const items = Array.from(drawer?.querySelectorAll<HTMLElement>('.cartItem') || []).map(item => {
+    const main = item.querySelector<HTMLElement>('.cartItemMain')
+    const priceText = main?.querySelector<HTMLElement>(':scope > span')?.textContent?.trim() || 'Liên hệ giá'
+    const qty = Number(main?.querySelector<HTMLElement>('.qtyControl b')?.textContent || '0') || 0
+    return {
+      name: main?.querySelector<HTMLElement>('strong')?.textContent?.trim() || 'Sản phẩm',
+      category: main?.querySelector<HTMLElement>('small')?.textContent?.trim() || '',
+      qty,
+      price: parseMoney(priceText),
+      price_text: priceText,
+      unit: parseUnit(priceText),
+      image_url: item.querySelector<HTMLImageElement>('img')?.src || '',
+    }
+  }).filter(item => item.qty > 0)
+
+  const totalText = drawer?.querySelector<HTMLElement>('.cartTotal b')?.textContent?.trim() || ''
+  return {
+    items,
+    subtotal_known: parseMoney(totalText) || 0,
+    has_contact_price: items.some(item => item.price == null || /liên hệ/i.test(item.price_text)),
+  }
+}
+
+async function saveOrder(drawer: Element | null, info: CustomerInfo) {
+  if (!supabase) return { saved: false, reused: false }
+  const snapshot = collectOrderSnapshot(drawer)
+  if (!snapshot.items.length) return { saved: false, reused: false }
+
+  const payload = {
+    customer_name: info.name.trim(),
+    customer_phone: info.phone.trim(),
+    customer_note: info.note.trim(),
+    items: snapshot.items,
+    subtotal_known: snapshot.subtotal_known,
+    has_contact_price: snapshot.has_contact_price,
+    status: 'new',
+    source: 'zalo',
+  }
+  const fingerprint = JSON.stringify(payload)
+  const now = Date.now()
+  if (fingerprint === lastSavedFingerprint && now - lastSavedAt < 120000) {
+    return { saved: true, reused: true }
+  }
+
+  const { error } = await supabase.from('orders').insert(payload)
+  if (error) throw new Error(error.message)
+  lastSavedFingerprint = fingerprint
+  lastSavedAt = now
+  return { saved: true, reused: false }
+}
+
 function enhanceDrawer(drawer: HTMLElement) {
   if (drawer.querySelector('[data-customer-info]')) return
   const footer = drawer.querySelector('.cartFooter')
@@ -187,7 +273,7 @@ function enhanceDrawer(drawer: HTMLElement) {
   const zaloButton = footer.querySelector<HTMLAnchorElement>('.cartPrimary')
   if (zaloButton) {
     zaloButton.textContent = 'Sao chép đơn & mở Zalo'
-    zaloButton.title = 'Nội dung đơn sẽ được sao chép trước khi mở Zalo'
+    zaloButton.title = 'Đơn sẽ được lưu vào hệ thống và sao chép trước khi mở Zalo'
   }
 
   const nameInput = block.querySelector<HTMLInputElement>('[data-customer-field="name"]')!
@@ -212,24 +298,60 @@ function enhanceDrawer(drawer: HTMLElement) {
   noteInput.addEventListener('input', persist)
 }
 
-function openZaloWithCopiedOrder(link: HTMLAnchorElement) {
+async function openZaloWithCopiedOrder(link: HTMLAnchorElement) {
   const drawer = link.closest('.cartDrawer')
   const info = readInfo(drawer)
   saveInfo(info)
   if (!validateInfo(drawer, info)) return
 
+  const popup = window.open('', '_blank')
+  if (popup) {
+    try {
+      popup.opener = null
+      popup.document.title = 'Sky’s house · Đang mở Zalo'
+      popup.document.body.textContent = 'Đang lưu đơn và mở Zalo…'
+    } catch { /* navigation fallback below */ }
+  }
+
+  setSendNotice(drawer, 'Đang lưu đơn vào hệ thống…', 'ok')
+  let stored = false
+  let reused = false
+  try {
+    const result = await saveOrder(drawer, info)
+    stored = result.saved
+    reused = result.reused
+  } catch {
+    stored = false
+  }
+
   const text = orderTextFromZaloLink(link, info)
   const copied = copyOrderText(text)
   const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-  setSendNotice(
-    drawer,
-    copied
-      ? `Đã sao chép toàn bộ đơn hàng. Zalo không tự điền nội dung từ link cá nhân; sang Zalo rồi ${mobile ? 'chạm giữ và chọn Dán' : 'nhấn Ctrl+V'} để gửi.`
-      : `Trình duyệt chặn sao chép tự động. Hãy dùng nút “Sao chép danh sách”, rồi sang Zalo ${mobile ? 'Dán' : 'nhấn Ctrl+V'}.`,
-    copied ? 'ok' : 'error',
-  )
 
-  window.open(zaloChatUrl(link), '_blank', 'noopener,noreferrer')
+  if (stored) {
+    setSendNotice(
+      drawer,
+      copied
+        ? `${reused ? 'Đơn này đã được lưu trước đó. ' : 'Đã lưu đơn vào hệ thống. '}Nội dung đã sao chép; sang Zalo rồi ${mobile ? 'chạm giữ và chọn Dán' : 'nhấn Ctrl+V'} để gửi.`
+        : `${reused ? 'Đơn này đã được lưu trước đó. ' : 'Đã lưu đơn vào hệ thống. '}Trình duyệt chặn sao chép; dùng nút “Sao chép danh sách” rồi dán vào Zalo.`,
+      copied ? 'ok' : 'error',
+    )
+  } else {
+    setSendNotice(
+      drawer,
+      copied
+        ? `Chưa lưu được đơn vào hệ thống, nhưng nội dung đã được sao chép. Sang Zalo rồi ${mobile ? 'Dán' : 'nhấn Ctrl+V'} để gửi.`
+        : 'Chưa lưu được đơn và trình duyệt cũng chặn sao chép tự động. Hãy thử lại.',
+      'error',
+    )
+  }
+
+  const chatUrl = zaloChatUrl(link)
+  if (popup && !popup.closed) {
+    try { popup.location.replace(chatUrl) } catch { popup.location.href = chatUrl }
+  } else {
+    window.open(chatUrl, '_blank', 'noopener,noreferrer')
+  }
 }
 
 async function copyAugmentedOrder(button: HTMLButtonElement) {
@@ -267,7 +389,7 @@ export function installCartCustomerInfo() {
     if (zalo) {
       event.preventDefault()
       event.stopPropagation()
-      openZaloWithCopiedOrder(zalo)
+      void openZaloWithCopiedOrder(zalo)
       return
     }
 
