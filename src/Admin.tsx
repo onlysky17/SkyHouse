@@ -19,6 +19,8 @@ type UploadedImage = {
   path: string
 }
 
+type CatalogFilter = 'all' | 'placeholder' | 'no-price' | 'needs-work'
+
 const emptyProduct: ProductRow = {
   name: '',
   price: null,
@@ -33,6 +35,10 @@ const emptyProduct: ProductRow = {
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 const STORAGE_PUBLIC_MARKER = '/storage/v1/object/public/product-images/'
+
+function isPlaceholderName(name: string) {
+  return /^Sản phẩm\s+\d+$/i.test(name.trim())
+}
 
 function storagePathFromPublicUrl(url: string) {
   const markerIndex = url.indexOf(STORAGE_PUBLIC_MARKER)
@@ -55,6 +61,7 @@ export default function Admin() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [query, setQuery] = useState('')
+  const [catalogFilter, setCatalogFilter] = useState<CatalogFilter>('all')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [localPreviewUrl, setLocalPreviewUrl] = useState('')
   const [initialImageUrl, setInitialImageUrl] = useState('')
@@ -96,11 +103,32 @@ export default function Admin() {
     return () => listener.subscription.unsubscribe()
   }, [])
 
+  const catalogCounts = useMemo(() => {
+    const placeholder = products.filter((p) => isPlaceholderName(p.name)).length
+    const noPrice = products.filter((p) => p.price == null).length
+    const needsWork = products.filter((p) => isPlaceholderName(p.name) || p.price == null).length
+    return {
+      all: products.length,
+      placeholder,
+      noPrice,
+      needsWork,
+    }
+  }, [products])
+
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return products
-    return products.filter((p) => `${p.name} ${p.category}`.toLowerCase().includes(q))
-  }, [products, query])
+    return products.filter((p) => {
+      const matchesFilter =
+        catalogFilter === 'all' ||
+        (catalogFilter === 'placeholder' && isPlaceholderName(p.name)) ||
+        (catalogFilter === 'no-price' && p.price == null) ||
+        (catalogFilter === 'needs-work' && (isPlaceholderName(p.name) || p.price == null))
+
+      if (!matchesFilter) return false
+      if (!q) return true
+      return `${p.name} ${p.category}`.toLowerCase().includes(q)
+    })
+  }, [products, query, catalogFilter])
 
   const previewSrc = localPreviewUrl || draft.image_url
 
@@ -311,6 +339,26 @@ export default function Admin() {
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tìm sản phẩm…" />
             <button onClick={resetEditor}>+ Thêm</button>
           </div>
+
+          <div className="adminCatalogFilters" aria-label="Lọc catalog">
+            <button type="button" className={catalogFilter === 'all' ? 'active' : ''} aria-pressed={catalogFilter === 'all'} onClick={() => setCatalogFilter('all')}>
+              <span>Tất cả</span><b>{catalogCounts.all}</b>
+            </button>
+            <button type="button" className={catalogFilter === 'needs-work' ? 'active' : ''} aria-pressed={catalogFilter === 'needs-work'} onClick={() => setCatalogFilter('needs-work')}>
+              <span>Cần hoàn thiện</span><b>{catalogCounts.needsWork}</b>
+            </button>
+            <button type="button" className={catalogFilter === 'placeholder' ? 'active' : ''} aria-pressed={catalogFilter === 'placeholder'} onClick={() => setCatalogFilter('placeholder')}>
+              <span>Cần sửa tên</span><b>{catalogCounts.placeholder}</b>
+            </button>
+            <button type="button" className={catalogFilter === 'no-price' ? 'active' : ''} aria-pressed={catalogFilter === 'no-price'} onClick={() => setCatalogFilter('no-price')}>
+              <span>Chưa có giá</span><b>{catalogCounts.noPrice}</b>
+            </button>
+          </div>
+
+          <div className="adminCatalogSummary">
+            Đang hiện <b>{shown.length}</b> / {products.length} sản phẩm
+          </div>
+
           <div className="adminItems">
             {shown.map((p) => (
               <button key={p.id} className={draft.id === p.id ? 'active' : ''} onClick={() => selectProduct(p)}>
@@ -318,6 +366,7 @@ export default function Admin() {
                 <div><b>{p.name}</b><small>{p.category} · {p.price == null ? 'Liên hệ giá' : `${p.price.toLocaleString('vi-VN')}đ/${p.unit}`}</small></div>
               </button>
             ))}
+            {shown.length === 0 && <div className="adminCatalogEmpty">Không có sản phẩm phù hợp bộ lọc này.</div>}
           </div>
         </aside>
 
