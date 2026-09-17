@@ -8,6 +8,7 @@ import { installQuickShop } from './quick-shop'
 import { installSalePricing } from './sale-pricing'
 import { installSaleVisualPolish } from './sale-visual-polish'
 import { installAdminOrders } from './admin-orders'
+import { installAdminOrderOps } from './admin-order-ops'
 import './index.css'
 import './mobile-fixes.css'
 import './typography-fixes.css'
@@ -20,12 +21,14 @@ import './quick-shop.css'
 import './sale-pricing.css'
 import './admin-orders.css'
 import './admin-order-settlement.css'
+import './admin-order-ops.css'
 
 const root = document.getElementById('root')!
 const screen = location.pathname.startsWith('/admin') ? <Admin /> : <Storefront />
 
 installSalePricing()
 installAdminOrders()
+installAdminOrderOps()
 
 if (!location.pathname.startsWith('/admin')) {
   installCartFeedback()
