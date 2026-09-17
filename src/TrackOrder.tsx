@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import { supabase } from './lib/supabase'
 
 type OrderStatus = 'new' | 'confirmed' | 'shipping' | 'completed' | 'cancelled'
