@@ -2,6 +2,7 @@ import { supabase } from './lib/supabase'
 
 type OrderStatus = 'new' | 'confirmed' | 'shipping' | 'completed' | 'cancelled'
 type OrderFilter = 'all' | OrderStatus
+type OrderDateRange = 'all' | 'today' | '7d' | '30d'
 
 type OrderItem = {
   name?: string
@@ -38,8 +39,17 @@ const statusMeta: Record<OrderStatus, { label: string; tone: string }> = {
 }
 
 const statusOrder: OrderStatus[] = ['new', 'confirmed', 'shipping', 'completed', 'cancelled']
+const dateRangeMeta: Record<OrderDateRange, string> = {
+  all: 'Tất cả',
+  today: 'Hôm nay',
+  '7d': '7 ngày',
+  '30d': '30 ngày',
+}
+
 let orders: OrderRow[] = []
 let filter: OrderFilter = 'all'
+let dateRange: OrderDateRange = 'all'
+let searchQuery = ''
 let selectedId: number | null = null
 let panelOpen = false
 let loading = false
@@ -77,6 +87,10 @@ function phoneDigits(value: string) {
   return value.replace(/\D/g, '')
 }
 
+function foldText(value: unknown) {
+  return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+}
+
 function itemCount(order: OrderRow) {
   return (order.items || []).reduce((sum, item) => sum + (Number(item.qty) || 0), 0)
 }
@@ -93,8 +107,60 @@ function totalLabel(order: OrderRow) {
   return subtotalLabel(order)
 }
 
-function countStatus(status: OrderStatus) {
-  return orders.filter(order => order.status === status).length
+function knownOrderValue(order: OrderRow) {
+  if (order.final_total != null) return Number(order.final_total) || 0
+  if (order.has_contact_price) return 0
+  return Number(order.subtotal_known || 0) + Number(order.shipping_fee || 0)
+}
+
+function countStatus(status: OrderStatus, source = orders) {
+  return source.filter(order => order.status === status).length
+}
+
+function rangeStart(range: OrderDateRange) {
+  if (range === 'all') return null
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  if (range === '7d') start.setDate(start.getDate() - 6)
+  if (range === '30d') start.setDate(start.getDate() - 29)
+  return start.getTime()
+}
+
+function matchesDateRange(order: OrderRow) {
+  const start = rangeStart(dateRange)
+  if (start == null) return true
+  const created = new Date(order.created_at).getTime()
+  return Number.isFinite(created) && created >= start
+}
+
+function periodOrders() {
+  return orders.filter(matchesDateRange)
+}
+
+function matchesSearch(order: OrderRow) {
+  const query = foldText(searchQuery.trim().replace(/^#/, ''))
+  if (!query) return true
+  const itemText = (order.items || []).map(item => `${item.name || ''} ${item.category || ''}`).join(' ')
+  const haystack = foldText([
+    order.id,
+    order.customer_name,
+    order.customer_phone,
+    order.customer_note,
+    order.admin_note,
+    statusMeta[order.status].label,
+    itemText,
+  ].join(' '))
+  return haystack.includes(query)
+}
+
+function filteredOrders() {
+  return periodOrders().filter(order => (filter === 'all' || order.status === filter) && matchesSearch(order))
+}
+
+function ensureSelection() {
+  const shown = filteredOrders()
+  if (selectedId != null && shown.some(order => order.id === selectedId)) return
+  selectedId = shown[0]?.id ?? null
 }
 
 function renderTrigger() {
@@ -109,25 +175,48 @@ function renderTrigger() {
   trigger.title = count > 0 ? `${count} đơn mới đang chờ xử lý` : 'Mở quản lý đơn hàng'
 }
 
-function filteredOrders() {
-  return filter === 'all' ? orders : orders.filter(order => order.status === filter)
-}
-
-function ensureSelection() {
-  const shown = filteredOrders()
-  if (selectedId != null && shown.some(order => order.id === selectedId)) return
-  selectedId = shown[0]?.id ?? null
-}
-
 function statusBadge(status: OrderStatus) {
   const meta = statusMeta[status]
   return `<span class="adminOrderStatus ${meta.tone}">${escapeHtml(meta.label)}</span>`
 }
 
+function summaryHtml() {
+  const period = periodOrders()
+  const newCount = countStatus('new', period)
+  const processingCount = countStatus('confirmed', period) + countStatus('shipping', period)
+  const completed = period.filter(order => order.status === 'completed')
+  const completedRevenue = completed.reduce((sum, order) => sum + knownOrderValue(order), 0)
+  return `
+    <section class="adminOrdersSummary" aria-label="Tổng quan đơn hàng">
+      <div class="adminOrdersKpi"><small>Đơn trong kỳ</small><strong>${period.length}</strong><span>${escapeHtml(dateRangeMeta[dateRange])}</span></div>
+      <div class="adminOrdersKpi isNew"><small>Đơn mới</small><strong>${newCount}</strong><span>Chờ xử lý</span></div>
+      <div class="adminOrdersKpi"><small>Đang xử lý</small><strong>${processingCount}</strong><span>Xác nhận + đang giao</span></div>
+      <div class="adminOrdersKpi isRevenue"><small>Doanh thu hoàn tất</small><strong>${escapeHtml(money(completedRevenue))}</strong><span>${completed.length} đơn hoàn tất</span></div>
+    </section>
+  `
+}
+
+function toolsHtml() {
+  const periods = (Object.keys(dateRangeMeta) as OrderDateRange[]).map(range => `
+    <button type="button" data-order-period="${range}" class="${dateRange === range ? 'active' : ''}">${escapeHtml(dateRangeMeta[range])}</button>
+  `).join('')
+  return `
+    <div class="adminOrderTools">
+      <label class="adminOrderSearch">
+        <span>⌕</span>
+        <input data-order-search value="${escapeHtml(searchQuery)}" placeholder="Tìm mã đơn, tên, SĐT, món…" autocomplete="off" />
+        ${searchQuery ? '<button type="button" data-order-search-clear aria-label="Xóa tìm kiếm">×</button>' : ''}
+      </label>
+      <div class="adminOrderPeriods" aria-label="Khoảng thời gian">${periods}</div>
+      <div class="adminOrderToolEnd"><span data-order-result-count>${filteredOrders().length}/${periodOrders().length} đơn</span><button type="button" data-orders-export>Xuất CSV</button></div>
+    </div>
+  `
+}
+
 function orderListHtml() {
   const shown = filteredOrders()
   if (loading && !loadedOnce) return '<div class="adminOrdersEmpty">Đang tải đơn hàng…</div>'
-  if (!shown.length) return '<div class="adminOrdersEmpty">Chưa có đơn nào trong nhóm này.</div>'
+  if (!shown.length) return `<div class="adminOrdersEmpty">${searchQuery ? 'Không tìm thấy đơn phù hợp.' : 'Chưa có đơn nào trong nhóm này.'}</div>`
 
   return shown.map(order => `
     <button type="button" class="adminOrderRow ${selectedId === order.id ? 'active' : ''}" data-order-id="${order.id}">
@@ -207,10 +296,29 @@ function orderDetailHtml() {
   `
 }
 
+function renderWorkspaceOnly() {
+  if (!panelRoot) return
+  ensureSelection()
+  const list = panelRoot.querySelector<HTMLElement>('.adminOrdersList')
+  const detail = panelRoot.querySelector<HTMLElement>('.adminOrdersDetail')
+  if (list) list.innerHTML = orderListHtml()
+  if (detail) detail.innerHTML = orderDetailHtml()
+  const result = panelRoot.querySelector<HTMLElement>('[data-order-result-count]')
+  if (result) result.textContent = `${filteredOrders().length}/${periodOrders().length} đơn`
+}
+
 function renderPanel() {
   if (!panelRoot) return
   ensureSelection()
-  const counts = { all: orders.length, new: countStatus('new'), confirmed: countStatus('confirmed'), shipping: countStatus('shipping'), completed: countStatus('completed'), cancelled: countStatus('cancelled') }
+  const period = periodOrders()
+  const counts = {
+    all: period.length,
+    new: countStatus('new', period),
+    confirmed: countStatus('confirmed', period),
+    shipping: countStatus('shipping', period),
+    completed: countStatus('completed', period),
+    cancelled: countStatus('cancelled', period),
+  }
   const filterButtons: Array<[OrderFilter, string]> = [
     ['all', 'Tất cả'], ['new', 'Đơn mới'], ['confirmed', 'Đã xác nhận'], ['shipping', 'Đang giao'], ['completed', 'Hoàn tất'], ['cancelled', 'Đã hủy'],
   ]
@@ -225,6 +333,8 @@ function renderPanel() {
         <div><small>SKY'S HOUSE · ADMIN</small><h1 class="serif">Đơn hàng.</h1><p>Theo dõi từ lúc khách gửi giỏ đến khi giao xong.</p></div>
         <div class="adminOrdersHeaderActions"><button type="button" data-orders-refresh>↻ Làm mới</button><button type="button" data-orders-close aria-label="Đóng">×</button></div>
       </header>
+      ${summaryHtml()}
+      ${toolsHtml()}
       <nav class="adminOrderFilters">${filters}</nav>
       ${noticeText ? `<div class="adminOrdersNotice ${noticeState}">${escapeHtml(noticeText)}</div>` : ''}
       <div class="adminOrdersWorkspace">
@@ -402,6 +512,52 @@ async function copyConfirmation(id: number) {
   renderPanel()
 }
 
+function csvCell(value: unknown) {
+  let text = String(value ?? '')
+  if (/^[=+\-@]/.test(text)) text = `'${text}`
+  return `"${text.replace(/"/g, '""')}"`
+}
+
+function exportOrdersCsv() {
+  const shown = filteredOrders()
+  if (!shown.length) {
+    noticeText = 'Không có đơn nào trong bộ lọc hiện tại để xuất CSV.'
+    noticeState = 'error'
+    renderPanel()
+    return
+  }
+
+  const headers = ['Mã đơn', 'Thời gian', 'Khách', 'SĐT', 'Trạng thái', 'Số món', 'Sản phẩm', 'Tạm tính', 'Phí giao hàng', 'Tổng chốt', 'Ghi chú khách', 'Ghi chú nội bộ']
+  const rows = shown.map(order => [
+    `#${order.id}`,
+    formatDate(order.created_at),
+    order.customer_name,
+    order.customer_phone,
+    statusMeta[order.status].label,
+    itemCount(order),
+    (order.items || []).map(item => `${item.name || 'Sản phẩm'} ×${Number(item.qty) || 0}`).join(' | '),
+    order.subtotal_known,
+    order.shipping_fee || 0,
+    order.final_total ?? '',
+    order.customer_note,
+    order.admin_note,
+  ])
+  const csv = '\uFEFF' + [headers, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  const stamp = new Date().toISOString().slice(0, 10)
+  link.href = url
+  link.download = `skyhouse-orders-${stamp}.csv`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+  noticeText = `Đã xuất ${shown.length} đơn theo bộ lọc hiện tại.`
+  noticeState = 'ok'
+  renderPanel()
+}
+
 function ensurePanel() {
   if (panelRoot) return panelRoot
   panelRoot = document.createElement('div')
@@ -418,6 +574,26 @@ function ensurePanel() {
     }
     if (target.closest('[data-orders-refresh]')) {
       void loadOrders(false)
+      return
+    }
+    if (target.closest('[data-orders-export]')) {
+      exportOrdersCsv()
+      return
+    }
+    if (target.closest('[data-order-search-clear]')) {
+      searchQuery = ''
+      ensureSelection()
+      renderPanel()
+      return
+    }
+    const periodButton = target.closest<HTMLElement>('[data-order-period]')
+    if (periodButton) {
+      const next = periodButton.dataset.orderPeriod as OrderDateRange
+      if (next in dateRangeMeta) {
+        dateRange = next
+        ensureSelection()
+        renderPanel()
+      }
       return
     }
     const settlementSave = target.closest<HTMLElement>('[data-order-settlement-save]')
@@ -443,8 +619,15 @@ function ensurePanel() {
     const row = target.closest<HTMLElement>('[data-order-id]')
     if (row) {
       selectedId = Number(row.dataset.orderId)
-      renderPanel()
+      renderWorkspaceOnly()
     }
+  })
+
+  panelRoot.addEventListener('input', event => {
+    const input = (event.target as Element | null)?.closest<HTMLInputElement>('[data-order-search]')
+    if (!input) return
+    searchQuery = input.value
+    renderWorkspaceOnly()
   })
 
   panelRoot.addEventListener('change', event => {
