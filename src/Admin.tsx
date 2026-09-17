@@ -11,6 +11,8 @@ type ProductRow = {
   image_url: string
   in_stock: boolean
   visible: boolean
+  best_seller: boolean
+  signature: boolean
   sort_order: number
 }
 
@@ -19,7 +21,7 @@ type UploadedImage = {
   path: string
 }
 
-type CatalogFilter = 'all' | 'placeholder' | 'no-price' | 'needs-work'
+type CatalogFilter = 'all' | 'placeholder' | 'no-price' | 'needs-work' | 'best-seller' | 'signature'
 
 const emptyProduct: ProductRow = {
   name: '',
@@ -30,6 +32,8 @@ const emptyProduct: ProductRow = {
   image_url: '',
   in_stock: true,
   visible: true,
+  best_seller: false,
+  signature: false,
   sort_order: 0,
 }
 
@@ -77,7 +81,7 @@ export default function Admin() {
     if (!supabase) return
     const { data, error } = await supabase
       .from('products')
-      .select('id,name,price,unit,category,description,image_url,in_stock,visible,sort_order')
+      .select('id,name,price,unit,category,description,image_url,in_stock,visible,best_seller,signature,sort_order')
       .order('sort_order', { ascending: true })
       .order('id', { ascending: true })
     if (error) {
@@ -107,11 +111,15 @@ export default function Admin() {
     const placeholder = products.filter((p) => isPlaceholderName(p.name)).length
     const noPrice = products.filter((p) => p.price == null).length
     const needsWork = products.filter((p) => isPlaceholderName(p.name) || p.price == null).length
+    const bestSeller = products.filter((p) => p.best_seller).length
+    const signature = products.filter((p) => p.signature).length
     return {
       all: products.length,
       placeholder,
       noPrice,
       needsWork,
+      bestSeller,
+      signature,
     }
   }, [products])
 
@@ -122,7 +130,9 @@ export default function Admin() {
         catalogFilter === 'all' ||
         (catalogFilter === 'placeholder' && isPlaceholderName(p.name)) ||
         (catalogFilter === 'no-price' && p.price == null) ||
-        (catalogFilter === 'needs-work' && (isPlaceholderName(p.name) || p.price == null))
+        (catalogFilter === 'needs-work' && (isPlaceholderName(p.name) || p.price == null)) ||
+        (catalogFilter === 'best-seller' && p.best_seller) ||
+        (catalogFilter === 'signature' && p.signature)
 
       if (!matchesFilter) return false
       if (!q) return true
@@ -142,6 +152,7 @@ export default function Admin() {
     clearLocalPreview()
     setDraft({ ...emptyProduct })
     setInitialImageUrl('')
+    setMessage('')
   }
 
   function selectProduct(product: ProductRow) {
@@ -344,6 +355,12 @@ export default function Admin() {
             <button type="button" className={catalogFilter === 'all' ? 'active' : ''} aria-pressed={catalogFilter === 'all'} onClick={() => setCatalogFilter('all')}>
               <span>Tất cả</span><b>{catalogCounts.all}</b>
             </button>
+            <button type="button" className={catalogFilter === 'best-seller' ? 'active' : ''} aria-pressed={catalogFilter === 'best-seller'} onClick={() => setCatalogFilter('best-seller')}>
+              <span>Best Seller</span><b>{catalogCounts.bestSeller}</b>
+            </button>
+            <button type="button" className={catalogFilter === 'signature' ? 'active' : ''} aria-pressed={catalogFilter === 'signature'} onClick={() => setCatalogFilter('signature')}>
+              <span>Signature</span><b>{catalogCounts.signature}</b>
+            </button>
             <button type="button" className={catalogFilter === 'needs-work' ? 'active' : ''} aria-pressed={catalogFilter === 'needs-work'} onClick={() => setCatalogFilter('needs-work')}>
               <span>Cần hoàn thiện</span><b>{catalogCounts.needsWork}</b>
             </button>
@@ -363,7 +380,11 @@ export default function Admin() {
             {shown.map((p) => (
               <button key={p.id} className={draft.id === p.id ? 'active' : ''} onClick={() => selectProduct(p)}>
                 <span>{p.image_url ? <img src={p.image_url} alt="" /> : <i>Ảnh</i>}</span>
-                <div><b>{p.name}</b><small>{p.category} · {p.price == null ? 'Liên hệ giá' : `${p.price.toLocaleString('vi-VN')}đ/${p.unit}`}</small></div>
+                <div>
+                  <b>{p.name}</b>
+                  <small>{p.category} · {p.price == null ? 'Liên hệ giá' : `${p.price.toLocaleString('vi-VN')}đ/${p.unit}`}</small>
+                  {(p.best_seller || p.signature) && <small className="adminItemFlags">{p.best_seller ? '★ Best Seller' : ''}{p.best_seller && p.signature ? ' · ' : ''}{p.signature ? '◆ Signature' : ''}</small>}
+                </div>
               </button>
             ))}
             {shown.length === 0 && <div className="adminCatalogEmpty">Không có sản phẩm phù hợp bộ lọc này.</div>}
@@ -419,6 +440,14 @@ export default function Admin() {
             <label className={`adminToggleCard ${draft.visible ? 'on' : ''}`}>
               <input type="checkbox" checked={draft.visible} onChange={(e) => setDraft({ ...draft, visible: e.target.checked })} />
               <span className="adminToggleText"><b>Hiển thị trên web</b><small>{draft.visible ? 'Khách hàng đang nhìn thấy' : 'Ẩn khỏi catalog khách hàng'}</small></span>
+            </label>
+            <label className={`adminToggleCard adminToggleBest ${draft.best_seller ? 'on' : ''}`}>
+              <input type="checkbox" checked={draft.best_seller} onChange={(e) => setDraft({ ...draft, best_seller: e.target.checked })} />
+              <span className="adminToggleText"><b>★ Best Seller</b><small>{draft.best_seller ? 'Đang nằm trong nhóm bán chạy' : 'Đánh dấu món bán chạy nổi bật'}</small></span>
+            </label>
+            <label className={`adminToggleCard adminToggleSignature ${draft.signature ? 'on' : ''}`}>
+              <input type="checkbox" checked={draft.signature} onChange={(e) => setDraft({ ...draft, signature: e.target.checked })} />
+              <span className="adminToggleText"><b>◆ Signature</b><small>{draft.signature ? 'Đang là món đại diện của Sky’s house' : 'Đánh dấu món đặc trưng của shop'}</small></span>
             </label>
           </div>
 
