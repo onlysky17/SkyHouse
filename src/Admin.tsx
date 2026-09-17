@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase'
 
 type ProductRow = {
@@ -14,6 +14,11 @@ type ProductRow = {
   sort_order: number
 }
 
+type UploadedImage = {
+  url: string
+  path: string
+}
+
 const emptyProduct: ProductRow = {
   name: '',
   price: null,
@@ -26,15 +31,40 @@ const emptyProduct: ProductRow = {
   sort_order: 0,
 }
 
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024
+const STORAGE_PUBLIC_MARKER = '/storage/v1/object/public/product-images/'
+
+function storagePathFromPublicUrl(url: string) {
+  const markerIndex = url.indexOf(STORAGE_PUBLIC_MARKER)
+  if (markerIndex === -1) return null
+  const rawPath = url.slice(markerIndex + STORAGE_PUBLIC_MARKER.length).split('?')[0]
+  if (!rawPath) return null
+  try {
+    return decodeURIComponent(rawPath)
+  } catch {
+    return rawPath
+  }
+}
+
 export default function Admin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [products, setProducts] = useState<ProductRow[]>([])
-  const [draft, setDraft] = useState<ProductRow>(emptyProduct)
+  const [draft, setDraft] = useState<ProductRow>({ ...emptyProduct })
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [query, setQuery] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [localPreviewUrl, setLocalPreviewUrl] = useState('')
+  const [initialImageUrl, setInitialImageUrl] = useState('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(localPreviewUrl)
+    }
+  }, [localPreviewUrl])
 
   async function loadProducts() {
     if (!supabase) return
@@ -72,6 +102,56 @@ export default function Admin() {
     return products.filter((p) => `${p.name} ${p.category}`.toLowerCase().includes(q))
   }, [products, query])
 
+  const previewSrc = localPreviewUrl || draft.image_url
+
+  function clearLocalPreview() {
+    setSelectedFile(null)
+    setLocalPreviewUrl('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  function resetEditor() {
+    clearLocalPreview()
+    setDraft({ ...emptyProduct })
+    setInitialImageUrl('')
+  }
+
+  function selectProduct(product: ProductRow) {
+    clearLocalPreview()
+    setDraft({ ...product })
+    setInitialImageUrl(product.image_url || '')
+    setMessage('')
+  }
+
+  function chooseImage(file: File | undefined) {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setMessage('File đã chọn không phải hình ảnh.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setMessage('Ảnh lớn hơn 8 MB. Hãy chọn ảnh nhỏ hơn để tải nhanh hơn.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    const nextPreview = URL.createObjectURL(file)
+    setSelectedFile(file)
+    setLocalPreviewUrl(nextPreview)
+    setMessage('Ảnh mới đã chọn. Bấm “Lưu sản phẩm” để tải ảnh lên.')
+  }
+
+  function changeImageUrl(value: string) {
+    clearLocalPreview()
+    setDraft((current) => ({ ...current, image_url: value }))
+  }
+
+  function clearImage() {
+    clearLocalPreview()
+    setDraft((current) => ({ ...current, image_url: '' }))
+    setMessage('Ảnh sẽ được gỡ khỏi sản phẩm sau khi bấm “Lưu sản phẩm”.')
+  }
+
   async function login(e: FormEvent) {
     e.preventDefault()
     if (!supabase) return
@@ -85,19 +165,29 @@ export default function Admin() {
   async function logout() {
     if (!supabase) return
     await supabase.auth.signOut()
-    setDraft(emptyProduct)
+    resetEditor()
   }
 
-  async function uploadImage(file: File) {
-    if (!supabase) return null
+  async function uploadImage(file: File): Promise<UploadedImage> {
+    if (!supabase) throw new Error('Supabase chưa sẵn sàng.')
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
     const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
     const { error } = await supabase.storage.from('product-images').upload(path, file, {
       cacheControl: '3600',
       upsert: false,
+      contentType: file.type || undefined,
     })
-    if (error) throw error
-    return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl
+    if (error) throw new Error(error.message)
+    const publicUrl = supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl
+    return { url: publicUrl, path }
+  }
+
+  async function removeStorageImage(url: string) {
+    if (!supabase || !url) return
+    const path = storagePathFromPublicUrl(url)
+    if (!path) return
+    const { error } = await supabase.storage.from('product-images').remove([path])
+    if (error) console.warn('Không xóa được ảnh cũ:', error.message)
   }
 
   async function saveProduct(e: FormEvent) {
@@ -107,34 +197,70 @@ export default function Admin() {
       setMessage('Tên sản phẩm đang trống.')
       return
     }
+
     setBusy(true)
-    setMessage('')
-    const payload = { ...draft, name: draft.name.trim() }
-    const result = draft.id
-      ? await supabase.from('products').update(payload).eq('id', draft.id)
-      : await supabase.from('products').insert(payload)
-    setBusy(false)
-    if (result.error) {
-      setMessage(result.error.message)
-      return
+    setMessage(selectedFile ? 'Đang tải ảnh và lưu sản phẩm…' : 'Đang lưu sản phẩm…')
+    let uploadedPath: string | null = null
+
+    try {
+      let nextImageUrl = draft.image_url.trim()
+      if (selectedFile) {
+        const uploaded = await uploadImage(selectedFile)
+        uploadedPath = uploaded.path
+        nextImageUrl = uploaded.url
+      }
+
+      const { id, ...rest } = draft
+      const payload = {
+        ...rest,
+        name: draft.name.trim(),
+        unit: draft.unit.trim() || 'kg',
+        category: draft.category.trim() || 'Sản phẩm khác',
+        description: draft.description.trim(),
+        image_url: nextImageUrl,
+        sort_order: Number.isFinite(draft.sort_order) ? draft.sort_order : 0,
+      }
+
+      const result = id
+        ? await supabase.from('products').update(payload).eq('id', id)
+        : await supabase.from('products').insert(payload)
+
+      if (result.error) throw new Error(result.error.message)
+
+      if (initialImageUrl && initialImageUrl !== nextImageUrl) {
+        await removeStorageImage(initialImageUrl)
+      }
+
+      setMessage(id ? 'Đã lưu thay đổi.' : 'Đã thêm sản phẩm.')
+      resetEditor()
+      await loadProducts()
+    } catch (err) {
+      if (uploadedPath) {
+        await supabase.storage.from('product-images').remove([uploadedPath])
+      }
+      setMessage(err instanceof Error ? err.message : 'Không lưu được sản phẩm.')
+    } finally {
+      setBusy(false)
     }
-    setMessage(draft.id ? 'Đã lưu thay đổi.' : 'Đã thêm sản phẩm.')
-    setDraft(emptyProduct)
-    await loadProducts()
   }
 
   async function removeProduct() {
     if (!supabase || !draft.id) return
     if (!window.confirm(`Xóa “${draft.name}”?`)) return
     setBusy(true)
+    setMessage('Đang xóa sản phẩm…')
+    const imageToDelete = draft.image_url
     const { error } = await supabase.from('products').delete().eq('id', draft.id)
-    setBusy(false)
     if (error) {
+      setBusy(false)
       setMessage(error.message)
       return
     }
-    setDraft(emptyProduct)
+    await removeStorageImage(imageToDelete)
+    resetEditor()
     await loadProducts()
+    setBusy(false)
+    setMessage('Đã xóa sản phẩm.')
   }
 
   if (!supabaseConfigured) {
@@ -183,11 +309,11 @@ export default function Admin() {
         <aside className="adminList">
           <div className="adminListHead">
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tìm sản phẩm…" />
-            <button onClick={() => setDraft(emptyProduct)}>+ Thêm</button>
+            <button onClick={resetEditor}>+ Thêm</button>
           </div>
           <div className="adminItems">
             {shown.map((p) => (
-              <button key={p.id} className={draft.id === p.id ? 'active' : ''} onClick={() => setDraft(p)}>
+              <button key={p.id} className={draft.id === p.id ? 'active' : ''} onClick={() => selectProduct(p)}>
                 <span>{p.image_url ? <img src={p.image_url} alt="" /> : <i>Ảnh</i>}</span>
                 <div><b>{p.name}</b><small>{p.category} · {p.price == null ? 'Liên hệ giá' : `${p.price.toLocaleString('vi-VN')}đ/${p.unit}`}</small></div>
               </button>
@@ -196,7 +322,14 @@ export default function Admin() {
         </aside>
 
         <form className="adminEditor" onSubmit={saveProduct}>
-          <div className="adminEditorTitle"><div><div className="adminEyebrow">{draft.id ? `SẢN PHẨM #${draft.id}` : 'SẢN PHẨM MỚI'}</div><h2 className="serif">{draft.id ? draft.name : 'Thêm sản phẩm'}</h2></div>{draft.id && <button type="button" className="danger" onClick={removeProduct}>Xóa</button>}</div>
+          <div className="adminEditorTitle">
+            <div>
+              <div className="adminEyebrow">{draft.id ? `SẢN PHẨM #${draft.id}` : 'SẢN PHẨM MỚI'}</div>
+              <h2 className="serif">{draft.id ? draft.name : 'Thêm sản phẩm'}</h2>
+            </div>
+            {draft.id && <button type="button" className="danger" disabled={busy} onClick={removeProduct}>Xóa</button>}
+          </div>
+
           <div className="adminFormGrid">
             <label className="wide">Tên sản phẩm<input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></label>
             <label>Giá<input type="number" min="0" value={draft.price ?? ''} onChange={(e) => setDraft({ ...draft, price: e.target.value === '' ? null : Number(e.target.value) })} placeholder="Để trống = Liên hệ giá" /></label>
@@ -204,27 +337,46 @@ export default function Admin() {
             <label className="wide">Danh mục<input value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} /></label>
             <label className="wide">Mô tả<textarea rows={4} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
             <label>Thứ tự<input type="number" value={draft.sort_order} onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })} /></label>
-            <label>Ảnh sản phẩm<input type="file" accept="image/*" onChange={async (e) => {
-              const file = e.target.files?.[0]
-              if (!file) return
-              try {
-                setBusy(true)
-                const url = await uploadImage(file)
-                if (url) setDraft((d) => ({ ...d, image_url: url }))
-              } catch (err) {
-                setMessage(err instanceof Error ? err.message : 'Upload ảnh thất bại')
-              } finally {
-                setBusy(false)
-              }
-            }} /></label>
-            <label className="wide">URL ảnh<input value={draft.image_url} onChange={(e) => setDraft({ ...draft, image_url: e.target.value })} /></label>
+            <label className="adminFileField">Ảnh sản phẩm
+              <input ref={fileInputRef} type="file" accept="image/*" disabled={busy} onChange={(e) => chooseImage(e.target.files?.[0])} />
+              <small>JPG, PNG, WEBP · tối đa 8 MB. Ảnh chỉ được tải lên khi bấm Lưu.</small>
+            </label>
+            <label className="wide">URL ảnh
+              <input value={draft.image_url} onChange={(e) => changeImageUrl(e.target.value)} placeholder="Có thể dán URL ảnh trực tiếp" />
+            </label>
           </div>
-          {draft.image_url && <img className="adminPreview" src={draft.image_url} alt="Preview" />}
+
+          <section className="adminImagePanel">
+            <div className="adminImageMeta">
+              <div>
+                <b>{selectedFile ? 'Ảnh mới đang chờ lưu' : previewSrc ? 'Ảnh hiện tại' : 'Chưa có ảnh'}</b>
+                <small>{selectedFile ? selectedFile.name : previewSrc || 'Chọn ảnh mới hoặc dán URL ảnh.'}</small>
+              </div>
+              {previewSrc && (
+                <div className="adminImageTools">
+                  {!localPreviewUrl && <a href={previewSrc} target="_blank" rel="noreferrer">Mở ảnh</a>}
+                  <button type="button" className="secondary" disabled={busy} onClick={clearImage}>Bỏ ảnh</button>
+                </div>
+              )}
+            </div>
+            {previewSrc ? <img className="adminPreview" src={previewSrc} alt={`Xem trước ${draft.name || 'sản phẩm'}`} /> : <div className="adminEmptyPreview">Chưa có ảnh sản phẩm</div>}
+          </section>
+
           <div className="adminToggles">
-            <label><input type="checkbox" checked={draft.in_stock} onChange={(e) => setDraft({ ...draft, in_stock: e.target.checked })} /> Còn hàng</label>
-            <label><input type="checkbox" checked={draft.visible} onChange={(e) => setDraft({ ...draft, visible: e.target.checked })} /> Hiển thị trên web</label>
+            <label className={`adminToggleCard ${draft.in_stock ? 'on' : ''}`}>
+              <input type="checkbox" checked={draft.in_stock} onChange={(e) => setDraft({ ...draft, in_stock: e.target.checked })} />
+              <span className="adminToggleText"><b>Còn hàng</b><small>{draft.in_stock ? 'Đang nhận đơn sản phẩm này' : 'Đánh dấu tạm hết hàng'}</small></span>
+            </label>
+            <label className={`adminToggleCard ${draft.visible ? 'on' : ''}`}>
+              <input type="checkbox" checked={draft.visible} onChange={(e) => setDraft({ ...draft, visible: e.target.checked })} />
+              <span className="adminToggleText"><b>Hiển thị trên web</b><small>{draft.visible ? 'Khách hàng đang nhìn thấy' : 'Ẩn khỏi catalog khách hàng'}</small></span>
+            </label>
           </div>
-          <div className="adminActions"><button disabled={busy}>{busy ? 'Đang xử lý…' : 'Lưu sản phẩm'}</button><button type="button" className="secondary" onClick={() => setDraft(emptyProduct)}>Hủy / tạo mới</button></div>
+
+          <div className="adminActions">
+            <button disabled={busy}>{busy ? 'Đang xử lý…' : draft.id ? 'Lưu thay đổi' : 'Thêm sản phẩm'}</button>
+            <button type="button" className="secondary" disabled={busy} onClick={resetEditor}>{draft.id ? 'Hủy chỉnh sửa' : 'Xóa nội dung'}</button>
+          </div>
           {message && <p className="adminMessage">{message}</p>}
         </form>
       </section>
