@@ -33,9 +33,8 @@ function customerPrefix(info: CustomerInfo) {
     `Tên khách: ${info.name.trim()}`,
     `Số điện thoại: ${info.phone.trim()}`,
     info.note.trim() ? `Ghi chú: ${info.note.trim()}` : '',
-    '',
-  ].filter((line, index) => index === 0 || line !== '')
-  return `${lines.join('\n')}\n`
+  ].filter(Boolean)
+  return `${lines.join('\n')}\n\n`
 }
 
 function readInfo(drawer?: Element | null): CustomerInfo {
@@ -49,6 +48,18 @@ function readInfo(drawer?: Element | null): CustomerInfo {
 
 function getValidationNotice(drawer: Element | null) {
   return drawer?.querySelector<HTMLElement>('[data-customer-validation]') || null
+}
+
+function getSendNotice(drawer: Element | null) {
+  return drawer?.querySelector<HTMLElement>('[data-customer-send-notice]') || null
+}
+
+function setSendNotice(drawer: Element | null, text: string, state: 'ok' | 'error' = 'ok') {
+  const notice = getSendNotice(drawer)
+  if (!notice) return
+  notice.textContent = text
+  notice.dataset.state = state
+  notice.hidden = false
 }
 
 function validateInfo(drawer: Element | null, info: CustomerInfo) {
@@ -90,6 +101,53 @@ function extractBaseOrderText(text: string) {
   return markerIndex >= 0 ? text.slice(markerIndex) : text
 }
 
+function orderTextFromZaloLink(link: HTMLAnchorElement, info: CustomerInfo) {
+  try {
+    const url = new URL(link.href)
+    const baseText = extractBaseOrderText(url.searchParams.get('text') || '')
+    return `${customerPrefix(info)}${baseText}`.trim()
+  } catch {
+    return customerPrefix(info).trim()
+  }
+}
+
+function zaloChatUrl(link: HTMLAnchorElement) {
+  try {
+    const url = new URL(link.href)
+    const phone = url.pathname.split('/').filter(Boolean).pop() || ''
+    const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+    return mobile
+      ? `https://zalo.me/${encodeURIComponent(phone)}`
+      : `https://chat.zalo.me/?phone=${encodeURIComponent(phone)}`
+  } catch {
+    return link.href.split('?')[0]
+  }
+}
+
+function copyTextFallback(text: string) {
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.opacity = '0'
+  textarea.style.pointerEvents = 'none'
+  document.body.appendChild(textarea)
+  textarea.select()
+  textarea.setSelectionRange(0, textarea.value.length)
+  let copied = false
+  try { copied = document.execCommand('copy') } catch { copied = false }
+  textarea.remove()
+  return copied
+}
+
+function copyOrderText(text: string) {
+  const copiedSynchronously = copyTextFallback(text)
+  if (!copiedSynchronously && navigator.clipboard?.writeText) {
+    void navigator.clipboard.writeText(text).catch(() => { /* keep the page usable if browser blocks clipboard */ })
+  }
+  return copiedSynchronously || Boolean(navigator.clipboard?.writeText)
+}
+
 function enhanceDrawer(drawer: HTMLElement) {
   if (drawer.querySelector('[data-customer-info]')) return
   const footer = drawer.querySelector('.cartFooter')
@@ -122,9 +180,16 @@ function enhanceDrawer(drawer: HTMLElement) {
       </label>
     </div>
     <p class="cartCustomerValidation" data-customer-validation hidden></p>
+    <p class="cartCustomerSendNotice" data-customer-send-notice hidden></p>
   `
 
   footer.insertBefore(block, footer.firstChild)
+  const zaloButton = footer.querySelector<HTMLAnchorElement>('.cartPrimary')
+  if (zaloButton) {
+    zaloButton.textContent = 'Sao chép đơn & mở Zalo'
+    zaloButton.title = 'Nội dung đơn sẽ được sao chép trước khi mở Zalo'
+  }
+
   const nameInput = block.querySelector<HTMLInputElement>('[data-customer-field="name"]')!
   const phoneInput = block.querySelector<HTMLInputElement>('[data-customer-field="phone"]')!
   const noteInput = block.querySelector<HTMLTextAreaElement>('[data-customer-field="note"]')!
@@ -147,21 +212,24 @@ function enhanceDrawer(drawer: HTMLElement) {
   noteInput.addEventListener('input', persist)
 }
 
-function augmentZaloLink(link: HTMLAnchorElement) {
+function openZaloWithCopiedOrder(link: HTMLAnchorElement) {
   const drawer = link.closest('.cartDrawer')
   const info = readInfo(drawer)
   saveInfo(info)
-  if (!validateInfo(drawer, info)) return false
+  if (!validateInfo(drawer, info)) return
 
-  try {
-    const url = new URL(link.href)
-    const baseText = extractBaseOrderText(url.searchParams.get('text') || '')
-    url.searchParams.set('text', `${customerPrefix(info)}${baseText}`)
-    link.href = url.toString()
-    return true
-  } catch {
-    return true
-  }
+  const text = orderTextFromZaloLink(link, info)
+  const copied = copyOrderText(text)
+  const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+  setSendNotice(
+    drawer,
+    copied
+      ? `Đã sao chép toàn bộ đơn hàng. Zalo không tự điền nội dung từ link cá nhân; sang Zalo rồi ${mobile ? 'chạm giữ và chọn Dán' : 'nhấn Ctrl+V'} để gửi.`
+      : `Trình duyệt chặn sao chép tự động. Hãy dùng nút “Sao chép danh sách”, rồi sang Zalo ${mobile ? 'Dán' : 'nhấn Ctrl+V'}.`,
+    copied ? 'ok' : 'error',
+  )
+
+  window.open(zaloChatUrl(link), '_blank', 'noopener,noreferrer')
 }
 
 async function copyAugmentedOrder(button: HTMLButtonElement) {
@@ -172,15 +240,17 @@ async function copyAugmentedOrder(button: HTMLButtonElement) {
   saveInfo(info)
   if (!validateInfo(drawer, info)) return
 
+  const text = orderTextFromZaloLink(zalo, info)
   try {
-    const url = new URL(zalo.href)
-    const baseText = extractBaseOrderText(url.searchParams.get('text') || '')
-    const text = `${customerPrefix(info)}${baseText}`
-    await navigator.clipboard.writeText(text)
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text)
+    else if (!copyTextFallback(text)) throw new Error('clipboard unavailable')
     const original = button.textContent || 'Sao chép danh sách'
     button.textContent = 'Đã sao chép ✓'
+    setSendNotice(drawer, 'Đã sao chép đầy đủ thông tin người đặt và danh sách món.', 'ok')
     window.setTimeout(() => { button.textContent = original }, 1800)
-  } catch { /* keep native behavior unavailable rather than breaking cart */ }
+  } catch {
+    setSendNotice(drawer, 'Không sao chép được tự động. Hãy thử lại hoặc cho phép trình duyệt truy cập clipboard.', 'error')
+  }
 }
 
 export function installCartCustomerInfo() {
@@ -195,11 +265,9 @@ export function installCartCustomerInfo() {
 
     const zalo = target.closest<HTMLAnchorElement>('.cartPrimary')
     if (zalo) {
-      const ok = augmentZaloLink(zalo)
-      if (!ok) {
-        event.preventDefault()
-        event.stopPropagation()
-      }
+      event.preventDefault()
+      event.stopPropagation()
+      openZaloWithCopiedOrder(zalo)
       return
     }
 
