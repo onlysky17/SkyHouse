@@ -11,10 +11,17 @@ create table if not exists public.products (
   image_url text not null default '',
   in_stock boolean not null default true,
   visible boolean not null default true,
+  best_seller boolean not null default false,
+  signature boolean not null default false,
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Keep existing projects compatible when this schema is re-run.
+alter table public.products
+  add column if not exists best_seller boolean not null default false,
+  add column if not exists signature boolean not null default false;
 
 create table if not exists public.site_settings (
   id bigint primary key default 1 check (id = 1),

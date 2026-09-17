@@ -14,6 +14,8 @@ type Product = {
   image_url?: string | null
   in_stock: boolean
   visible: boolean
+  best_seller: boolean
+  signature: boolean
   sort_order: number
 }
 
@@ -36,6 +38,14 @@ const gradients: Record<Theme, string> = {
 const priceText = (p: Product) =>
   p.price_label?.trim() ||
   (p.price == null ? 'Liên hệ giá' : `${new Intl.NumberFormat('vi-VN').format(p.price)}đ${p.unit ? `/${p.unit}` : ''}`)
+
+function ProductBadges({ p }: { p: Product }) {
+  if (!p.best_seller && !p.signature) return null
+  return <div className="productBadges" aria-label="Nhãn sản phẩm">
+    {p.best_seller && <span className="badgeBest">★ Best Seller</span>}
+    {p.signature && <span className="badgeSignature">◆ Signature</span>}
+  </div>
+}
 
 function Navbar({ theme }: { theme: Theme }) {
   const light = theme === 'fruit' || theme === 'nuts'
@@ -71,7 +81,7 @@ function Showcase({ s, onActive }: { s: ShowcaseData; onActive: (theme: Theme) =
     <div className="watermark serif">{s.watermark}</div>
     <div className="worldInner">
       <motion.div className="productZone" initial={{ opacity: 0, x: -70 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false, amount: .2 }} transition={{ duration: .8 }}>
-        <div className="productFloat"><img src={s.product.image_url || ''} alt={s.product.name} /><span className="wm">Sky's house</span></div>
+        <div className="productFloat"><img src={s.product.image_url || ''} alt={s.product.name} /><span className="wm">Sky's house</span><ProductBadges p={s.product} /></div>
       </motion.div>
       <motion.div className="copy" initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false, amount: .2 }} transition={{ duration: .8, delay: .08 }}>
         <div className="kicker">{s.kicker}</div>
@@ -84,18 +94,39 @@ function Showcase({ s, onActive }: { s: ShowcaseData; onActive: (theme: Theme) =
   </section>
 }
 
-function Modal({ p, onClose }: { p: Product | null; onClose: () => void }) {
-  if (!p) return null
-  return <div className="modal"><button className="modalBack" onClick={onClose} aria-label="Đóng" /><div className="modalCard"><button className="close" onClick={onClose}>×</button><img src={p.image_url || ''} alt={p.name} /><div className="modalCopy"><div className="kicker">{p.category}</div><h3 className="serif">{p.name}</h3><div className="modalPrice serif">{priceText(p)}</div><p>{p.description || "Ảnh sản phẩm thật từ Sky's house. Nhắn Zalo hoặc Facebook để hỏi giá và tình trạng hàng."}</p><div className="modalActions"><a href={`${SHOP.zalo}?text=${encodeURIComponent(`Chào Sky's house, mình muốn hỏi ${p.name}`)}`} target="_blank">Nhắn Zalo</a><a href={`tel:${SHOP.phone}`}>Gọi đặt hàng</a><a href={SHOP.facebook} target="_blank">Facebook</a></div></div></div></div>
+function HighlightSection({ kind, products, onSelect }: { kind: 'best' | 'signature'; products: Product[]; onSelect: (p: Product) => void }) {
+  if (!products.length) return null
+  const isSignature = kind === 'signature'
+  const title = isSignature ? 'Signature của Sky’s house.' : 'Best Seller được chọn nhiều.'
+  const eyebrow = isSignature ? 'Sky’s house signature' : 'Khách chọn nhiều'
+  const note = isSignature
+    ? 'Những món mang dấu ấn riêng của Sky’s house — ưu tiên để biếu tặng, nhâm nhi hoặc chọn khi chưa biết bắt đầu từ đâu.'
+    : 'Những món bán chạy được Sky’s house đánh dấu trực tiếp trong trang quản trị.'
+  return <section className={`highlightSection ${isSignature ? 'signatureSection' : 'bestSection'}`}>
+    <div className="highlightHead">
+      <div><div className="over">{eyebrow}</div><h2 className="serif">{title}</h2></div>
+      <p>{note}</p>
+    </div>
+    <div className="highlightGrid">
+      {products.slice(0, 8).map((p, index) => <motion.button key={p.id} className="highlightCard" onClick={() => onSelect(p)} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .15 }} transition={{ duration: .45, delay: Math.min(index * .04, .2) }}>
+        <div className="highlightImage"><img src={p.image_url || ''} alt={p.name} loading="lazy" /><ProductBadges p={p} /></div>
+        <div className="highlightCopy"><small>{p.category}</small><h3 className="serif">{p.name}</h3><div><b>{priceText(p)}</b><span>Xem món →</span></div></div>
+      </motion.button>)}
+    </div>
+  </section>
 }
 
-function Catalog({ products }: { products: Product[] }) {
+function Modal({ p, onClose }: { p: Product | null; onClose: () => void }) {
+  if (!p) return null
+  return <div className="modal"><button className="modalBack" onClick={onClose} aria-label="Đóng" /><div className="modalCard"><button className="close" onClick={onClose}>×</button><div className="modalImageWrap"><img src={p.image_url || ''} alt={p.name} /><ProductBadges p={p} /></div><div className="modalCopy"><div className="kicker">{p.category}</div><h3 className="serif">{p.name}</h3><div className="modalPrice serif">{priceText(p)}</div><p>{p.description || "Ảnh sản phẩm thật từ Sky's house. Nhắn Zalo hoặc Facebook để hỏi giá và tình trạng hàng."}</p><div className="modalActions"><a href={`${SHOP.zalo}?text=${encodeURIComponent(`Chào Sky's house, mình muốn hỏi ${p.name}`)}`} target="_blank">Nhắn Zalo</a><a href={`tel:${SHOP.phone}`}>Gọi đặt hàng</a><a href={SHOP.facebook} target="_blank">Facebook</a></div></div></div></div>
+}
+
+function Catalog({ products, selected, onSelect, onClose }: { products: Product[]; selected: Product | null; onSelect: (p: Product) => void; onClose: () => void }) {
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('Tất cả')
-  const [sel, setSel] = useState<Product | null>(null)
   const cats = useMemo(() => ['Tất cả', ...Array.from(new Set(products.map(p => p.category))).sort()], [products])
   const shown = products.filter(p => (cat === 'Tất cả' || p.category === cat) && (`${p.name} ${p.category}`.toLowerCase().includes(q.toLowerCase())))
-  return <section id="catalog" className="catalog"><div className="catalogHead"><div><div className="over">The collection</div><h2 className="serif">Tất cả món ngon<br /><i>của Sky's house.</i></h2><p>Ảnh thật, giá bán lẻ hiện tại và liên hệ trực tiếp. Món chưa có giá sẽ hiển thị “Liên hệ giá” để tránh niêm yết sai.</p></div><div className="tools"><input value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm sản phẩm..." /><select value={cat} onChange={e => setCat(e.target.value)}>{cats.map(c => <option key={c}>{c}</option>)}</select></div></div><div className="grid">{shown.map(p => <button className="card" key={p.id} onClick={() => setSel(p)}><div className="cardImg"><img src={p.image_url || ''} loading="lazy" alt={p.name} /><span>{p.in_stock ? 'Còn hàng' : 'Liên hệ'}</span><em>Sky's house</em></div><div className="cardBody"><small>{p.category}</small><h3 className="serif">{p.name}</h3><div className="cardBottom"><b>{priceText(p)}</b><span>Xem →</span></div></div></button>)}</div><Modal p={sel} onClose={() => setSel(null)} /></section>
+  return <section id="catalog" className="catalog"><div className="catalogHead"><div><div className="over">The collection</div><h2 className="serif">Tất cả món ngon<br /><i>của Sky's house.</i></h2><p>Ảnh thật, giá bán lẻ hiện tại và liên hệ trực tiếp. Món chưa có giá sẽ hiển thị “Liên hệ giá” để tránh niêm yết sai.</p></div><div className="tools"><input value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm sản phẩm..." /><select value={cat} onChange={e => setCat(e.target.value)}>{cats.map(c => <option key={c}>{c}</option>)}</select></div></div><div className="grid">{shown.map(p => <button className="card" key={p.id} onClick={() => onSelect(p)}><div className="cardImg"><img src={p.image_url || ''} loading="lazy" alt={p.name} /><span>{p.in_stock ? 'Còn hàng' : 'Liên hệ'}</span><em>Sky's house</em><ProductBadges p={p} /></div><div className="cardBody"><small>{p.category}</small><h3 className="serif">{p.name}</h3><div className="cardBottom"><b>{priceText(p)}</b><span>Xem →</span></div></div></button>)}</div><Modal p={selected} onClose={onClose} /></section>
 }
 
 function Contact() {
@@ -105,13 +136,14 @@ function Contact() {
 export default function Storefront() {
   const [theme, setTheme] = useState<Theme>('fruit')
   const [products, setProducts] = useState<Product[]>([])
+  const [selected, setSelected] = useState<Product | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let alive = true
     async function load() {
       if (!supabase) { setError('Storefront chưa kết nối Supabase.'); return }
-      const { data, error } = await supabase.from('products').select('id,name,price,price_label,unit,category,description,image_url,in_stock,visible,sort_order').eq('visible', true).order('sort_order', { ascending: true }).order('id', { ascending: true })
+      const { data, error } = await supabase.from('products').select('id,name,price,price_label,unit,category,description,image_url,in_stock,visible,best_seller,signature,sort_order').eq('visible', true).order('sort_order', { ascending: true }).order('id', { ascending: true })
       if (!alive) return
       if (error) setError(error.message)
       else setProducts((data ?? []) as Product[])
@@ -124,6 +156,8 @@ export default function Storefront() {
   const byCategory = (needle: string) => products.find(p => p.category.toLowerCase().includes(needle.toLowerCase()))
   const fallback = products[0]
   const showcaseProducts = [bySort(96) || byCategory('Đồ sấy') || fallback, bySort(109) || byCategory('Mứt') || fallback, bySort(70) || byCategory('Hạt') || fallback, bySort(17) || byCategory('Đồ khô') || fallback]
+  const bestSellers = products.filter(p => p.best_seller)
+  const signatures = products.filter(p => p.signature)
   const showcases: ShowcaseData[] = fallback ? [
     { id: 'dried', theme: 'dried', kicker: 'Đồ sấy chọn lọc', watermark: 'DRIED', subtitle: 'Giòn rụm.\nĐậm vị Đà Lạt.', description: 'Đồ sấy giòn thơm, chọn từ những món được yêu thích.\nMột món ăn vặt đơn giản nhưng rất dễ ghiền.', product: showcaseProducts[0] },
     { id: 'fruit', theme: 'fruit', kicker: 'Mứt & trái cây', watermark: 'FRUIT', subtitle: 'Thanh nhẹ.\nDẻo ngon. Tinh tế.', description: 'Mứt và trái cây sấy cân bằng vị, dễ ăn và dễ chọn.\nMột lựa chọn rất “Sky’s house”.', product: showcaseProducts[1] },
@@ -131,5 +165,5 @@ export default function Storefront() {
     { id: 'deli', theme: 'deli', kicker: 'Đồ khô & đặc sản', watermark: 'DELI', subtitle: 'Đậm đà.\nĂn là nhớ.', description: 'Từ khô gà lá chanh đến các món đặc sản ăn vặt.\nƯu tiên ảnh thật, vị thật và liên hệ trực tiếp.', product: showcaseProducts[3] },
   ] : []
 
-  return <><AnimatePresence mode="wait"><motion.div key={theme} style={{ position: 'fixed', inset: 0, zIndex: -10, background: gradients[theme] }} initial={{ opacity: .7 }} animate={{ opacity: 1 }} exit={{ opacity: .85 }} transition={{ duration: .2 }} /></AnimatePresence><Navbar theme={theme} /><Intro />{error && <section className="catalog"><div className="adminMessage">Không tải được catalog: {error}</div></section>}{!error && products.length === 0 && <section className="catalog"><div className="adminMessage">Đang tải sản phẩm…</div></section>}{showcases.map(s => <Showcase key={s.id} s={s} onActive={setTheme} />)}{products.length > 0 && <Catalog products={products} />}<Contact /></>
+  return <><AnimatePresence mode="wait"><motion.div key={theme} style={{ position: 'fixed', inset: 0, zIndex: -10, background: gradients[theme] }} initial={{ opacity: .7 }} animate={{ opacity: 1 }} exit={{ opacity: .85 }} transition={{ duration: .2 }} /></AnimatePresence><Navbar theme={theme} /><Intro />{error && <section className="catalog"><div className="adminMessage">Không tải được catalog: {error}</div></section>}{!error && products.length === 0 && <section className="catalog"><div className="adminMessage">Đang tải sản phẩm…</div></section>}{showcases.map(s => <Showcase key={s.id} s={s} onActive={setTheme} />)}<HighlightSection kind="best" products={bestSellers} onSelect={setSelected} /><HighlightSection kind="signature" products={signatures} onSelect={setSelected} />{products.length > 0 && <Catalog products={products} selected={selected} onSelect={setSelected} onClose={() => setSelected(null)} />}<Contact /></>
 }
