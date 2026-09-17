@@ -20,6 +20,9 @@ type OrderRow = {
   items: OrderItem[]
   subtotal_known: number
   has_contact_price: boolean
+  shipping_fee: number
+  final_total: number | null
+  admin_note: string
   status: OrderStatus
   source: string
   created_at: string
@@ -83,6 +86,13 @@ function subtotalLabel(order: OrderRow) {
   return order.has_contact_price ? 'Liên hệ giá' : '0đ'
 }
 
+function totalLabel(order: OrderRow) {
+  if (order.final_total != null) return money(order.final_total)
+  const suggested = Number(order.subtotal_known || 0) + Number(order.shipping_fee || 0)
+  if (!order.has_contact_price && suggested > 0) return `${money(suggested)} dự kiến`
+  return subtotalLabel(order)
+}
+
 function countStatus(status: OrderStatus) {
   return orders.filter(order => order.status === status).length
 }
@@ -123,7 +133,7 @@ function orderListHtml() {
     <button type="button" class="adminOrderRow ${selectedId === order.id ? 'active' : ''}" data-order-id="${order.id}">
       <div class="adminOrderRowTop"><strong>#${order.id} · ${escapeHtml(order.customer_name)}</strong>${statusBadge(order.status)}</div>
       <div class="adminOrderRowMeta"><span>${escapeHtml(order.customer_phone)}</span><span>${escapeHtml(formatDate(order.created_at))}</span></div>
-      <div class="adminOrderRowBottom"><span>${itemCount(order)} món</span><b>${escapeHtml(subtotalLabel(order))}</b></div>
+      <div class="adminOrderRowBottom"><span>${itemCount(order)} món</span><b>${escapeHtml(totalLabel(order))}</b></div>
     </button>
   `).join('')
 }
@@ -142,6 +152,9 @@ function orderDetailHtml() {
   `).join('')
 
   const statusOptions = statusOrder.map(status => `<option value="${status}" ${order.status === status ? 'selected' : ''}>${escapeHtml(statusMeta[status].label)}</option>`).join('')
+  const shippingFee = Number(order.shipping_fee || 0)
+  const suggestedTotal = Number(order.subtotal_known || 0) + shippingFee
+  const finalValue = order.final_total == null ? '' : String(order.final_total)
 
   return `
     <div class="adminOrderDetailHead">
@@ -152,12 +165,34 @@ function orderDetailHtml() {
     <div class="adminOrderCustomerGrid">
       <div><small>Số điện thoại</small><strong>${escapeHtml(order.customer_phone)}</strong></div>
       <div><small>Tạm tính đã có giá</small><strong>${escapeHtml(subtotalLabel(order))}</strong></div>
-      <div class="wide"><small>Ghi chú khách</small><strong>${escapeHtml(order.customer_note || 'Không có ghi chú')}</strong></div>
+      <div><small>Phí giao hàng</small><strong>${shippingFee > 0 ? escapeHtml(money(shippingFee)) : 'Chưa nhập'}</strong></div>
+      <div><small>Tổng chốt</small><strong class="adminOrderFinalTotal">${escapeHtml(order.final_total != null ? money(order.final_total) : 'Chưa chốt')}</strong></div>
+      <div class="wide"><small>Ghi chú khách / giao nhận</small><strong>${escapeHtml(order.customer_note || 'Không có ghi chú')}</strong></div>
     </div>
 
     <section class="adminOrderItemsBlock">
       <div class="adminOrdersSectionTitle"><span>Danh sách món</span><b>${itemCount(order)} món</b></div>
       <div class="adminOrderItems">${itemRows || '<div class="adminOrdersEmpty">Đơn chưa có snapshot sản phẩm.</div>'}</div>
+    </section>
+
+    <section class="adminOrderSettlement">
+      <div class="adminOrdersSectionTitle"><span>Chốt tiền & ghi chú nội bộ</span><b>${order.final_total != null ? 'Đã chốt' : 'Chưa chốt'}</b></div>
+      <div class="adminOrderSettlementGrid">
+        <label>Phí giao hàng
+          <input type="number" min="0" step="1000" inputmode="numeric" data-order-shipping-fee value="${shippingFee}" placeholder="0" />
+        </label>
+        <label>Tổng chốt với khách
+          <input type="number" min="0" step="1000" inputmode="numeric" data-order-final-total value="${escapeHtml(finalValue)}" placeholder="${!order.has_contact_price && suggestedTotal > 0 ? escapeHtml(String(suggestedTotal)) : 'Nhập tổng cuối'}" />
+          <small>${order.has_contact_price ? 'Có món hỏi giá — nhập tổng cuối sau khi xác nhận.' : `Gợi ý: ${money(suggestedTotal)}`}</small>
+        </label>
+        <label class="wide">Ghi chú nội bộ
+          <textarea rows="2" data-order-admin-note placeholder="Ví dụ: khách chuyển khoản, ship GHN, giao sau 18h…">${escapeHtml(order.admin_note || '')}</textarea>
+        </label>
+      </div>
+      <div class="adminOrderSettlementActions">
+        <button type="button" data-order-settlement-save="${order.id}">Lưu chốt đơn</button>
+        <button type="button" data-order-copy-confirmation="${order.id}">Sao chép xác nhận cho khách</button>
+      </div>
     </section>
 
     <div class="adminOrderManage">
@@ -168,7 +203,7 @@ function orderDetailHtml() {
         ${phone ? `<a href="tel:${phone}">Gọi khách</a><a href="https://zalo.me/${phone}" target="_blank" rel="noreferrer">Mở Zalo</a>` : ''}
       </div>
     </div>
-    ${order.has_contact_price ? '<p class="adminOrderPriceNotice">Đơn có món chưa niêm yết giá. Hãy xác nhận tổng tiền với khách trước khi chuyển trạng thái.</p>' : ''}
+    ${order.has_contact_price ? '<p class="adminOrderPriceNotice">Đơn có món chưa niêm yết giá. Hãy nhập “Tổng chốt với khách” sau khi xác nhận giá.</p>' : ''}
   `
 }
 
@@ -232,7 +267,7 @@ async function loadOrders(silent = true) {
 
   const { data, error } = await supabase
     .from('orders')
-    .select('id,customer_name,customer_phone,customer_note,items,subtotal_known,has_contact_price,status,source,created_at,updated_at')
+    .select('id,customer_name,customer_phone,customer_note,items,subtotal_known,has_contact_price,shipping_fee,final_total,admin_note,status,source,created_at,updated_at')
     .order('created_at', { ascending: false })
     .limit(300)
 
@@ -276,6 +311,97 @@ async function updateStatus(id: number, status: OrderStatus) {
   renderPanel()
 }
 
+function readSettlementValue(selector: string) {
+  const input = panelRoot?.querySelector<HTMLInputElement>(selector)
+  if (!input) return 0
+  const raw = input.value.trim()
+  if (!raw) return 0
+  const value = Number(raw)
+  return Number.isFinite(value) && value >= 0 ? Math.round(value) : 0
+}
+
+async function saveSettlement(id: number) {
+  if (!supabase) return
+  const order = orders.find(item => item.id === id)
+  if (!order) return
+
+  const shippingFee = readSettlementValue('[data-order-shipping-fee]')
+  const finalInput = panelRoot?.querySelector<HTMLInputElement>('[data-order-final-total]')
+  const adminNote = panelRoot?.querySelector<HTMLTextAreaElement>('[data-order-admin-note]')?.value.trim() || ''
+  const rawFinal = finalInput?.value.trim() || ''
+  let finalTotal: number | null = null
+  if (rawFinal) {
+    const parsed = Number(rawFinal)
+    finalTotal = Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed) : null
+  } else if (!order.has_contact_price) {
+    finalTotal = Number(order.subtotal_known || 0) + shippingFee
+  }
+
+  noticeText = 'Đang lưu phần chốt đơn…'
+  noticeState = ''
+  renderPanel()
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ shipping_fee: shippingFee, final_total: finalTotal, admin_note: adminNote, updated_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) {
+    noticeText = `Không lưu được phần chốt đơn: ${error.message}`
+    noticeState = 'error'
+    renderPanel()
+    return
+  }
+
+  order.shipping_fee = shippingFee
+  order.final_total = finalTotal
+  order.admin_note = adminNote
+  order.updated_at = new Date().toISOString()
+  noticeText = finalTotal == null
+    ? `Đã lưu đơn #${id}. Tổng cuối vẫn đang chờ xác nhận.`
+    : `Đã chốt đơn #${id}: ${money(finalTotal)}.`
+  noticeState = 'ok'
+  renderPanel()
+}
+
+function confirmationText(order: OrderRow) {
+  const items = (order.items || []).map((item, index) => {
+    const qty = Number(item.qty) || 0
+    const price = item.price_text || (item.price == null ? 'Liên hệ giá' : money(Number(item.price)))
+    return `${index + 1}. ${item.name || 'Sản phẩm'} ×${qty} — ${price}`
+  })
+  const lines = [
+    `SKY'S HOUSE · XÁC NHẬN ĐƠN #${order.id}`,
+    `Khách: ${order.customer_name}`,
+    `SĐT: ${order.customer_phone}`,
+    '',
+    ...items,
+    '',
+    `Tạm tính: ${subtotalLabel(order)}`,
+    `Phí giao hàng: ${money(Number(order.shipping_fee || 0))}`,
+    `TỔNG CHỐT: ${order.final_total != null ? money(order.final_total) : 'Chưa chốt'}`,
+    order.customer_note ? `Giao nhận / ghi chú: ${order.customer_note}` : '',
+    '',
+    'Sky’s house cảm ơn ní. Nhờ ní kiểm tra lại thông tin đơn giúp mình nhé.',
+  ].filter(Boolean)
+  return lines.join('\n')
+}
+
+async function copyConfirmation(id: number) {
+  const order = orders.find(item => item.id === id)
+  if (!order) return
+  const text = confirmationText(order)
+  try {
+    await navigator.clipboard.writeText(text)
+    noticeText = `Đã sao chép xác nhận đơn #${id}. Mở Zalo và Ctrl+V để gửi khách.`
+    noticeState = 'ok'
+  } catch {
+    noticeText = 'Trình duyệt không cho sao chép tự động. Hãy thử lại hoặc cấp quyền clipboard.'
+    noticeState = 'error'
+  }
+  renderPanel()
+}
+
 function ensurePanel() {
   if (panelRoot) return panelRoot
   panelRoot = document.createElement('div')
@@ -292,6 +418,16 @@ function ensurePanel() {
     }
     if (target.closest('[data-orders-refresh]')) {
       void loadOrders(false)
+      return
+    }
+    const settlementSave = target.closest<HTMLElement>('[data-order-settlement-save]')
+    if (settlementSave) {
+      void saveSettlement(Number(settlementSave.dataset.orderSettlementSave))
+      return
+    }
+    const copyConfirmationButton = target.closest<HTMLElement>('[data-order-copy-confirmation]')
+    if (copyConfirmationButton) {
+      void copyConfirmation(Number(copyConfirmationButton.dataset.orderCopyConfirmation))
       return
     }
     const filterButton = target.closest<HTMLElement>('[data-order-filter]')
