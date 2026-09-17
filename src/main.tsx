@@ -6,6 +6,7 @@ import { installCartFeedback } from './cart-feedback'
 import { installCartCustomerInfo } from './cart-customer-info'
 import { installQuickShop } from './quick-shop'
 import { installSalePricing } from './sale-pricing'
+import { installSaleVisualPolish } from './sale-visual-polish'
 import './index.css'
 import './mobile-fixes.css'
 import './typography-fixes.css'
@@ -26,6 +27,7 @@ if (!location.pathname.startsWith('/admin')) {
   installCartFeedback()
   installCartCustomerInfo()
   installQuickShop()
+  installSaleVisualPolish()
 }
 
 ReactDOM.createRoot(root).render(<React.StrictMode>{screen}</React.StrictMode>)
