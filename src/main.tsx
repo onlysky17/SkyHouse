@@ -19,6 +19,7 @@ import './cart-customer-info.css'
 import './quick-shop.css'
 import './sale-pricing.css'
 import './admin-orders.css'
+import './admin-order-settlement.css'
 
 const root = document.getElementById('root')!
 const screen = location.pathname.startsWith('/admin') ? <Admin /> : <Storefront />
