@@ -87,7 +87,7 @@ function buildRelated() {
     button.className = 'relatedItem'
     const img = card.querySelector<HTMLImageElement>('.cardImg img')?.src || ''
     const name = cardName(card)
-    const price = text(card.querySelector('.cardBottom b'))
+    const price = text(card.querySelector('.cardBottom .saleCurrent')) || text(card.querySelector('.cardBottom b'))
     button.innerHTML = `<img src="${img}" alt=""><span><small>${cardCategory(card)}</small><b>${name}</b><em>${price}</em></span><i>→</i>`
     button.addEventListener('click', () => {
       document.querySelector<HTMLButtonElement>('.modal .close')?.click()

@@ -1,0 +1,82 @@
+/* Sale/original-price presentation. */
+.saleBadge{
+  position:absolute;
+  z-index:6;
+  left:12px;
+  bottom:12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:48px;
+  min-height:28px;
+  padding:6px 10px;
+  border:1px solid rgba(255,255,255,.34);
+  border-radius:999px;
+  background:rgba(210,67,31,.94);
+  color:white;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+  backdrop-filter:blur(10px);
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:.05em;
+  pointer-events:none;
+}
+
+.salePrice{
+  display:flex !important;
+  align-items:baseline;
+  flex-wrap:wrap;
+  gap:7px;
+  white-space:normal !important;
+}
+.salePrice .saleCurrent{color:inherit}
+.salePrice del{
+  opacity:.42;
+  color:inherit;
+  font-size:.62em;
+  font-weight:700;
+  text-decoration-thickness:1px;
+}
+.cardBottom .salePrice,
+.cardBottom b.salePrice{gap:5px}
+.cardBottom b.salePrice del{font-size:11px;color:#6f655f}
+.modalPrice.salePrice{gap:10px}
+.modalPrice.salePrice del{font-size:16px;color:#6f655f}
+.featured strong.salePrice{justify-content:flex-end}
+.highlightCopy b.salePrice{align-items:flex-start;flex-direction:column;gap:2px}
+.highlightCopy b.salePrice del{font-size:10px}
+
+.relatedItem{position:relative}
+.relatedItem>.saleBadge{
+  left:7px;
+  bottom:auto;
+  top:7px;
+  min-width:36px;
+  min-height:20px;
+  padding:4px 6px;
+  font-size:7px;
+}
+
+.saleCompareField small{
+  display:block;
+  margin-top:6px;
+  color:rgba(37,23,15,.52);
+  font-size:10px;
+  font-weight:700;
+  line-height:1.35;
+}
+.saleCompareField small.isSale{color:#c44d22}
+.adminSaleFlag{
+  display:block;
+  margin-top:4px;
+  color:#d34c21 !important;
+  font-weight:900 !important;
+  letter-spacing:.04em;
+}
+
+@media(max-width:767px){
+  .saleBadge{left:10px;bottom:10px;min-width:44px;min-height:25px;padding:5px 8px;font-size:9px}
+  .modalPrice.salePrice{align-items:flex-start;flex-direction:column;gap:1px}
+  .featured strong.salePrice{justify-content:flex-start}
+}
