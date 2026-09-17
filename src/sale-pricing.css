@@ -36,24 +36,32 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  position:static!important;
   width:max-content;
   max-width:100%;
   min-height:24px;
-  padding:5px 9px;
+  padding:5px 10px;
   border:1px solid rgba(205,72,32,.18);
   border-radius:999px;
-  background:#d65323;
+  background:#e14d1c;
   color:#fff;
-  box-shadow:0 6px 18px rgba(164,58,25,.14);
+  box-shadow:0 7px 18px rgba(164,58,25,.16);
   font-size:9px;
   font-style:normal;
-  font-weight:900;
+  font-weight:950;
   line-height:1;
   letter-spacing:.07em;
   text-transform:uppercase;
 }
-.cardBody>.saleInlineBadge{margin:2px 0 4px}
-.modalCopy>.saleInlineBadge{margin:2px 0 8px}
+.cardBody>.saleInlineBadge{
+  display:flex!important;
+  clear:both;
+  margin:2px 0 12px;
+}
+.modalCopy>.saleInlineBadge{
+  display:flex!important;
+  margin:8px 0 12px;
+}
 .highlightCopy>.saleInlineBadge{margin:5px 0 0}
 .featured>.saleInlineBadge{margin-left:auto;flex:0 0 auto}
 .relatedItem span>.saleInlineBadge{margin:3px 0 2px;padding:3px 6px;min-height:18px;font-size:7px}
@@ -66,28 +74,48 @@
   white-space:normal!important;
 }
 .salePrice .saleCurrent{
-  color:#d94f1f!important;
-  font-weight:900!important;
+  color:#e24b16!important;
+  font-weight:950!important;
+  letter-spacing:-.02em;
 }
 .salePrice del{
   opacity:1;
-  color:rgba(37,23,15,.52)!important;
+  color:rgba(37,23,15,.60)!important;
   font-size:.64em;
-  font-weight:700;
-  text-decoration-color:rgba(37,23,15,.46);
+  font-weight:800;
+  text-decoration-color:rgba(37,23,15,.52);
   text-decoration-thickness:1.5px;
 }
 .cardBottom .salePrice,
-.cardBottom b.salePrice{gap:7px}
-.cardBottom b.salePrice .saleCurrent{font-size:18px}
-.cardBottom b.salePrice del{font-size:11px;color:#756a63!important}
-.modalPrice.salePrice{gap:10px;align-items:baseline}
-.modalPrice.salePrice .saleCurrent{color:#d94f1f!important}
-.modalPrice.salePrice del{font-size:16px;color:#766a62!important}
+.cardBottom b.salePrice{
+  gap:8px;
+  min-width:0;
+  flex:1 1 auto;
+}
+.cardBottom b.salePrice .saleCurrent{
+  font-size:22px!important;
+  line-height:1.04;
+}
+.cardBottom b.salePrice del{
+  font-size:11px!important;
+  color:#6f625a!important;
+}
+.cardBottom>span{flex:0 0 auto}
+.modalPrice.salePrice{gap:11px;align-items:baseline}
+.modalPrice.salePrice .saleCurrent{
+  color:#e24b16!important;
+  font-size:clamp(34px,3.2vw,42px)!important;
+  line-height:1;
+}
+.modalPrice.salePrice del{
+  font-size:14px!important;
+  color:#6f625a!important;
+}
 .featured strong.salePrice{justify-content:flex-end}
 .highlightCopy b.salePrice{align-items:flex-start;flex-direction:column;gap:3px}
-.highlightCopy b.salePrice del{font-size:10px;color:rgba(255,255,255,.68)!important}
-.bestSection .highlightCopy b.salePrice del{color:#766a62!important}
+.highlightCopy b.salePrice .saleCurrent{font-size:18px}
+.highlightCopy b.salePrice del{font-size:10px;color:rgba(255,255,255,.74)!important}
+.bestSection .highlightCopy b.salePrice del{color:#6f625a!important}
 
 .relatedItem{position:relative}
 
@@ -125,7 +153,11 @@
 }
 
 @media(max-width:767px){
-  .modalPrice.salePrice{align-items:flex-start;flex-direction:row;gap:8px}
+  .cardBody>.saleInlineBadge{margin:4px 0 12px}
+  .cardBottom b.salePrice .saleCurrent{font-size:23px!important}
+  .modalPrice.salePrice{align-items:baseline;flex-direction:row;gap:9px}
+  .modalPrice.salePrice .saleCurrent{font-size:34px!important}
+  .modalPrice.salePrice del{font-size:13px!important}
   .featured strong.salePrice{justify-content:flex-start}
   .featured>.saleInlineBadge{margin-left:0}
   .saleInlineBadge{font-size:8px;min-height:22px;padding:5px 8px}

@@ -27,7 +27,7 @@ function polishCards() {
   document.querySelectorAll<HTMLElement>('.card').forEach(card => {
     const source = card.querySelector('.cardImg > .saleBadge')
     const body = card.querySelector<HTMLElement>('.cardBody')
-    syncInlineBadge(source, body, body?.querySelector('h3'))
+    syncInlineBadge(source, body, body?.querySelector('.cardBottom'))
   })
 }
 
