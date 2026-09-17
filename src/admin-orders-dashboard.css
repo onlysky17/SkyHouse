@@ -1,0 +1,49 @@
+.adminOrdersSummary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 18px;background:#f8f1e7;border-bottom:1px solid rgba(36,22,15,.08)}
+.adminOrdersKpi{min-width:0;padding:12px 14px;border:1px solid rgba(36,22,15,.08);border-radius:16px;background:#fff;box-shadow:0 8px 22px rgba(68,43,23,.035)}
+.adminOrdersKpi small{display:block;margin-bottom:5px;color:rgba(36,22,15,.48);font-size:8px;font-weight:900;letter-spacing:.10em;text-transform:uppercase}
+.adminOrdersKpi strong{display:block;color:#24160f;font-family:'Playfair Display',Georgia,serif;font-size:26px;line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adminOrdersKpi span{display:block;margin-top:5px;color:rgba(36,22,15,.48);font-size:9px;font-weight:700}
+.adminOrdersKpi.isNew{background:#fff7f0;border-color:rgba(214,92,44,.18)}
+.adminOrdersKpi.isNew strong{color:#c64f22}
+.adminOrdersKpi.isRevenue{background:#f0f6e9;border-color:rgba(78,118,58,.16)}
+.adminOrdersKpi.isRevenue strong{color:#456d34}
+
+.adminOrderTools{display:grid;grid-template-columns:minmax(260px,1fr) auto auto;gap:10px;align-items:center;padding:10px 18px;background:#fffdf9;border-bottom:1px solid rgba(36,22,15,.08)}
+.adminOrderSearch{display:flex;align-items:center;gap:8px;min-width:0;height:40px;padding:0 10px;border:1px solid rgba(36,22,15,.12);border-radius:13px;background:#fff;color:rgba(36,22,15,.55)}
+.adminOrderSearch>span{font-size:18px;line-height:1;flex:0 0 auto}
+.adminOrderSearch input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#24160f;font:inherit;font-size:12px;font-weight:700}
+.adminOrderSearch input::placeholder{color:rgba(36,22,15,.36)}
+.adminOrderSearch button{display:grid;place-items:center;width:26px;height:26px;padding:0;border:0;border-radius:999px;background:rgba(36,22,15,.07);color:#24160f;font-size:16px;cursor:pointer}
+.adminOrderPeriods{display:flex;gap:6px;overflow:auto;scrollbar-width:none}
+.adminOrderPeriods::-webkit-scrollbar{display:none}
+.adminOrderPeriods button,.adminOrderToolEnd button{min-height:38px;border:1px solid rgba(36,22,15,.11);border-radius:999px;background:#fff;color:#4b3930;padding:7px 11px;font-size:10px;font-weight:850;white-space:nowrap;cursor:pointer}
+.adminOrderPeriods button.active{background:#24160f;color:#fff;border-color:#24160f}
+.adminOrderToolEnd{display:flex;align-items:center;justify-content:flex-end;gap:8px;white-space:nowrap}
+.adminOrderToolEnd span{color:rgba(36,22,15,.47);font-size:9px;font-weight:800}
+.adminOrderToolEnd button{background:#f4eadc;border-color:rgba(36,22,15,.10);color:#24160f}
+.adminOrderToolEnd button:hover{background:#eadac7}
+
+@media(max-width:1100px){
+  .adminOrdersSummary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adminOrderTools{grid-template-columns:minmax(220px,1fr) auto}
+  .adminOrderToolEnd{grid-column:1/-1;justify-content:space-between}
+}
+
+@media(max-width:700px){
+  .adminOrdersSummary{gap:7px;padding:9px 10px}
+  .adminOrdersKpi{padding:10px;border-radius:13px}
+  .adminOrdersKpi strong{font-size:21px}
+  .adminOrdersKpi span{font-size:8px}
+  .adminOrderTools{grid-template-columns:1fr;padding:9px 10px;gap:8px}
+  .adminOrderSearch{height:42px}
+  .adminOrderSearch input{font-size:16px}
+  .adminOrderPeriods{width:100%}
+  .adminOrderPeriods button{flex:0 0 auto}
+  .adminOrderToolEnd{grid-column:auto}
+}
+
+@media(max-width:420px){
+  .adminOrdersSummary{grid-template-columns:1fr 1fr}
+  .adminOrdersKpi strong{font-size:19px}
+  .adminOrdersKpi.isRevenue strong{font-size:17px}
+}
