@@ -1,8 +1,12 @@
 import { supabase } from './lib/supabase'
 
+type DeliveryMethod = 'delivery' | 'pickup'
+
 type CustomerInfo = {
   name: string
   phone: string
+  deliveryMethod: DeliveryMethod
+  address: string
   note: string
 }
 
@@ -23,7 +27,7 @@ type OrderSnapshot = {
 }
 
 const CUSTOMER_INFO_KEY = 'skyhouse_customer_info_v1'
-const emptyInfo: CustomerInfo = { name: '', phone: '', note: '' }
+const emptyInfo: CustomerInfo = { name: '', phone: '', deliveryMethod: 'delivery', address: '', note: '' }
 let lastSavedFingerprint = ''
 let lastSavedAt = 0
 
@@ -35,6 +39,8 @@ function loadInfo(): CustomerInfo {
     return {
       name: typeof parsed.name === 'string' ? parsed.name : '',
       phone: typeof parsed.phone === 'string' ? parsed.phone : '',
+      deliveryMethod: parsed.deliveryMethod === 'pickup' ? 'pickup' : 'delivery',
+      address: typeof parsed.address === 'string' ? parsed.address : '',
       note: typeof parsed.note === 'string' ? parsed.note : '',
     }
   } catch {
@@ -46,14 +52,27 @@ function saveInfo(info: CustomerInfo) {
   try { localStorage.setItem(CUSTOMER_INFO_KEY, JSON.stringify(info)) } catch { /* ignore storage errors */ }
 }
 
+function deliveryLabel(info: CustomerInfo) {
+  return info.deliveryMethod === 'pickup' ? 'Tự đến lấy' : 'Giao tận nơi'
+}
+
 function customerPrefix(info: CustomerInfo) {
   const lines = [
     'THÔNG TIN NGƯỜI ĐẶT',
     `Tên khách: ${info.name.trim()}`,
     `Số điện thoại: ${info.phone.trim()}`,
+    `Nhận hàng: ${deliveryLabel(info)}`,
+    info.deliveryMethod === 'delivery' ? `Địa chỉ: ${info.address.trim()}` : '',
     info.note.trim() ? `Ghi chú: ${info.note.trim()}` : '',
   ].filter(Boolean)
   return `${lines.join('\n')}\n\n`
+}
+
+function adminNote(info: CustomerInfo) {
+  const parts = [deliveryLabel(info)]
+  if (info.deliveryMethod === 'delivery' && info.address.trim()) parts.push(`Địa chỉ: ${info.address.trim()}`)
+  if (info.note.trim()) parts.push(`Ghi chú: ${info.note.trim()}`)
+  return parts.join(' · ')
 }
 
 function readInfo(drawer?: Element | null): CustomerInfo {
@@ -61,8 +80,10 @@ function readInfo(drawer?: Element | null): CustomerInfo {
   if (!drawer) return stored
   const name = drawer.querySelector<HTMLInputElement>('[data-customer-field="name"]')?.value ?? stored.name
   const phone = drawer.querySelector<HTMLInputElement>('[data-customer-field="phone"]')?.value ?? stored.phone
+  const deliveryMethod = (drawer.querySelector<HTMLSelectElement>('[data-customer-field="deliveryMethod"]')?.value === 'pickup' ? 'pickup' : 'delivery') as DeliveryMethod
+  const address = drawer.querySelector<HTMLInputElement>('[data-customer-field="address"]')?.value ?? stored.address
   const note = drawer.querySelector<HTMLTextAreaElement>('[data-customer-field="note"]')?.value ?? stored.note
-  return { name, phone, note }
+  return { name, phone, deliveryMethod, address, note }
 }
 
 function getValidationNotice(drawer: Element | null) {
@@ -84,14 +105,17 @@ function setSendNotice(drawer: Element | null, text: string, state: 'ok' | 'erro
 function validateInfo(drawer: Element | null, info: CustomerInfo) {
   const nameInput = drawer?.querySelector<HTMLInputElement>('[data-customer-field="name"]') || null
   const phoneInput = drawer?.querySelector<HTMLInputElement>('[data-customer-field="phone"]') || null
+  const addressInput = drawer?.querySelector<HTMLInputElement>('[data-customer-field="address"]') || null
   const notice = getValidationNotice(drawer)
 
   const missingName = !info.name.trim()
   const missingPhone = !info.phone.trim()
+  const missingAddress = info.deliveryMethod === 'delivery' && !info.address.trim()
   nameInput?.toggleAttribute('aria-invalid', missingName)
   phoneInput?.toggleAttribute('aria-invalid', missingPhone)
+  addressInput?.toggleAttribute('aria-invalid', missingAddress)
 
-  if (!missingName && !missingPhone) {
+  if (!missingName && !missingPhone && !missingAddress) {
     if (notice) {
       notice.textContent = ''
       notice.hidden = true
@@ -100,15 +124,16 @@ function validateInfo(drawer: Element | null, info: CustomerInfo) {
   }
 
   if (notice) {
-    notice.textContent = missingName && missingPhone
-      ? 'Nhập tên khách và số điện thoại trước khi gửi đơn nhé.'
-      : missingName
-        ? 'Nhập tên khách trước khi gửi đơn nhé.'
-        : 'Nhập số điện thoại trước khi gửi đơn nhé.'
+    const missing = [
+      missingName ? 'tên khách' : '',
+      missingPhone ? 'số điện thoại' : '',
+      missingAddress ? 'địa chỉ nhận hàng' : '',
+    ].filter(Boolean)
+    notice.textContent = `Nhập ${missing.join(', ')} trước khi gửi đơn nhé.`
     notice.hidden = false
   }
 
-  const firstMissing = missingName ? nameInput : phoneInput
+  const firstMissing = missingName ? nameInput : missingPhone ? phoneInput : addressInput
   firstMissing?.focus({ preventScroll: true })
   firstMissing?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   return false
@@ -214,7 +239,7 @@ async function saveOrder(drawer: Element | null, info: CustomerInfo) {
   const payload = {
     customer_name: info.name.trim(),
     customer_phone: info.phone.trim(),
-    customer_note: info.note.trim(),
+    customer_note: adminNote(info),
     items: snapshot.items,
     subtotal_known: snapshot.subtotal_known,
     has_contact_price: snapshot.has_contact_price,
@@ -260,6 +285,17 @@ function enhanceDrawer(drawer: HTMLElement) {
         <span>Số điện thoại <em>*</em></span>
         <input data-customer-field="phone" inputmode="tel" autocomplete="tel" placeholder="Số để Sky liên hệ" required />
       </label>
+      <label>
+        <span>Hình thức nhận <em>*</em></span>
+        <select data-customer-field="deliveryMethod">
+          <option value="delivery">Giao tận nơi</option>
+          <option value="pickup">Tự đến lấy</option>
+        </select>
+      </label>
+      <label class="cartCustomerAddress">
+        <span>Địa chỉ nhận hàng <em>*</em></span>
+        <input data-customer-field="address" autocomplete="street-address" placeholder="Số nhà, đường, phường/xã, quận/huyện..." />
+      </label>
       <label class="cartCustomerNote">
         <span>Ghi chú</span>
         <textarea data-customer-field="note" rows="2" placeholder="Ví dụ: giao buổi chiều, gọi trước khi giao..."></textarea>
@@ -278,23 +314,49 @@ function enhanceDrawer(drawer: HTMLElement) {
 
   const nameInput = block.querySelector<HTMLInputElement>('[data-customer-field="name"]')!
   const phoneInput = block.querySelector<HTMLInputElement>('[data-customer-field="phone"]')!
+  const deliverySelect = block.querySelector<HTMLSelectElement>('[data-customer-field="deliveryMethod"]')!
+  const addressLabel = block.querySelector<HTMLElement>('.cartCustomerAddress')!
+  const addressInput = block.querySelector<HTMLInputElement>('[data-customer-field="address"]')!
   const noteInput = block.querySelector<HTMLTextAreaElement>('[data-customer-field="note"]')!
   nameInput.value = info.name
   phoneInput.value = info.phone
+  deliverySelect.value = info.deliveryMethod
+  addressInput.value = info.address
   noteInput.value = info.note
 
+  const syncDeliveryUi = () => {
+    const isPickup = deliverySelect.value === 'pickup'
+    addressLabel.hidden = isPickup
+    addressInput.required = !isPickup
+    if (isPickup) addressInput.removeAttribute('aria-invalid')
+  }
+
   const persist = () => {
-    saveInfo({ name: nameInput.value, phone: phoneInput.value, note: noteInput.value })
+    const current: CustomerInfo = {
+      name: nameInput.value,
+      phone: phoneInput.value,
+      deliveryMethod: deliverySelect.value === 'pickup' ? 'pickup' : 'delivery',
+      address: addressInput.value,
+      note: noteInput.value,
+    }
+    saveInfo(current)
+    syncDeliveryUi()
     if (nameInput.value.trim()) nameInput.removeAttribute('aria-invalid')
     if (phoneInput.value.trim()) phoneInput.removeAttribute('aria-invalid')
+    if (current.deliveryMethod === 'pickup' || addressInput.value.trim()) addressInput.removeAttribute('aria-invalid')
     const notice = block.querySelector<HTMLElement>('[data-customer-validation]')
-    if (notice && nameInput.value.trim() && phoneInput.value.trim()) {
+    const complete = nameInput.value.trim() && phoneInput.value.trim() && (current.deliveryMethod === 'pickup' || addressInput.value.trim())
+    if (notice && complete) {
       notice.textContent = ''
       notice.hidden = true
     }
   }
+
+  syncDeliveryUi()
   nameInput.addEventListener('input', persist)
   phoneInput.addEventListener('input', persist)
+  deliverySelect.addEventListener('change', persist)
+  addressInput.addEventListener('input', persist)
   noteInput.addEventListener('input', persist)
 }
 
@@ -368,7 +430,7 @@ async function copyAugmentedOrder(button: HTMLButtonElement) {
     else if (!copyTextFallback(text)) throw new Error('clipboard unavailable')
     const original = button.textContent || 'Sao chép danh sách'
     button.textContent = 'Đã sao chép ✓'
-    setSendNotice(drawer, 'Đã sao chép đầy đủ thông tin người đặt và danh sách món.', 'ok')
+    setSendNotice(drawer, 'Đã sao chép đầy đủ thông tin người đặt, địa chỉ nhận hàng và danh sách món.', 'ok')
     window.setTimeout(() => { button.textContent = original }, 1800)
   } catch {
     setSendNotice(drawer, 'Không sao chép được tự động. Hãy thử lại hoặc cho phép trình duyệt truy cập clipboard.', 'error')
