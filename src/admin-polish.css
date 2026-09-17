@@ -95,6 +95,96 @@
   font-weight:700;
 }
 
+.adminCatalogFilters{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  padding:12px 14px 10px;
+  border-top:1px solid rgba(36,22,15,.07);
+  border-bottom:1px solid rgba(36,22,15,.07);
+  background:rgba(255,255,255,.40);
+}
+
+.adminCatalogFilters button{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  min-width:0;
+  min-height:38px;
+  padding:9px 10px;
+  border:1px solid rgba(36,22,15,.09);
+  border-radius:12px;
+  background:#fff;
+  color:rgba(57,42,33,.72);
+  font-size:11px;
+  font-weight:800;
+  line-height:1.2;
+  text-align:left;
+  cursor:pointer;
+  transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease;
+}
+
+.adminCatalogFilters button:hover{
+  transform:translateY(-1px);
+  border-color:rgba(36,22,15,.16);
+}
+
+.adminCatalogFilters button.active{
+  border-color:rgba(36,22,15,.88);
+  background:var(--sky-ink);
+  color:#fff;
+}
+
+.adminCatalogFilters button span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.adminCatalogFilters button b{
+  display:grid;
+  place-items:center;
+  min-width:25px;
+  height:22px;
+  padding:0 6px;
+  border-radius:999px;
+  background:rgba(36,22,15,.08);
+  color:inherit;
+  font-size:10px;
+  font-variant-numeric:tabular-nums;
+}
+
+.adminCatalogFilters button.active b{
+  background:rgba(255,255,255,.16);
+}
+
+.adminCatalogSummary{
+  padding:9px 16px 7px;
+  color:rgba(57,42,33,.56);
+  font-size:10px;
+  font-weight:700;
+  line-height:1.4;
+}
+
+.adminCatalogSummary b{
+  color:var(--sky-ink);
+}
+
+.adminCatalogEmpty{
+  margin:10px 12px;
+  padding:16px 12px;
+  border:1px dashed rgba(36,22,15,.14);
+  border-radius:14px;
+  color:rgba(57,42,33,.52);
+  background:rgba(255,255,255,.52);
+  font-size:11px;
+  font-weight:700;
+  line-height:1.4;
+  text-align:center;
+}
+
 .adminToggles{
   display:grid;
   grid-template-columns:repeat(2,minmax(220px,1fr));
@@ -183,6 +273,9 @@
   .adminImageTools{
     width:100%;
   }
+  .adminCatalogFilters{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
   .adminToggles{
     grid-template-columns:1fr 1fr;
   }
@@ -198,6 +291,14 @@
   }
   .adminImageTools{
     flex-wrap:wrap;
+  }
+  .adminCatalogFilters{
+    grid-template-columns:1fr 1fr;
+    padding:10px;
+  }
+  .adminCatalogFilters button{
+    min-height:42px;
+    padding:9px;
   }
   .adminToggles{
     grid-template-columns:1fr;
