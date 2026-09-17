@@ -4,6 +4,8 @@
   z-index:6;
   left:12px;
   bottom:12px;
+  top:auto;
+  right:auto;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -23,45 +25,76 @@
   pointer-events:none;
 }
 
+/* Keep the generated image badges as the sale data source, but do not cover product photos. */
+.cardImg>.saleBadge,
+.modalImageWrap>.saleBadge,
+.highlightImage>.saleBadge,
+.productFloat>.saleBadge,
+.relatedItem>.saleBadge{display:none!important}
+
+.saleInlineBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  max-width:100%;
+  min-height:24px;
+  padding:5px 9px;
+  border:1px solid rgba(205,72,32,.18);
+  border-radius:999px;
+  background:#d65323;
+  color:#fff;
+  box-shadow:0 6px 18px rgba(164,58,25,.14);
+  font-size:9px;
+  font-style:normal;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.cardBody>.saleInlineBadge{margin:2px 0 4px}
+.modalCopy>.saleInlineBadge{margin:2px 0 8px}
+.highlightCopy>.saleInlineBadge{margin:5px 0 0}
+.featured>.saleInlineBadge{margin-left:auto;flex:0 0 auto}
+.relatedItem span>.saleInlineBadge{margin:3px 0 2px;padding:3px 6px;min-height:18px;font-size:7px}
+
 .salePrice{
-  display:flex !important;
+  display:flex!important;
   align-items:baseline;
   flex-wrap:wrap;
-  gap:7px;
-  white-space:normal !important;
+  gap:8px;
+  white-space:normal!important;
 }
-.salePrice .saleCurrent{color:inherit}
+.salePrice .saleCurrent{
+  color:#d94f1f!important;
+  font-weight:900!important;
+}
 .salePrice del{
-  opacity:.42;
-  color:inherit;
-  font-size:.62em;
+  opacity:1;
+  color:rgba(37,23,15,.52)!important;
+  font-size:.64em;
   font-weight:700;
-  text-decoration-thickness:1px;
+  text-decoration-color:rgba(37,23,15,.46);
+  text-decoration-thickness:1.5px;
 }
 .cardBottom .salePrice,
-.cardBottom b.salePrice{gap:5px}
-.cardBottom b.salePrice del{font-size:11px;color:#6f655f}
-.modalPrice.salePrice{gap:10px}
-.modalPrice.salePrice del{font-size:16px;color:#6f655f}
+.cardBottom b.salePrice{gap:7px}
+.cardBottom b.salePrice .saleCurrent{font-size:18px}
+.cardBottom b.salePrice del{font-size:11px;color:#756a63!important}
+.modalPrice.salePrice{gap:10px;align-items:baseline}
+.modalPrice.salePrice .saleCurrent{color:#d94f1f!important}
+.modalPrice.salePrice del{font-size:16px;color:#766a62!important}
 .featured strong.salePrice{justify-content:flex-end}
-.highlightCopy b.salePrice{align-items:flex-start;flex-direction:column;gap:2px}
-.highlightCopy b.salePrice del{font-size:10px}
+.highlightCopy b.salePrice{align-items:flex-start;flex-direction:column;gap:3px}
+.highlightCopy b.salePrice del{font-size:10px;color:rgba(255,255,255,.68)!important}
+.bestSection .highlightCopy b.salePrice del{color:#766a62!important}
 
 .relatedItem{position:relative}
-.relatedItem>.saleBadge{
-  left:7px;
-  bottom:auto;
-  top:7px;
-  min-width:36px;
-  min-height:20px;
-  padding:4px 6px;
-  font-size:7px;
-}
 
 .saleCompareField small{
   display:block;
   margin-top:6px;
-  color:rgba(37,23,15,.52);
+  color:rgba(37,23,15,.58);
   font-size:10px;
   font-weight:700;
   line-height:1.35;
@@ -70,13 +103,30 @@
 .adminSaleFlag{
   display:block;
   margin-top:4px;
-  color:#d34c21 !important;
-  font-weight:900 !important;
+  color:#d34c21!important;
+  font-weight:900!important;
   letter-spacing:.04em;
 }
 
+/* Keep the pricing editor stable instead of pushing Unit onto a lonely row. */
+.adminLayout>*{min-width:0}
+.adminEditor{min-width:0;overflow:hidden}
+.adminFormGrid>*{min-width:0}
+@media(min-width:901px){
+  .adminLayout{grid-template-columns:minmax(300px,360px) minmax(0,1fr)}
+  .adminFormGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .adminFormGrid .wide{grid-column:1/-1}
+  .adminFormGrid .adminFileField{grid-column:span 2}
+  .saleCompareField{grid-column:auto!important;align-content:start}
+}
+
+@media(max-width:900px){
+  .saleCompareField{grid-column:auto!important}
+}
+
 @media(max-width:767px){
-  .saleBadge{left:10px;bottom:10px;min-width:44px;min-height:25px;padding:5px 8px;font-size:9px}
-  .modalPrice.salePrice{align-items:flex-start;flex-direction:column;gap:1px}
+  .modalPrice.salePrice{align-items:flex-start;flex-direction:row;gap:8px}
   .featured strong.salePrice{justify-content:flex-start}
+  .featured>.saleInlineBadge{margin-left:0}
+  .saleInlineBadge{font-size:8px;min-height:22px;padding:5px 8px}
 }
