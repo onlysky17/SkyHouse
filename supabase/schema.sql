@@ -46,11 +46,19 @@ create table if not exists public.orders (
   items jsonb not null default '[]'::jsonb,
   subtotal_known bigint not null default 0 check (subtotal_known >= 0),
   has_contact_price boolean not null default false,
+  shipping_fee bigint not null default 0 check (shipping_fee >= 0),
+  final_total bigint check (final_total is null or final_total >= 0),
+  admin_note text not null default '',
   status text not null default 'new' check (status in ('new','confirmed','shipping','completed','cancelled')),
   source text not null default 'zalo',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.orders
+  add column if not exists shipping_fee bigint not null default 0 check (shipping_fee >= 0),
+  add column if not exists final_total bigint check (final_total is null or final_total >= 0),
+  add column if not exists admin_note text not null default '';
 
 create index if not exists orders_status_created_at_idx on public.orders (status, created_at desc);
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
