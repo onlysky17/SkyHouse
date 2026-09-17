@@ -1,0 +1,271 @@
+/* Best Seller + Signature presentation for storefront and admin. */
+.productBadges{
+  position:absolute;
+  z-index:5;
+  top:12px;
+  right:12px;
+  left:auto;
+  bottom:auto;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:6px;
+  pointer-events:none;
+}
+
+.productBadges span,
+.cardImg .productBadges span{
+  position:static;
+  display:inline-flex;
+  align-items:center;
+  width:auto;
+  min-height:28px;
+  padding:6px 9px;
+  border:1px solid rgba(255,255,255,.32);
+  border-radius:999px;
+  box-shadow:0 8px 24px rgba(0,0,0,.14);
+  backdrop-filter:blur(12px);
+  color:#fff;
+  font-size:9px;
+  font-style:normal;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.productBadges .badgeBest,
+.cardImg .productBadges .badgeBest{
+  background:rgba(183,103,44,.90);
+}
+
+.productBadges .badgeSignature,
+.cardImg .productBadges .badgeSignature{
+  background:rgba(31,47,25,.88);
+}
+
+.productFloat .productBadges{
+  top:4%;
+  right:4%;
+}
+
+.highlightSection{
+  min-height:auto;
+  scroll-snap-align:start;
+  padding:96px 5vw 105px;
+  color:#25170f;
+  background:#f7f0e5;
+}
+
+.bestSection{
+  background:linear-gradient(145deg,#f8ead7 0%,#f3d3ab 48%,#c57845 160%);
+}
+
+.signatureSection{
+  background:linear-gradient(145deg,#1b2815 0%,#334c25 46%,#718b53 140%);
+  color:#fff;
+}
+
+.highlightHead{
+  max-width:1450px;
+  margin:0 auto 32px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(280px,520px);
+  align-items:end;
+  gap:38px;
+  border-bottom:1px solid currentColor;
+  padding-bottom:28px;
+}
+
+.highlightHead .over{
+  margin-bottom:12px;
+  color:#c25d2f;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+}
+
+.signatureSection .highlightHead .over{
+  color:#d5e6ba;
+}
+
+.highlightHead h2{
+  margin:0;
+  max-width:850px;
+  font-size:clamp(44px,5.5vw,78px);
+  line-height:1.02;
+  letter-spacing:-.035em;
+}
+
+.highlightHead p{
+  margin:0;
+  opacity:.65;
+  line-height:1.75;
+}
+
+.highlightGrid{
+  max-width:1450px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:18px;
+}
+
+.highlightCard{
+  overflow:hidden;
+  padding:0;
+  border:1px solid rgba(36,22,15,.08);
+  border-radius:26px;
+  background:rgba(255,255,255,.88);
+  color:#25170f;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:0 18px 55px rgba(69,42,22,.10);
+  transition:transform .25s ease,box-shadow .25s ease;
+}
+
+.signatureSection .highlightCard{
+  border-color:rgba(255,255,255,.12);
+  background:rgba(255,255,255,.09);
+  color:#fff;
+  box-shadow:0 22px 60px rgba(0,0,0,.22);
+}
+
+.highlightCard:hover{
+  transform:translateY(-4px);
+  box-shadow:0 26px 66px rgba(69,42,22,.16);
+}
+
+.highlightImage{
+  position:relative;
+  overflow:hidden;
+  aspect-ratio:4/3;
+  background:#e7dcc8;
+}
+
+.highlightImage img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transition:transform .5s ease;
+}
+
+.highlightCard:hover .highlightImage img{
+  transform:scale(1.045);
+}
+
+.highlightCopy{
+  padding:18px;
+}
+
+.highlightCopy>small{
+  opacity:.5;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+.highlightCopy h3{
+  min-height:52px;
+  margin:9px 0 16px;
+  font-size:22px;
+  line-height:1.18;
+}
+
+.highlightCopy>div{
+  display:flex;
+  align-items:flex-end;
+  gap:12px;
+  border-top:1px solid currentColor;
+  padding-top:13px;
+}
+
+.highlightCopy b{
+  color:#d65323;
+  font-size:15px;
+  line-height:1.25;
+}
+
+.signatureSection .highlightCopy b{
+  color:#e4efcf;
+}
+
+.highlightCopy span{
+  margin-left:auto;
+  opacity:.58;
+  font-size:9px;
+  font-weight:800;
+}
+
+.modalImageWrap{
+  position:relative;
+  min-height:560px;
+  overflow:hidden;
+  background:#e7dcc8;
+}
+
+.modalImageWrap>img{
+  display:block;
+  width:100%;
+  height:100%;
+  min-height:560px;
+  object-fit:cover;
+}
+
+.adminItemFlags{
+  display:block;
+  margin-top:4px;
+  color:#9b5b27 !important;
+  font-size:9px !important;
+  font-weight:900 !important;
+  line-height:1.25;
+  letter-spacing:.02em;
+  text-transform:none !important;
+  opacity:1 !important;
+}
+
+.adminToggleBest.on{
+  border-color:rgba(193,111,49,.36) !important;
+  background:rgba(255,239,219,.92) !important;
+}
+
+.adminToggleBest input[type="checkbox"]{
+  accent-color:#b7672c;
+}
+
+.adminToggleSignature.on{
+  border-color:rgba(54,89,39,.38) !important;
+  background:rgba(230,241,219,.92) !important;
+}
+
+.adminToggleSignature input[type="checkbox"]{
+  accent-color:#365927;
+}
+
+@media(max-width:1050px){
+  .highlightGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:767px){
+  .highlightSection{padding:76px 16px 82px}
+  .highlightHead{grid-template-columns:1fr;gap:16px;margin-bottom:22px;padding-bottom:22px}
+  .highlightHead h2{font-size:42px}
+  .highlightHead p{font-size:14px}
+  .highlightGrid{grid-template-columns:1fr 1fr;gap:12px}
+  .highlightCard{border-radius:20px}
+  .highlightCopy{padding:14px}
+  .highlightCopy h3{min-height:45px;font-size:18px}
+  .highlightCopy>div{display:grid;gap:6px}
+  .highlightCopy span{margin-left:0}
+  .modalImageWrap{min-height:300px;max-height:42vh}
+  .modalImageWrap>img{min-height:300px;max-height:42vh}
+}
+
+@media(max-width:520px){
+  .highlightGrid{grid-template-columns:1fr}
+  .highlightCopy h3{min-height:0}
+  .productBadges{top:9px;right:9px;gap:5px}
+  .productBadges span,.cardImg .productBadges span{min-height:25px;padding:5px 7px;font-size:8px}
+}
