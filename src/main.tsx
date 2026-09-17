@@ -7,6 +7,7 @@ import './mobile-fixes.css'
 import './typography-fixes.css'
 import './admin-polish.css'
 import './product-badges.css'
+import './cart.css'
 
 const root = document.getElementById('root')!
 const screen = location.pathname.startsWith('/admin') ? <Admin /> : <Storefront />
