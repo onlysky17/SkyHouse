@@ -1,0 +1,87 @@
+/* Final admin UI polish — loaded after the existing admin/mobile styles. */
+.adminPreview{
+  width:min(100%,520px);
+  max-height:380px;
+  margin:20px 0 16px;
+  border-radius:20px;
+  box-shadow:0 12px 32px rgba(55,35,20,.10);
+}
+
+.adminToggles{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(180px,220px));
+  gap:12px;
+  margin:16px 0 18px;
+  align-items:stretch;
+}
+
+.adminToggles label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:52px;
+  padding:12px 14px;
+  border:1px solid rgba(36,22,15,.10);
+  border-radius:16px;
+  background:rgba(255,255,255,.74);
+  color:var(--sky-ink);
+  font-size:13px;
+  font-weight:800;
+  line-height:1.25;
+  white-space:nowrap;
+  cursor:pointer;
+  box-shadow:0 6px 20px rgba(70,45,22,.05);
+}
+
+.adminToggles input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  margin:0;
+  flex:0 0 18px;
+  accent-color:#2f7df6;
+  cursor:pointer;
+}
+
+.adminActions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:2px;
+  flex-wrap:wrap;
+}
+
+.adminActions>button{
+  min-height:46px;
+  padding:12px 20px;
+}
+
+.adminMessage{
+  margin:14px 0 0;
+  line-height:1.45;
+}
+
+@media(max-width:700px){
+  .adminToggles{
+    grid-template-columns:1fr 1fr;
+  }
+  .adminToggles label{
+    min-width:0;
+    justify-content:flex-start;
+  }
+}
+
+@media(max-width:520px){
+  .adminToggles{
+    grid-template-columns:1fr;
+  }
+  .adminToggles label{
+    white-space:normal;
+  }
+  .adminActions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .adminActions>button{
+    width:100%;
+  }
+}
