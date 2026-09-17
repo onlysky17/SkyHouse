@@ -4,6 +4,7 @@ import Storefront from './Storefront'
 import Admin from './Admin'
 import { installCartFeedback } from './cart-feedback'
 import { installCartCustomerInfo } from './cart-customer-info'
+import { installQuickShop } from './quick-shop'
 import './index.css'
 import './mobile-fixes.css'
 import './typography-fixes.css'
@@ -12,6 +13,7 @@ import './product-badges.css'
 import './cart.css'
 import './cart-feedback.css'
 import './cart-customer-info.css'
+import './quick-shop.css'
 
 const root = document.getElementById('root')!
 const screen = location.pathname.startsWith('/admin') ? <Admin /> : <Storefront />
@@ -19,6 +21,7 @@ const screen = location.pathname.startsWith('/admin') ? <Admin /> : <Storefront 
 if (!location.pathname.startsWith('/admin')) {
   installCartFeedback()
   installCartCustomerInfo()
+  installQuickShop()
 }
 
 ReactDOM.createRoot(root).render(<React.StrictMode>{screen}</React.StrictMode>)
