@@ -37,14 +37,14 @@ function ensureSaleBadge(container: HTMLElement | null, row: SaleRow | null) {
     existing?.remove()
     return
   }
-  const pct = discount(row)
+  const nextText = `-${discount(row)}%`
   if (existing) {
-    existing.textContent = `-${pct}%`
+    if (existing.textContent !== nextText) existing.textContent = nextText
     return
   }
   const badge = document.createElement('span')
   badge.className = 'saleBadge'
-  badge.textContent = `-${pct}%`
+  badge.textContent = nextText
   container.appendChild(badge)
 }
 
@@ -54,10 +54,14 @@ function applySalePrice(priceEl: HTMLElement | null, row: SaleRow | null) {
     if (priceEl.dataset.saleBasePrice) {
       priceEl.textContent = priceEl.dataset.saleBasePrice
       delete priceEl.dataset.saleBasePrice
+      delete priceEl.dataset.saleApplied
       priceEl.classList.remove('salePrice')
     }
     return
   }
+
+  const appliedKey = `${row.price}|${row.compare_at_price}`
+  if (priceEl.dataset.saleApplied === appliedKey) return
 
   if (!priceEl.dataset.saleBasePrice) {
     priceEl.dataset.saleBasePrice = (priceEl.textContent || '').trim()
@@ -69,6 +73,7 @@ function applySalePrice(priceEl: HTMLElement | null, row: SaleRow | null) {
   const oldEl = priceEl.querySelector<HTMLElement>('del')
   if (currentEl) currentEl.textContent = current
   if (oldEl) oldEl.textContent = money(Number(row.compare_at_price))
+  priceEl.dataset.saleApplied = appliedKey
 }
 
 function enhanceStorefront() {
@@ -115,6 +120,11 @@ function findAdminPriceInput() {
   return priceLabel?.querySelector<HTMLInputElement>('input[type="number"]') || null
 }
 
+function setStatus(status: HTMLElement, text: string, sale: boolean) {
+  if (status.textContent !== text) status.textContent = text
+  status.classList.toggle('isSale', sale)
+}
+
 function updateAdminHint(field: HTMLElement, row: SaleRow | null) {
   const input = field.querySelector<HTMLInputElement>('input')
   const status = field.querySelector<HTMLElement>('[data-sale-admin-status]')
@@ -125,24 +135,20 @@ function updateAdminHint(field: HTMLElement, row: SaleRow | null) {
   const original = input.value === '' ? null : Number(input.value)
 
   if (original == null) {
-    status.textContent = 'Để trống nếu sản phẩm không giảm giá.'
-    status.classList.remove('isSale')
+    setStatus(status, 'Để trống nếu sản phẩm không giảm giá.', false)
     return
   }
   if (current == null || !Number.isFinite(Number(current))) {
-    status.textContent = 'Nhập giá bán trước để tính phần trăm giảm.'
-    status.classList.remove('isSale')
+    setStatus(status, 'Nhập giá bán trước để tính phần trăm giảm.', false)
     return
   }
   if (original <= Number(current)) {
-    status.textContent = 'Giá gốc phải cao hơn giá bán để hiện badge SALE.'
-    status.classList.remove('isSale')
+    setStatus(status, 'Giá gốc phải cao hơn giá bán để hiện badge SALE.', false)
     return
   }
 
   const pct = Math.max(1, Math.min(100, Math.round(((original - Number(current)) / original) * 100)))
-  status.textContent = `Sẽ hiển thị SALE -${pct}% · ${money(original)} → ${money(Number(current))}`
-  status.classList.add('isSale')
+  setStatus(status, `Sẽ hiển thị SALE -${pct}% · ${money(original)} → ${money(Number(current))}`, true)
 }
 
 async function saveAdminComparePrice(field: HTMLElement) {
@@ -154,16 +160,16 @@ async function saveAdminComparePrice(field: HTMLElement) {
 
   const value = input.value.trim() === '' ? null : Number(input.value)
   if (value != null && (!Number.isFinite(value) || value < 0)) {
-    status.textContent = 'Giá gốc không hợp lệ.'
+    setStatus(status, 'Giá gốc không hợp lệ.', false)
     return
   }
 
   input.disabled = true
-  status.textContent = 'Đang lưu giá gốc…'
+  setStatus(status, 'Đang lưu giá gốc…', false)
   const { error } = await supabase.from('products').update({ compare_at_price: value }).eq('id', id)
   input.disabled = false
   if (error) {
-    status.textContent = `Không lưu được giá gốc: ${error.message}`
+    setStatus(status, `Không lưu được giá gốc: ${error.message}`, false)
     return
   }
 
@@ -202,8 +208,7 @@ function syncAdminField() {
     if (!id) {
       input.value = ''
       input.disabled = true
-      status.textContent = 'Sản phẩm mới: lưu sản phẩm trước, sau đó mở lại để nhập giá gốc.'
-      status.classList.remove('isSale')
+      setStatus(status, 'Sản phẩm mới: lưu sản phẩm trước, sau đó mở lại để nhập giá gốc.', false)
     } else {
       const row = byId.get(id) || null
       input.disabled = false
@@ -227,7 +232,8 @@ function renderAdminSaleFlags() {
       flag.className = 'adminSaleFlag'
       button.querySelector('div')?.appendChild(flag)
     }
-    flag.textContent = `SALE -${discount(row)}%`
+    const nextText = `SALE -${discount(row)}%`
+    if (flag.textContent !== nextText) flag.textContent = nextText
   })
 }
 
