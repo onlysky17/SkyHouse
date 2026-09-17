@@ -1,0 +1,39 @@
+.adminOrderOps{display:grid;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(36,22,15,.08);background:rgba(255,255,255,.54)}
+.adminOrderOpsMetrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.adminOrderOpsMetrics>div{min-width:0;padding:10px 12px;border:1px solid rgba(36,22,15,.08);border-radius:15px;background:#fff;box-shadow:0 6px 18px rgba(68,43,23,.035)}
+.adminOrderOpsMetrics small{display:block;margin-bottom:4px;color:rgba(36,22,15,.48);font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.adminOrderOpsMetrics strong{display:block;color:#24160f;font-size:18px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adminOrderOpsMetrics .revenue strong{color:#d65c2c}
+.adminOrderOpsToolbar{display:grid;grid-template-columns:minmax(220px,1fr) auto auto auto;align-items:center;gap:8px}
+.adminOrderOpsSearch{display:flex;align-items:center;gap:7px;min-width:0;height:40px;padding:0 11px;border:1px solid rgba(36,22,15,.11);border-radius:13px;background:#fff;color:rgba(36,22,15,.42)}
+.adminOrderOpsSearch span{font-size:18px;line-height:1;transform:translateY(-1px)}
+.adminOrderOpsSearch input{width:100%;min-width:0;border:0;background:transparent;color:#24160f;outline:0;font:inherit;font-size:12px;font-weight:700}
+.adminOrderOpsSearch input::placeholder{color:rgba(36,22,15,.38);font-weight:650}
+.adminOrderOpsToolbar select{height:40px;border:1px solid rgba(36,22,15,.11);border-radius:13px;background:#fff;color:#24160f;padding:0 30px 0 11px;font-size:11px;font-weight:800;outline:0}
+.adminOrderOpsCount{color:rgba(36,22,15,.50);font-size:10px;font-weight:800;white-space:nowrap}
+.adminOrderOpsToolbar button{height:40px;border:1px solid #24160f;border-radius:999px;background:#24160f;color:#fff;padding:0 14px;font-size:10px;font-weight:900;white-space:nowrap;cursor:pointer}
+.adminOrderOpsToolbar button:hover{background:#d65c2c;border-color:#d65c2c}
+.adminOrderRow[hidden]{display:none!important}
+.adminOrderOpsEmpty{margin:4px 0 0}
+
+@media(max-width:900px){
+  .adminOrderOps{padding:10px 12px}
+  .adminOrderOpsMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adminOrderOpsToolbar{grid-template-columns:minmax(0,1fr) auto}
+  .adminOrderOpsSearch{grid-column:1/-1}
+  .adminOrderOpsCount{justify-self:start}
+}
+
+@media(max-width:560px){
+  .adminOrderOps{padding:9px 10px;gap:8px}
+  .adminOrderOpsMetrics{gap:6px}
+  .adminOrderOpsMetrics>div{padding:9px 10px;border-radius:13px}
+  .adminOrderOpsMetrics small{font-size:7px}
+  .adminOrderOpsMetrics strong{font-size:15px}
+  .adminOrderOpsToolbar{grid-template-columns:minmax(0,1fr) auto;gap:6px}
+  .adminOrderOpsSearch{height:42px;grid-column:1/-1}
+  .adminOrderOpsSearch input{font-size:16px}
+  .adminOrderOpsToolbar select{height:40px;min-width:0;width:100%;font-size:10px}
+  .adminOrderOpsToolbar button{height:40px;padding:0 12px;font-size:9px}
+  .adminOrderOpsCount{grid-column:1/-1;font-size:9px}
+}
