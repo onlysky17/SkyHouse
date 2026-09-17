@@ -19,7 +19,8 @@ function syncInlineBadge(source: Element | null, host: HTMLElement | null, befor
     if (before && before.parentElement === host) host.insertBefore(badge, before)
     else host.appendChild(badge)
   }
-  badge.textContent = label
+
+  if (badge.textContent !== label) badge.textContent = label
 }
 
 function polishCards() {
@@ -83,6 +84,6 @@ function queueScan() {
 export function installSaleVisualPolish() {
   if (location.pathname.startsWith('/admin')) return
   const observer = new MutationObserver(queueScan)
-  observer.observe(document.body, { childList: true, subtree: true, characterData: true })
+  observer.observe(document.body, { childList: true, subtree: true })
   queueScan()
 }
