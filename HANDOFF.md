@@ -13,6 +13,7 @@ Use this file when moving the project to ChatGPT Work, another agent, or a new c
 
 - root continuity bootstrap: PR #34 / merge `1da1fab945a6f555932ef3d049fa89a70eccb2a9`
 - notification runtime instrumentation: PR #35 / merge `af71874517eba99604630ecc2a41b360a022cb1e`
+- admin freeze fix: PR #36 / merge `57d195253473a44a92911cb14d46e297c7fd35a7`
 - PR #33: CLOSED / NOT MERGED / superseded
 
 ## Rehydrate procedure
@@ -29,46 +30,48 @@ Before changing anything:
 
 ## Current active task
 
-`ADMIN-RUNTIME-FREEZE-001`
+`ORDER-OPS-NOTIFY-008 — runtime acceptance`
 
-Branch:
+Current state:
 
-`task/admin-runtime-freeze-001`
+**PARTIAL RUNTIME PASS**
 
-Production symptom:
+Verified by Owner screenshots/runtime:
 
-- login form appears
-- password login succeeds at Supabase
-- authenticated REST requests succeed
-- browser becomes non-responsive around authenticated admin mount
+- admin dashboard responsive after login
+- order panel responsive
+- Realtime stable
+- browser notification permission granted
+- background notification enabled
+- toast self-test delivered
+- browser/system notification visibly delivered
+- diagnostic trace records expected subscription/permission/self-test events
 
-Root cause in `src/admin-orders.ts`:
+The earlier admin freeze is resolved and `ADMIN-RUNTIME-FREEZE-001` is closed.
 
-- `MutationObserver` watches body child-list changes
-- existing order-trigger callback rerendered notification state
-- rerender unconditionally rewrote badge `textContent`
-- text-node replacement generated another observed mutation
-- loop repeated indefinitely and saturated the browser main thread
+## Remaining acceptance
 
-Fix:
+Safe next check:
 
-- guard badge DOM writes
-- do not rerender an unchanged existing trigger during observer callbacks
+- offline → online reconnect/catch-up diagnostic trace
 
-No DB/schema/order change is part of this bugfix.
+Still order-dependent:
 
-## Runtime acceptance after bugfix
+- real Realtime order arrival
+- dedupe on duplicate discovery
+- cross-device unread/read synchronization
 
-Once merged/deployed:
+Production had 0 orders during this session.
 
-- verify admin dashboard responsive after login
-- run local notification self-test
-- inspect diagnostic trace
-- continue reconnect/dedupe/browser-notification/audio/mobile checks
-- do not create fake production orders without explicit Owner authorization
+Do not create synthetic production orders without explicit Owner authorization.
+
+Audio note:
+
+- the application self-test executed the audio path
+- audible sound is not Owner-PASS until Sky confirms it was actually heard
 
 ## Merge boundary
 
 Sky controls merge.
 
-A green preview/build does not equal Owner runtime PASS.
+A continuity-only acceptance update may be merged after review; it does not alter production behavior.
