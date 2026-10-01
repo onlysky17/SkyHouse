@@ -58,6 +58,7 @@ let seenOrderIds = loadSeenOrderIds()
 let legacySeenThroughOrderId = loadLegacySeenThroughOrderId()
 let soundEnabled = loadSoundPreference()
 let audioContext: AudioContext | null = null
+let currentAdminUserId: string | null = null
 let realtimeChannel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
 const baseDocumentTitle = document.title
 
@@ -168,21 +169,87 @@ function rebuildUnseenOrders() {
   )
 }
 
+async function persistRemoteSeenOrderIds(ids: number[]) {
+  if (!supabase || !currentAdminUserId) return
+  const uniqueIds = Array.from(new Set(ids.filter(id => Number.isSafeInteger(id) && id > 0)))
+  if (!uniqueIds.length) return
+
+  const rows = uniqueIds.map(orderId => ({
+    user_id: currentAdminUserId,
+    order_id: orderId,
+  }))
+  const { error } = await supabase
+    .from('admin_order_reads')
+    .upsert(rows, { onConflict: 'user_id,order_id', ignoreDuplicates: true })
+
+  if (error) console.warn('Không đồng bộ được trạng thái đã xem:', error.message)
+}
+
+async function syncRemoteSeenState(userId: string) {
+  if (!supabase) return
+  currentAdminUserId = userId
+  const hadLocalSeenState = hasSeenOrderState()
+
+  const { data, error } = await supabase
+    .from('admin_order_reads')
+    .select('order_id')
+    .eq('user_id', userId)
+    .limit(1000)
+
+  if (error) {
+    if (!hadLocalSeenState) seedSeenStateForExistingOrders()
+    return
+  }
+
+  const remoteIds = new Set(
+    (data ?? [])
+      .map(row => Number(row.order_id))
+      .filter(id => Number.isSafeInteger(id) && id > 0),
+  )
+
+  if (remoteIds.size > 0) {
+    for (const id of remoteIds) seenOrderIds.add(id)
+  } else if (!hadLocalSeenState) {
+    seedSeenStateForExistingOrders()
+  }
+
+  persistSeenOrderIds()
+
+  const currentOrderIds = new Set(orders.map(order => Number(order.id)))
+  const missingRemote = Array.from(seenOrderIds)
+    .filter(id => currentOrderIds.has(id) && !remoteIds.has(id))
+  if (missingRemote.length) await persistRemoteSeenOrderIds(missingRemote)
+}
+
+function handleRealtimeSeenInsert(raw: Record<string, unknown>) {
+  if (!currentAdminUserId || raw.user_id !== currentAdminUserId) return
+  const id = Number(raw.order_id)
+  if (!Number.isSafeInteger(id) || id <= 0 || seenOrderIds.has(id)) return
+  seenOrderIds.add(id)
+  unseenOrderIds.delete(id)
+  persistSeenOrderIds()
+  renderNotificationState()
+  if (panelOpen) renderPanel()
+}
+
 function markOrderSeen(id: number) {
   if (!Number.isSafeInteger(id) || id <= 0) return
   seenOrderIds.add(id)
   unseenOrderIds.delete(id)
   persistSeenOrderIds()
   renderNotificationState()
+  void persistRemoteSeenOrderIds([id])
 }
 
 function markAllOrdersSeen() {
   if (unseenOrderIds.size === 0) return
-  for (const id of unseenOrderIds) seenOrderIds.add(id)
+  const ids = Array.from(unseenOrderIds)
+  for (const id of ids) seenOrderIds.add(id)
   unseenOrderIds.clear()
   persistSeenOrderIds()
+  void persistRemoteSeenOrderIds(ids)
   if (filter === 'unread') selectedId = null
-  noticeText = 'Đã đánh dấu tất cả đơn đang hiển thị là đã xem.'
+  noticeText = 'Đã đánh dấu tất cả đơn đang hiển thị là đã xem trên tài khoản admin.'
   noticeState = 'ok'
   renderNotificationState()
   if (panelOpen) renderPanel()
@@ -498,8 +565,8 @@ async function loadOrders(silent = true) {
     .order('created_at', { ascending: false })
     .limit(300)
 
-  loading = false
   if (error) {
+    loading = false
     noticeText = `Không tải được đơn hàng: ${error.message}`
     noticeState = 'error'
     if (panelOpen) renderPanel()
@@ -512,7 +579,8 @@ async function loadOrders(silent = true) {
     : []
 
   orders = nextOrders
-  if (!loadedOnce && !hasSeenOrderState()) seedSeenStateForExistingOrders()
+  await syncRemoteSeenState(sessionData.session.user.id)
+  loading = false
   loadedOnce = true
   rebuildUnseenOrders()
   ensureSelection()
@@ -677,6 +745,9 @@ function startRealtime() {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
       handleRealtimeInsert(payload.new as Record<string, unknown>)
     })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_order_reads' }, payload => {
+      handleRealtimeSeenInsert(payload.new as Record<string, unknown>)
+    })
     .subscribe(status => {
       if (status === 'SUBSCRIBED') {
         void loadOrders(true)
@@ -804,6 +875,7 @@ export function installAdminOrders() {
       }, 80)
     } else {
       stopRealtime()
+      currentAdminUserId = null
       orders = []
       unseenOrderIds.clear()
       loadedOnce = false
