@@ -2,49 +2,45 @@
 
 This file exists so a new agent does not have to guess what happens next.
 
-## Current active task
+## Current authorized work
 
-`ORDER-OPS-RECONNECT-UX-001 — clear stale fetch error after reconnect`
+`ORDER-OPS-NOTIFY-008 — runtime acceptance`
 
-## Why this task exists
+## Completed runtime evidence
 
-Owner reconnect test successfully proved:
+After PR #38 deployed:
 
-- fallback/degraded behavior during network loss
-- Realtime reconnection after network restoration
-- return to stable connected state
+- authenticated admin dashboard is responsive
+- order panel opens normally
+- Realtime reports stable
+- browser notification permission is granted
+- background notifications are enabled
+- local self-test shows toast
+- browser/system notification is visibly delivered
+- reconnect/fallback/catch-up is verified
+- stale `Failed to fetch` banner now disappears automatically after successful recovery
+- diagnostic trace records the successful recovery event
 
-But the UI kept showing:
-
-`Không tải được đơn hàng: TypeError: Failed to fetch`
-
-after recovery.
-
-## Implemented fix
-
-After a successful order reload:
-
-- if the current notice is specifically the stale order-fetch error, clear it
-- record a recovery event in notification diagnostics
-- do not clear unrelated notices/errors
+No synthetic production order was created.
 
 ## Current next step
 
-1. Verify Vercel preview/build for this branch.
-2. Open the fix PR.
-3. Stop at Sky's merge gate.
-4. After merge/deploy, perform a short reconnect re-test to confirm the red stale banner disappears automatically after recovery.
+The remaining transport/UI checks are complete.
 
-## After that
+Remaining acceptance depends on a real/new order:
 
-The remaining notification acceptance cases require a real/new order:
+1. observe Realtime arrival
+2. verify duplicate-alert suppression
+3. verify unread/read synchronization across two devices
 
-- Realtime arrival
-- duplicate-alert suppression
-- unread/read sync across devices
-
-If production still has no orders, wait for a natural order unless Sky explicitly authorizes synthetic production test data.
+If production still has no orders, wait for a naturally occurring order unless Sky explicitly authorizes synthetic production test data.
 
 ## Audio evidence boundary
 
-The app self-test executed its audio path, but only Sky confirming the sound was audibly heard can mark audio PASS.
+The app self-test executed its audio path.
+
+Only Sky confirming that the sound was actually heard can mark audible-output PASS.
+
+## Continuity rule
+
+If no real order is available, do not invent a replacement validation path and do not create production test data without Owner authorization.
