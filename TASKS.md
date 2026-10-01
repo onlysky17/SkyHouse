@@ -17,30 +17,37 @@ Live Git evidence overrides this file if stale.
 | `PROJECT-CONTINUITY-001` — root-level Work/agent continuity | CLOSED | #34 | `1da1fab945a6f555932ef3d049fa89a70eccb2a9` |
 | `ORDER-OPS-NOTIFY-008` — runtime acceptance instrumentation | PARTIAL RUNTIME PASS | #35 | `af71874517eba99604630ecc2a41b360a022cb1e` |
 | `ADMIN-RUNTIME-FREEZE-001` — admin MutationObserver freeze fix | CLOSED / RUNTIME VERIFIED | #36 | `57d195253473a44a92911cb14d46e297c7fd35a7` |
+| `RUNTIME-ACCEPTANCE-EVIDENCE-001` — acceptance continuity update | CLOSED | #37 | `606b1ee323106d8b35866de81658eb036a9f5180` |
+| `ORDER-OPS-RECONNECT-UX-001` — clear stale reconnect error banner | ACTIVE / MERGE GATE | pending | pending |
+
+## Reconnect test result
+
+PASS for reconnect/catch-up transport behavior:
+
+- offline period caused expected fetch failures
+- app entered fallback/degraded state
+- network restoration caused Realtime re-subscribe
+- trace showed degraded → connecting → connected
+- final state returned to `Realtime ổn định`
 
 ## Active task
 
-`ORDER-OPS-NOTIFY-008 — runtime acceptance`
+`ORDER-OPS-RECONNECT-UX-001`
 
-Verified:
+Bug found during reconnect test:
 
-- admin remains responsive after login
-- Realtime connected/stable
-- notification permission granted
-- background notification enabled
-- local toast self-test delivered
-- system/browser notification visibly delivered
-- diagnostics trace recorded the expected events
-- no production test order created
+- stale `Failed to fetch` banner remains after recovery
 
-Pending:
+Fix:
 
-- Owner confirmation that the test sound was audibly heard
-- offline/online reconnect trace
-- real-order arrival/dedupe/read-sync cases
+- clear only that stale order-fetch notice after a successful reload
+- retain all unrelated admin notices
 
-## Boundary
+## Remaining ORDER-OPS-NOTIFY-008 validation
 
-Production currently had 0 orders during validation.
+- Owner audible-sound confirmation
+- real-order Realtime arrival
+- dedupe on real/new order
+- cross-device unread/read sync
 
-Do not create synthetic production orders unless Sky explicitly authorizes that test data.
+Do not create synthetic production orders unless Sky explicitly authorizes it.
