@@ -42,6 +42,7 @@ const statusOrder: OrderStatus[] = ['new', 'confirmed', 'shipping', 'completed',
 const SEEN_ORDER_IDS_KEY = 'skyhouse_admin_seen_order_ids_v2'
 const LEGACY_SEEN_THROUGH_KEY = 'skyhouse_admin_orders_seen_through_v1'
 const SOUND_KEY = 'skyhouse_admin_order_sound_v1'
+const BACKGROUND_NOTIFICATION_KEY = 'skyhouse_admin_background_notifications_v1'
 let orders: OrderRow[] = []
 let filter: OrderFilter = 'all'
 let selectedId: number | null = null
@@ -58,6 +59,7 @@ let unseenOrderIds = new Set<number>()
 let seenOrderIds = loadSeenOrderIds()
 let legacySeenThroughOrderId = loadLegacySeenThroughOrderId()
 let soundEnabled = loadSoundPreference()
+let backgroundNotificationsEnabled = loadBackgroundNotificationPreference()
 let audioContext: AudioContext | null = null
 let currentAdminUserId: string | null = null
 let realtimeChannel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
@@ -162,6 +164,30 @@ function loadSoundPreference() {
   try { return localStorage.getItem(SOUND_KEY) === '1' } catch { return false }
 }
 
+function loadBackgroundNotificationPreference() {
+  try { return localStorage.getItem(BACKGROUND_NOTIFICATION_KEY) === '1' } catch { return false }
+}
+
+function browserNotificationsSupported() {
+  return 'Notification' in window
+}
+
+function browserNotificationPermission() {
+  return browserNotificationsSupported() ? Notification.permission : 'unsupported'
+}
+
+function persistBackgroundNotificationPreference() {
+  try { localStorage.setItem(BACKGROUND_NOTIFICATION_KEY, backgroundNotificationsEnabled ? '1' : '0') } catch { /* ignore storage errors */ }
+}
+
+function backgroundNotificationMeta() {
+  if (!browserNotificationsSupported()) return { label: 'Thông báo nền: Không hỗ trợ', tone: 'unsupported', disabled: true }
+  const permission = browserNotificationPermission()
+  if (permission === 'denied') return { label: 'Thông báo nền: Bị chặn', tone: 'blocked', disabled: false }
+  if (backgroundNotificationsEnabled && permission === 'granted') return { label: '🖥 Thông báo nền: Bật', tone: 'on', disabled: false }
+  return { label: '🖥 Thông báo nền: Tắt', tone: 'off', disabled: false }
+}
+
 function hasSeenOrderState() {
   try { return localStorage.getItem(SEEN_ORDER_IDS_KEY) != null } catch { return false }
 }
@@ -177,6 +203,50 @@ function persistSeenOrderIds() {
 
 function persistSoundPreference() {
   try { localStorage.setItem(SOUND_KEY, soundEnabled ? '1' : '0') } catch { /* ignore storage errors */ }
+}
+
+async function toggleBackgroundNotifications() {
+  if (!browserNotificationsSupported()) {
+    noticeText = 'Trình duyệt này không hỗ trợ thông báo hệ thống.'
+    noticeState = 'error'
+    if (panelOpen) renderPanel()
+    return
+  }
+
+  if (backgroundNotificationsEnabled && Notification.permission === 'granted') {
+    backgroundNotificationsEnabled = false
+    persistBackgroundNotificationPreference()
+    noticeText = 'Đã tắt thông báo nền trên thiết bị này.'
+    noticeState = 'ok'
+    if (panelOpen) renderPanel()
+    return
+  }
+
+  const permission = Notification.permission === 'granted'
+    ? 'granted'
+    : await Notification.requestPermission()
+
+  if (permission !== 'granted') {
+    backgroundNotificationsEnabled = false
+    persistBackgroundNotificationPreference()
+    noticeText = permission === 'denied'
+      ? 'Thông báo hệ thống đang bị trình duyệt chặn. Hãy cho phép notification trong cài đặt site nếu muốn bật lại.'
+      : 'Chưa cấp quyền thông báo nền.'
+    noticeState = 'error'
+    if (panelOpen) renderPanel()
+    return
+  }
+
+  backgroundNotificationsEnabled = true
+  persistBackgroundNotificationPreference()
+  noticeText = 'Đã bật thông báo nền. Tính năng hoạt động khi tab admin vẫn đang mở.'
+  noticeState = 'ok'
+  showSystemNotification({
+    title: "Sky's house · Đã bật thông báo nền",
+    body: 'Khi có đơn mới lúc tab đang ở nền, trình duyệt sẽ hiện cảnh báo hệ thống.',
+    tag: 'skyhouse-notification-enabled',
+  })
+  if (panelOpen) renderPanel()
 }
 
 function seedSeenStateForExistingOrders() {
@@ -350,6 +420,34 @@ function toggleSound() {
   if (panelOpen) renderPanel()
 }
 
+function showSystemNotification(input: { title: string; body: string; tag: string; orderId?: number }) {
+  if (!browserNotificationsSupported() || Notification.permission !== 'granted') return false
+  try {
+    const notification = new Notification(input.title, {
+      body: input.body,
+      tag: input.tag,
+    })
+    notification.onclick = () => {
+      window.focus()
+      if (input.orderId != null) void openPanel(input.orderId)
+      notification.close()
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+function showBackgroundOrderNotification(order: OrderRow) {
+  if (!backgroundNotificationsEnabled || !document.hidden) return false
+  return showSystemNotification({
+    title: `Đơn mới #${order.id} · ${order.customer_name}`,
+    body: `${itemCount(order)} món · ${totalLabel(order)}`,
+    tag: `skyhouse-order-${order.id}`,
+    orderId: order.id,
+  })
+}
+
 function hideOrderToast() {
   if (toastTimer != null) {
     window.clearTimeout(toastTimer)
@@ -417,7 +515,16 @@ function testNotification() {
   playOrderChime(true)
   if (toastTimer != null) window.clearTimeout(toastTimer)
   toastTimer = window.setTimeout(hideOrderToast, 8000)
-  noticeText = 'Đã chạy thử toast + âm báo cục bộ. Không tạo đơn test.'
+  const systemShown = backgroundNotificationsEnabled
+    ? showSystemNotification({
+        title: "Sky's house · Kiểm tra thông báo",
+        body: 'Thông báo hệ thống đang hoạt động. Không có đơn test nào được tạo.',
+        tag: 'skyhouse-notification-test',
+      })
+    : false
+  noticeText = systemShown
+    ? 'Đã chạy thử toast + âm báo + thông báo hệ thống. Không tạo đơn test.'
+    : 'Đã chạy thử toast + âm báo cục bộ. Không tạo đơn test.'
   noticeState = 'ok'
   if (panelOpen) renderPanel()
 }
@@ -534,6 +641,7 @@ function renderPanel() {
   if (!panelRoot) return
   ensureSelection()
   const realtime = realtimeMeta()
+  const browserNotification = backgroundNotificationMeta()
   const counts: Record<OrderFilter, number> = {
     all: orders.length,
     unread: unseenOrderIds.size,
@@ -563,7 +671,7 @@ function renderPanel() {
             <small>Đồng bộ gần nhất: ${escapeHtml(formatClockTime(lastSyncAt))}</small>
           </div>
         </div>
-        <div class="adminOrdersHeaderActions"><button type="button" data-orders-refresh>↻ Làm mới</button><button type="button" class="adminOrdersTestNotification" data-orders-test-notification>✦ Thử cảnh báo</button><button type="button" class="adminOrdersSoundToggle ${soundEnabled ? 'on' : ''}" data-orders-sound-toggle aria-pressed="${soundEnabled}">${soundEnabled ? '🔔 Âm báo: Bật' : '🔕 Âm báo: Tắt'}</button><button type="button" data-orders-close aria-label="Đóng">×</button></div>
+        <div class="adminOrdersHeaderActions"><button type="button" data-orders-refresh>↻ Làm mới</button><button type="button" class="adminOrdersTestNotification" data-orders-test-notification>✦ Thử cảnh báo</button><button type="button" class="adminOrdersBrowserToggle ${browserNotification.tone}" data-orders-browser-notifications ${browserNotification.disabled ? 'disabled' : ''} title="Hoạt động khi tab admin vẫn đang mở">${escapeHtml(browserNotification.label)}</button><button type="button" class="adminOrdersSoundToggle ${soundEnabled ? 'on' : ''}" data-orders-sound-toggle aria-pressed="${soundEnabled}">${soundEnabled ? '🔔 Âm báo: Bật' : '🔕 Âm báo: Tắt'}</button><button type="button" data-orders-close aria-label="Đóng">×</button></div>
       </header>
       <nav class="adminOrderFilters">
         <div class="adminOrderFilterScroller">${filters}</div>
@@ -654,7 +762,9 @@ async function loadOrders(silent = true) {
       noticeState = 'ok'
       playOrderChime()
     } else {
-      showOrderToast(newlyDiscovered[0])
+      const newest = newlyDiscovered[0]
+      if (!showBackgroundOrderNotification(newest)) showOrderToast(newest)
+      else playOrderChime()
     }
   }
 
@@ -793,7 +903,8 @@ function handleRealtimeInsert(raw: Record<string, unknown>) {
     playOrderChime()
     renderPanel()
   } else {
-    showOrderToast(order)
+    if (!showBackgroundOrderNotification(order)) showOrderToast(order)
+    else playOrderChime()
   }
 }
 
@@ -848,6 +959,10 @@ function ensurePanel() {
     }
     if (target.closest('[data-orders-test-notification]')) {
       testNotification()
+      return
+    }
+    if (target.closest('[data-orders-browser-notifications]')) {
+      void toggleBackgroundNotifications()
       return
     }
     if (target.closest('[data-orders-sound-toggle]')) {
