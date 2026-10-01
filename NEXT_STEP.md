@@ -4,60 +4,55 @@ This file exists so a new agent does not have to guess what happens next.
 
 ## Current authorized work
 
-`ORDER-OPS-NOTIFY-008 — Runtime acceptance instrumentation`
+`ADMIN-RUNTIME-FREEZE-001 — stop admin page MutationObserver loop`
 
 Branch:
 
-`task/order-ops-notify-008`
+`task/admin-runtime-freeze-001`
 
-PR:
+## Evidence
 
-**#35 — Add notification diagnostic trace**
+Production investigation on 2026-10-01 established:
 
-## What has been implemented
+- admin password auth succeeded in Supabase
+- authenticated product/order requests returned HTTP 200
+- browser still became unresponsive
+- therefore the blocker is frontend runtime behavior, not invalid credentials or RLS
 
-- local diagnostic event trace in the admin order panel
-- Realtime state transition logging
-- reconnect/fallback logging
-- duplicate-alert suppression logging
-- notification delivery-path logging
-- browser notification permission/toggle logging
-- manual refresh and network online/offline logging
-- self-test logging
-- privacy-safe diagnostic snapshot copy
-- local trace cleanup
+Source inspection identified a deterministic feedback loop in `src/admin-orders.ts`:
 
-The trace intentionally avoids customer name, phone, customer note and admin note.
+1. body-wide MutationObserver invokes `ensureTrigger`
+2. existing trigger path invokes `renderNotificationState`
+3. `renderTrigger` rewrites badge `textContent`
+4. that creates another child-list mutation
+5. observer repeats indefinitely
+
+## Implemented fix
+
+- only update badge text/hidden state when the value actually changes
+- if an existing trigger is already the current trigger, return without rendering it again
 
 ## Current next step
 
-1. Verify PR #35 is mergeable and Vercel is green.
-2. Stop at Sky's merge gate.
-3. After Sky merges #35, verify the actual merge commit and `main`.
-4. Run a runtime acceptance sweep with the new trace:
-   - Realtime arrival
-   - reconnect/polling catch-up
-   - duplicate suppression
-   - unread/read synchronization across devices
-   - browser permission flow
-   - background-tab notification
-   - sound
-   - mobile layout
-5. Capture diagnostic output when behavior is unclear.
+1. Verify Vercel preview/build for the fix branch.
+2. Open the fix PR.
+3. Stop at Sky's merge gate.
+4. After merge/deploy, retest `/admin` login.
+5. Confirm the authenticated dashboard is responsive.
+6. Run `✦ Thử cảnh báo` and inspect notification diagnostics.
+7. Resume remaining runtime acceptance checks.
 
 ## Hard boundary
 
 Do **not** create a synthetic production order merely to exercise notification flow unless Sky explicitly authorizes production test data.
 
-A real naturally occurring order may be observed read-only without that additional authorization.
-
 ## Continuity protocol
 
-Before each material PR is presented as ready for merge, update:
+Before each material PR is presented as ready for merge, keep:
 
 - `PROJECT_STATE.md`
 - `TASKS.md`
 - `NEXT_STEP.md`
-- `HANDOFF.md` when context/boundaries changed
+- `HANDOFF.md`
 
-The files must state the exact successor or clearly state that no successor is authorized.
+aligned with live Git/runtime evidence.
