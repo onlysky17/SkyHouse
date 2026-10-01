@@ -38,7 +38,9 @@ const statusMeta: Record<OrderStatus, { label: string; tone: string }> = {
 }
 
 const statusOrder: OrderStatus[] = ['new', 'confirmed', 'shipping', 'completed', 'cancelled']
-const SEEN_THROUGH_KEY = 'skyhouse_admin_orders_seen_through_v1'
+const SEEN_ORDER_IDS_KEY = 'skyhouse_admin_seen_order_ids_v2'
+const LEGACY_SEEN_THROUGH_KEY = 'skyhouse_admin_orders_seen_through_v1'
+const SOUND_KEY = 'skyhouse_admin_order_sound_v1'
 let orders: OrderRow[] = []
 let filter: OrderFilter = 'all'
 let selectedId: number | null = null
@@ -52,7 +54,10 @@ let toastTimer: number | null = null
 let noticeText = ''
 let noticeState: 'ok' | 'error' | '' = ''
 let unseenOrderIds = new Set<number>()
-let seenThroughOrderId = loadSeenThroughOrderId()
+let seenOrderIds = loadSeenOrderIds()
+let legacySeenThroughOrderId = loadLegacySeenThroughOrderId()
+let soundEnabled = loadSoundPreference()
+let audioContext: AudioContext | null = null
 let realtimeChannel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
 const baseDocumentTitle = document.title
 
@@ -104,38 +109,70 @@ function countStatus(status: OrderStatus) {
   return orders.filter(order => order.status === status).length
 }
 
-function loadSeenThroughOrderId() {
+function loadSeenOrderIds() {
   try {
-    const value = Number(localStorage.getItem(SEEN_THROUGH_KEY) || '0')
+    const raw = localStorage.getItem(SEEN_ORDER_IDS_KEY)
+    if (!raw) return new Set<number>()
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return new Set<number>()
+    return new Set(parsed.map(Number).filter(id => Number.isSafeInteger(id) && id > 0))
+  } catch {
+    return new Set<number>()
+  }
+}
+
+function loadLegacySeenThroughOrderId() {
+  try {
+    const value = Number(localStorage.getItem(LEGACY_SEEN_THROUGH_KEY) || '0')
     return Number.isSafeInteger(value) && value > 0 ? value : 0
   } catch {
     return 0
   }
 }
 
-function highestOrderId() {
-  return orders.reduce((max, order) => Math.max(max, Number(order.id) || 0), 0)
+function loadSoundPreference() {
+  try { return localStorage.getItem(SOUND_KEY) === '1' } catch { return false }
 }
 
-function persistSeenThroughOrderId() {
-  try { localStorage.setItem(SEEN_THROUGH_KEY, String(seenThroughOrderId)) } catch { /* ignore storage errors */ }
+function hasSeenOrderState() {
+  try { return localStorage.getItem(SEEN_ORDER_IDS_KEY) != null } catch { return false }
+}
+
+function persistSeenOrderIds() {
+  const recent = Array.from(seenOrderIds)
+    .filter(id => Number.isSafeInteger(id) && id > 0)
+    .sort((a, b) => b - a)
+    .slice(0, 500)
+  seenOrderIds = new Set(recent)
+  try { localStorage.setItem(SEEN_ORDER_IDS_KEY, JSON.stringify(recent)) } catch { /* ignore storage errors */ }
+}
+
+function persistSoundPreference() {
+  try { localStorage.setItem(SOUND_KEY, soundEnabled ? '1' : '0') } catch { /* ignore storage errors */ }
+}
+
+function seedSeenStateForExistingOrders() {
+  for (const order of orders) {
+    const id = Number(order.id)
+    if (!Number.isSafeInteger(id) || id <= 0) continue
+    if (legacySeenThroughOrderId === 0 || id <= legacySeenThroughOrderId) seenOrderIds.add(id)
+  }
+  persistSeenOrderIds()
 }
 
 function rebuildUnseenOrders() {
   unseenOrderIds = new Set(
     orders
       .map(order => Number(order.id))
-      .filter(id => Number.isSafeInteger(id) && id > seenThroughOrderId),
+      .filter(id => Number.isSafeInteger(id) && id > 0 && !seenOrderIds.has(id)),
   )
 }
 
-function markOrdersSeen() {
-  const highest = highestOrderId()
-  if (highest > seenThroughOrderId) {
-    seenThroughOrderId = highest
-    persistSeenThroughOrderId()
-  }
-  unseenOrderIds.clear()
+function markOrderSeen(id: number) {
+  if (!Number.isSafeInteger(id) || id <= 0) return
+  seenOrderIds.add(id)
+  unseenOrderIds.delete(id)
+  persistSeenOrderIds()
   renderNotificationState()
 }
 
@@ -162,6 +199,49 @@ function renderNotificationState() {
   document.title = unseenOrderIds.size > 0
     ? `(${unseenOrderIds.size}) Đơn mới · Sky's house`
     : baseDocumentTitle
+}
+
+function ensureAudioContext() {
+  const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  if (!AudioContextCtor) return null
+  if (!audioContext) audioContext = new AudioContextCtor()
+  return audioContext
+}
+
+function playOrderChime() {
+  if (!soundEnabled) return
+  const context = ensureAudioContext()
+  if (!context) return
+
+  void context.resume().then(() => {
+    const now = context.currentTime
+    const gain = context.createGain()
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.11, now + 0.015)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42)
+    gain.connect(context.destination)
+
+    const first = context.createOscillator()
+    first.type = 'sine'
+    first.frequency.setValueAtTime(880, now)
+    first.connect(gain)
+    first.start(now)
+    first.stop(now + 0.16)
+
+    const second = context.createOscillator()
+    second.type = 'sine'
+    second.frequency.setValueAtTime(1175, now + 0.16)
+    second.connect(gain)
+    second.start(now + 0.16)
+    second.stop(now + 0.42)
+  }).catch(() => { /* browser may block audio until a user gesture */ })
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled
+  persistSoundPreference()
+  if (soundEnabled) playOrderChime()
+  if (panelOpen) renderPanel()
 }
 
 function hideOrderToast() {
@@ -209,6 +289,7 @@ function showOrderToast(order: OrderRow) {
     <button type="button" class="adminOrderToastOpen" data-order-toast-open="${order.id}">Xem đơn</button>
   `
   requestAnimationFrame(() => toast.classList.add('show'))
+  playOrderChime()
   if (toastTimer != null) window.clearTimeout(toastTimer)
   toastTimer = window.setTimeout(hideOrderToast, 12000)
 }
@@ -233,13 +314,19 @@ function orderListHtml() {
   if (loading && !loadedOnce) return '<div class="adminOrdersEmpty">Đang tải đơn hàng…</div>'
   if (!shown.length) return '<div class="adminOrdersEmpty">Chưa có đơn nào trong nhóm này.</div>'
 
-  return shown.map(order => `
-    <button type="button" class="adminOrderRow ${selectedId === order.id ? 'active' : ''}" data-order-id="${order.id}">
-      <div class="adminOrderRowTop"><strong>#${order.id} · ${escapeHtml(order.customer_name)}</strong>${statusBadge(order.status)}</div>
-      <div class="adminOrderRowMeta"><span>${escapeHtml(order.customer_phone)}</span><span>${escapeHtml(formatDate(order.created_at))}</span></div>
-      <div class="adminOrderRowBottom"><span>${itemCount(order)} món</span><b>${escapeHtml(totalLabel(order))}</b></div>
-    </button>
-  `).join('')
+  return shown.map(order => {
+    const unread = unseenOrderIds.has(Number(order.id))
+    return `
+      <button type="button" class="adminOrderRow ${selectedId === order.id ? 'active' : ''} ${unread ? 'unread' : ''}" data-order-id="${order.id}">
+        <div class="adminOrderRowTop">
+          <strong>#${order.id} · ${escapeHtml(order.customer_name)}</strong>
+          <div class="adminOrderRowBadges">${unread ? '<span class="adminOrderUnread">Chưa xem</span>' : ''}${statusBadge(order.status)}</div>
+        </div>
+        <div class="adminOrderRowMeta"><span>${escapeHtml(order.customer_phone)}</span><span>${escapeHtml(formatDate(order.created_at))}</span></div>
+        <div class="adminOrderRowBottom"><span>${itemCount(order)} món</span><b>${escapeHtml(totalLabel(order))}</b></div>
+      </button>
+    `
+  }).join('')
 }
 
 function orderDetailHtml() {
@@ -327,7 +414,7 @@ function renderPanel() {
     <section class="adminOrdersPanel" role="dialog" aria-modal="true" aria-label="Quản lý đơn hàng">
       <header class="adminOrdersHeader">
         <div><small>SKY'S HOUSE · ADMIN</small><h1 class="serif">Đơn hàng.</h1><p>Theo dõi từ lúc khách gửi giỏ đến khi giao xong.</p></div>
-        <div class="adminOrdersHeaderActions"><button type="button" data-orders-refresh>↻ Làm mới</button><button type="button" data-orders-close aria-label="Đóng">×</button></div>
+        <div class="adminOrdersHeaderActions"><button type="button" data-orders-refresh>↻ Làm mới</button><button type="button" class="adminOrdersSoundToggle ${soundEnabled ? 'on' : ''}" data-orders-sound-toggle aria-pressed="${soundEnabled}">${soundEnabled ? '🔔 Âm báo: Bật' : '🔕 Âm báo: Tắt'}</button><button type="button" data-orders-close aria-label="Đóng">×</button></div>
       </header>
       <nav class="adminOrderFilters">${filters}</nav>
       ${noticeText ? `<div class="adminOrdersNotice ${noticeState}">${escapeHtml(noticeText)}</div>` : ''}
@@ -357,12 +444,14 @@ async function openPanel(preferredId?: number) {
   renderPanel()
   await loadOrders(false)
   if (preferredId != null && orders.some(order => order.id === preferredId)) selectedId = preferredId
-  markOrdersSeen()
+  if (selectedId != null) markOrderSeen(selectedId)
   renderPanel()
 }
 
 async function loadOrders(silent = true) {
   if (!supabase || loading) return
+  const knownIds = new Set(orders.map(order => Number(order.id)))
+  const wasLoaded = loadedOnce
   loading = true
   if (!silent) {
     noticeText = ''
@@ -390,16 +479,31 @@ async function loadOrders(silent = true) {
     return
   }
 
-  orders = (data ?? []) as OrderRow[]
-  if (!loadedOnce && seenThroughOrderId === 0) {
-    seenThroughOrderId = highestOrderId()
-    persistSeenThroughOrderId()
-  }
+  const nextOrders = (data ?? []) as OrderRow[]
+  const newlyDiscovered = wasLoaded
+    ? nextOrders.filter(order => !knownIds.has(Number(order.id)))
+    : []
+
+  orders = nextOrders
+  if (!loadedOnce && !hasSeenOrderState()) seedSeenStateForExistingOrders()
   loadedOnce = true
   rebuildUnseenOrders()
   ensureSelection()
   renderNotificationState()
   startRealtime()
+
+  if (newlyDiscovered.length > 0) {
+    if (panelOpen) {
+      noticeText = newlyDiscovered.length === 1
+        ? `Có đơn mới #${newlyDiscovered[0].id} vừa tới.`
+        : `Có ${newlyDiscovered.length} đơn mới vừa tới.`
+      noticeState = 'ok'
+      playOrderChime()
+    } else {
+      showOrderToast(newlyDiscovered[0])
+    }
+  }
+
   if (panelOpen) renderPanel()
 }
 
@@ -526,15 +630,15 @@ function handleRealtimeInsert(raw: Record<string, unknown>) {
   const order = raw as unknown as OrderRow
   orders = [order, ...orders].slice(0, 300)
   loadedOnce = true
-  if (id > seenThroughOrderId) unseenOrderIds.add(id)
+  if (!seenOrderIds.has(id)) unseenOrderIds.add(id)
 
+  renderNotificationState()
   if (panelOpen) {
     noticeText = `Có đơn mới #${id} vừa tới.`
     noticeState = 'ok'
-    markOrdersSeen()
+    playOrderChime()
     renderPanel()
   } else {
-    renderNotificationState()
     showOrderToast(order)
   }
 }
@@ -546,7 +650,13 @@ function startRealtime() {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
       handleRealtimeInsert(payload.new as Record<string, unknown>)
     })
-    .subscribe()
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') {
+        void loadOrders(true)
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        window.setTimeout(() => void loadOrders(true), 1200)
+      }
+    })
 }
 
 function stopRealtime() {
@@ -573,6 +683,10 @@ function ensurePanel() {
       void loadOrders(false)
       return
     }
+    if (target.closest('[data-orders-sound-toggle]')) {
+      toggleSound()
+      return
+    }
     const settlementSave = target.closest<HTMLElement>('[data-order-settlement-save]')
     if (settlementSave) {
       void saveSettlement(Number(settlementSave.dataset.orderSettlementSave))
@@ -596,6 +710,7 @@ function ensurePanel() {
     const row = target.closest<HTMLElement>('[data-order-id]')
     if (row) {
       selectedId = Number(row.dataset.orderId)
+      markOrderSeen(selectedId)
       renderPanel()
     }
   })
@@ -642,6 +757,13 @@ export function installAdminOrders() {
   const observer = new MutationObserver(ensureTrigger)
   observer.observe(document.body, { childList: true, subtree: true })
   ensureTrigger()
+
+  const refreshAfterResume = () => {
+    if (document.hidden) return
+    void loadOrders(true)
+  }
+  document.addEventListener('visibilitychange', refreshAfterResume)
+  window.addEventListener('online', refreshAfterResume)
 
   supabase.auth.onAuthStateChange((_event, session) => {
     if (session) {
