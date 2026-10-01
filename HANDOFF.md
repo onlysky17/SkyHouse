@@ -7,47 +7,42 @@ Use this file when moving the project to ChatGPT Work, another agent, or a new c
 - Owner: Sky
 - Repository: `onlysky17/SkyHouse`
 - Known local workspace: `D:\PRIVATE\APP\SkyHouse`
-- The local path must be verified; never assume it is the active Git root.
+- Always verify the actual Git root/workspace before mutation.
 
-## Last verified product checkpoint
+## Canonical continuity checkpoint
 
-- latest completed product task: `ORDER-OPS-NOTIFY-007`
-- latest completed product PR: #32
-- merge commit: `fb29fb87185f1c55d7dc3031b579016878aebe32`
-
-## Important correction
-
-PR #33 was a mistaken continuity implementation:
-
-- it created a nested `project/` directory
-- it was closed without merge
-- do not resurrect that layout
-
-The correct model is root-level continuity files in the existing SkyHouse workspace.
+- root continuity bootstrap: merged in PR #34
+- continuity merge commit: `1da1fab945a6f555932ef3d049fa89a70eccb2a9`
+- PR #33: CLOSED / NOT MERGED / superseded
+- latest completed product task before current work: `ORDER-OPS-NOTIFY-007`
 
 ## Rehydrate procedure
 
 Before changing anything:
 
 1. verify Git root
-2. verify branch/HEAD/status
+2. verify branch / HEAD / status
 3. inspect `origin/main`
 4. inspect open PRs
 5. read all root continuity files
-6. inspect the exact active task branch/PR if one exists
-7. inspect Vercel/Supabase only when relevant to the task
+6. inspect the exact active task branch/PR
+7. inspect Vercel/Supabase only when relevant
 
-## Current task at handoff creation
+## Current active task
 
-`PROJECT-CONTINUITY-001`
+`ORDER-OPS-NOTIFY-008 — Runtime acceptance instrumentation`
 
-This is infrastructure/documentation work only.
+- branch: `task/order-ops-notify-008`
+- PR: #35
+- base main at task start: `1da1fab945a6f555932ef3d049fa89a70eccb2a9`
 
-It does not authorize a new product feature.
+Purpose: make the existing notification system observable during real browser use without inserting fake production orders.
+
+Current implementation provides a local event trace and privacy-safe copied diagnostic snapshot.
 
 ## Product continuity
 
-The last development lane focused on admin order notification reliability:
+The order notification lane now contains:
 
 - Realtime order arrival
 - polling fallback
@@ -56,20 +51,35 @@ The last development lane focused on admin order notification reliability:
 - diagnostics/self-test
 - opt-in browser notifications
 - duplicate alert de-duplication
+- runtime trace instrumentation (current task)
 
-Known remaining evidence gap: full runtime/visual acceptance across browser permission, background tab, audio, multi-device and reconnect timing.
+## Validation still required
+
+Build/deploy evidence is not enough to close timing-sensitive notification behavior.
+
+After #35 merges, the next acceptance activity is runtime observation of:
+
+- Realtime arrival
+- reconnect/catch-up
+- dedupe behavior
+- multi-device read sync
+- browser permission/system notification
+- sound
+- mobile presentation
+
+Do not silently create production test orders. That is a separate Owner authorization boundary.
 
 ## Merge boundary
 
 Sky controls merge.
 
-If the current continuity PR is still open, finish verification and stop at the merge gate.
+If PR #35 is open, finish evidence and stop at the merge gate.
 
-If it is already merged, verify the actual merge commit, update local `main`, then continue only the next Owner-authorized task.
+If #35 is merged, verify the actual merge commit and main deployment before continuing the runtime acceptance sweep.
 
 ## Required handoff maintenance
 
-Every material task must leave enough state in these root files that another agent can answer:
+Every material task must leave enough state here/root continuity files that another agent can answer:
 
 - What task is active?
 - What is already complete?
@@ -77,4 +87,4 @@ Every material task must leave enough state in these root files that another age
 - What evidence exists?
 - What still needs validation?
 - What exact step is next?
-- Is that next step authorized or only a candidate?
+- Is that next step authorized or gated?
