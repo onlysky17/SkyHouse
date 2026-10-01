@@ -4,55 +4,44 @@ This file exists so a new agent does not have to guess what happens next.
 
 ## Current authorized work
 
-`ADMIN-RUNTIME-FREEZE-001 — stop admin page MutationObserver loop`
+`ORDER-OPS-NOTIFY-008 — runtime acceptance`
 
-Branch:
+## Completed runtime evidence
 
-`task/admin-runtime-freeze-001`
+After PR #36 deployed:
 
-## Evidence
+- authenticated admin dashboard is responsive
+- order panel opens normally
+- Realtime reports stable
+- browser notification permission is granted
+- background notifications are enabled
+- local self-test shows toast
+- browser/system notification is visibly delivered
+- diagnostic trace records subscription, connected state, granted permission and self-test execution
 
-Production investigation on 2026-10-01 established:
-
-- admin password auth succeeded in Supabase
-- authenticated product/order requests returned HTTP 200
-- browser still became unresponsive
-- therefore the blocker is frontend runtime behavior, not invalid credentials or RLS
-
-Source inspection identified a deterministic feedback loop in `src/admin-orders.ts`:
-
-1. body-wide MutationObserver invokes `ensureTrigger`
-2. existing trigger path invokes `renderNotificationState`
-3. `renderTrigger` rewrites badge `textContent`
-4. that creates another child-list mutation
-5. observer repeats indefinitely
-
-## Implemented fix
-
-- only update badge text/hidden state when the value actually changes
-- if an existing trigger is already the current trigger, return without rendering it again
+No synthetic production order was created.
 
 ## Current next step
 
-1. Verify Vercel preview/build for the fix branch.
-2. Open the fix PR.
-3. Stop at Sky's merge gate.
-4. After merge/deploy, retest `/admin` login.
-5. Confirm the authenticated dashboard is responsive.
-6. Run `✦ Thử cảnh báo` and inspect notification diagnostics.
-7. Resume remaining runtime acceptance checks.
+The next safe, non-order-mutating check is reconnect behavior:
 
-## Hard boundary
+1. keep the admin order panel open
+2. temporarily take the browser/network offline
+3. confirm status changes to offline and the trace records it
+4. restore network
+5. confirm catch-up/reconnect returns to stable/connected
+6. inspect the diagnostic trace
 
-Do **not** create a synthetic production order merely to exercise notification flow unless Sky explicitly authorizes production test data.
+After that, the remaining cases require a real/new order:
 
-## Continuity protocol
+- Realtime arrival
+- duplicate-alert suppression
+- unread/read synchronization across devices
 
-Before each material PR is presented as ready for merge, keep:
+With production currently at 0 orders, wait for a naturally occurring order unless Sky explicitly authorizes synthetic production test data.
 
-- `PROJECT_STATE.md`
-- `TASKS.md`
-- `NEXT_STEP.md`
-- `HANDOFF.md`
+## Evidence boundary
 
-aligned with live Git/runtime evidence.
+The self-test proves the application executed its audio path, but only Owner hearing the sound confirms audible-output PASS.
+
+Do not mark the remaining order-dependent cases PASS without runtime evidence.

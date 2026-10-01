@@ -15,42 +15,32 @@ Live Git evidence overrides this file if stale.
 | `ORDER-OPS-NOTIFY-006` — optional browser background notification | CLOSED | #31 | `1bde18c509d1e8b232809bcc8d42311a5ba9cb08` |
 | `ORDER-OPS-NOTIFY-007` — duplicate-alert lifecycle | CLOSED | #32 | `fb29fb87185f1c55d7dc3031b579016878aebe32` |
 | `PROJECT-CONTINUITY-001` — root-level Work/agent continuity | CLOSED | #34 | `1da1fab945a6f555932ef3d049fa89a70eccb2a9` |
-| `ORDER-OPS-NOTIFY-008` — runtime acceptance instrumentation | IMPLEMENTED / RUNTIME VALIDATION PENDING | #35 | `af71874517eba99604630ecc2a41b360a022cb1e` |
-| `ADMIN-RUNTIME-FREEZE-001` — admin MutationObserver freeze fix | ACTIVE | pending | pending |
-
-## Superseded continuity attempt
-
-- PR #33: **CLOSED / NOT MERGED**
-- Reason: incorrectly created a nested `project/` directory.
-- Do not revive or merge that approach.
+| `ORDER-OPS-NOTIFY-008` — runtime acceptance instrumentation | PARTIAL RUNTIME PASS | #35 | `af71874517eba99604630ecc2a41b360a022cb1e` |
+| `ADMIN-RUNTIME-FREEZE-001` — admin MutationObserver freeze fix | CLOSED / RUNTIME VERIFIED | #36 | `57d195253473a44a92911cb14d46e297c7fd35a7` |
 
 ## Active task
 
-`ADMIN-RUNTIME-FREEZE-001`
+`ORDER-OPS-NOTIFY-008 — runtime acceptance`
 
-Observed blocker:
+Verified:
 
-- Supabase password login succeeds
-- authenticated API calls succeed
-- browser becomes unresponsive when authenticated admin UI mounts
+- admin remains responsive after login
+- Realtime connected/stable
+- notification permission granted
+- background notification enabled
+- local toast self-test delivered
+- system/browser notification visibly delivered
+- diagnostics trace recorded the expected events
+- no production test order created
 
-Root cause:
+Pending:
 
-- admin order-trigger MutationObserver recursively retriggered itself through unconditional badge text-node writes.
+- Owner confirmation that the test sound was audibly heard
+- offline/online reconnect trace
+- real-order arrival/dedupe/read-sync cases
 
-Fix scope:
+## Boundary
 
-- guard badge DOM writes
-- avoid rerendering an already-bound trigger for every body mutation
-- no DB/schema/order mutation
+Production currently had 0 orders during validation.
 
-## Next state
-
-After this fix is merged and production deploy is live:
-
-1. log into `/admin`
-2. verify dashboard remains responsive
-3. run local notification self-test
-4. continue the remaining `ORDER-OPS-NOTIFY-008` runtime acceptance sweep
-
-Creating synthetic production orders remains a separate Owner boundary.
+Do not create synthetic production orders unless Sky explicitly authorizes that test data.

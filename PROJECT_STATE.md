@@ -8,8 +8,8 @@ This file is a continuity snapshot. Live repository/runtime evidence overrides i
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `af71874517eba99604630ecc2a41b360a022cb1e`
-- PR #35 is merged at that commit.
+- Current canonical `main`: `57d195253473a44a92911cb14d46e297c7fd35a7`
+- PR #36 merged at that commit.
 - PR #33 remains CLOSED / NOT MERGED / superseded.
 - Root continuity files are part of `main`.
 
@@ -59,49 +59,49 @@ Repository contains migrations for:
 - orders Realtime publication
 - `admin_order_reads`
 
-Verified on 2026-10-01 during runtime investigation:
+Verified on 2026-10-01:
 
 - SkyHouse Supabase project is active/healthy.
-- Admin auth account exists and password login succeeded.
-- Authenticated requests to `products` and `orders` returned HTTP 200.
-- Current production order count was 0 at the time of validation.
+- Admin password login succeeds.
+- Authenticated `products` and `orders` requests return HTTP 200.
+- Production order count was 0 during this acceptance session.
+
+## Runtime acceptance evidence
+
+`ADMIN-RUNTIME-FREEZE-001` is resolved in production by PR #36.
+
+Owner/runtime evidence after deployment:
+
+- admin dashboard renders and remains responsive
+- order panel opens
+- Realtime status reports stable/connected
+- browser notification permission is granted
+- background notification setting is enabled
+- local self-test produced an in-page toast
+- local self-test executed the audio path
+- a browser/system notification was visibly delivered
+- diagnostic trace recorded:
+  - Supabase Realtime subscribed
+  - Realtime connecting → connected
+  - background notification permission = granted
+  - self-test with toast + audio + system notification
+
+No synthetic production order was created.
 
 ## Current active task
 
-`ADMIN-RUNTIME-FREEZE-001 — stop admin page MutationObserver loop`
+`ORDER-OPS-NOTIFY-008 — runtime acceptance`
 
-Base:
+State:
 
-`af71874517eba99604630ecc2a41b360a022cb1e`
+**PARTIAL RUNTIME PASS / ORDER-DEPENDENT CASES PENDING**
 
-Branch:
+Still unverified:
 
-`task/admin-runtime-freeze-001`
+- audible sound actually heard by Owner
+- offline → online reconnect/catch-up trace
+- real order Realtime arrival
+- duplicate suppression on a real/new order
+- unread/read synchronization across devices
 
-Observed production symptom:
-
-- admin login succeeds at Supabase
-- browser then becomes unresponsive / input cannot be used
-- Chrome shows “Trang không phản hồi”
-
-Root cause identified in `src/admin-orders.ts`:
-
-- a body-wide `MutationObserver` calls `ensureTrigger`
-- when the admin order trigger already exists, `ensureTrigger` called `renderNotificationState`
-- `renderTrigger` unconditionally rewrote badge `textContent`
-- rewriting the text node emits another child-list mutation
-- the observer immediately runs again, creating a self-sustaining main-thread mutation loop after the authenticated admin toolbar appears
-
-Current fix guards DOM writes and avoids re-rendering the existing trigger on every observed mutation.
-
-## Validation boundary
-
-The source-level root cause is identified and patched on the task branch.
-
-Still required before task closure:
-
-- Vercel preview/build success
-- browser confirmation that admin login no longer freezes
-- then resume notification runtime acceptance
-
-No synthetic production order is authorized.
+The order-dependent cases cannot be exercised with the current zero-order production state without either a naturally occurring order or explicit Owner authorization for synthetic production test data.
