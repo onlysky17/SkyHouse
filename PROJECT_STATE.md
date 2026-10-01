@@ -8,8 +8,8 @@ This file is a continuity snapshot. Live repository/runtime evidence overrides i
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `606b1ee323106d8b35866de81658eb036a9f5180`
-- PR #37 merged at that commit.
+- Current canonical `main`: `f296da213eddf20a08c62265e4eff58800b9c9c4`
+- PR #38 merged at that commit.
 - PR #33 remains CLOSED / NOT MERGED / superseded.
 - Root continuity files are part of `main`.
 
@@ -24,41 +24,40 @@ Verified by Owner/runtime on 2026-10-01:
 - background notifications are enabled
 - local self-test produced in-page toast
 - browser/system notification visibly delivered
-- reconnect test:
-  - network loss caused order fetch failures as expected
-  - UI entered fallback/degraded state
-  - after network returned, Realtime re-subscribed
-  - trace recorded degraded → connecting and connecting → connected
+- reconnect behavior:
+  - network loss caused expected fetch failures
+  - app entered fallback/degraded state
+  - network restoration caused Realtime to re-subscribe
+  - trace recorded degraded → connecting → connected
   - final status returned to `Realtime ổn định`
+- reconnect stale-banner regression after PR #38:
+  - red `Failed to fetch` notice appeared during network loss
+  - after recovery and successful reload, the red notice automatically disappeared
+  - trace recorded `Tải đơn thành công sau lỗi mạng; đã xóa cảnh báo lỗi cũ.`
 
 No synthetic production order was created.
 
-## Reconnect UX issue discovered
+## Closed runtime bugfixes
 
-During the successful reconnect test, the red banner:
+`ADMIN-RUNTIME-FREEZE-001`
 
-`Không tải được đơn hàng: TypeError: Failed to fetch`
+- CLOSED / runtime verified
+- PR #36
+- merge `57d195253473a44a92911cb14d46e297c7fd35a7`
 
-remained visible even after Realtime had recovered and a later order load succeeded.
+`ORDER-OPS-RECONNECT-UX-001`
 
-Root cause:
-
-- `loadOrders()` records the fetch error in `noticeText`
-- a later successful silent reload does not clear that stale fetch-error notice
-
-Current fix on branch `task/order-ops-reconnect-ux-001`:
-
-- clear only the stale order-fetch error after a successful order load
-- add a diagnostic trace entry confirming recovery
-- do not clear unrelated admin notices
+- CLOSED / runtime verified
+- PR #38
+- merge `f296da213eddf20a08c62265e4eff58800b9c9c4`
 
 ## Current active task
 
-`ORDER-OPS-RECONNECT-UX-001 — clear stale fetch error after reconnect`
+`ORDER-OPS-NOTIFY-008 — runtime acceptance`
 
-## Acceptance state
+State:
 
-`ORDER-OPS-NOTIFY-008` is now **PARTIAL RUNTIME PASS** with reconnect verified.
+**PARTIAL RUNTIME PASS / ORDER-DEPENDENT CASES PENDING**
 
 Still unverified:
 
@@ -67,4 +66,4 @@ Still unverified:
 - duplicate suppression on a real/new order
 - unread/read synchronization across devices
 
-Order-dependent cases still require a naturally occurring order or explicit Owner authorization for synthetic production test data.
+The remaining order-dependent cases require a naturally occurring order or explicit Owner authorization for synthetic production test data.

@@ -18,36 +18,32 @@ Live Git evidence overrides this file if stale.
 | `ORDER-OPS-NOTIFY-008` — runtime acceptance instrumentation | PARTIAL RUNTIME PASS | #35 | `af71874517eba99604630ecc2a41b360a022cb1e` |
 | `ADMIN-RUNTIME-FREEZE-001` — admin MutationObserver freeze fix | CLOSED / RUNTIME VERIFIED | #36 | `57d195253473a44a92911cb14d46e297c7fd35a7` |
 | `RUNTIME-ACCEPTANCE-EVIDENCE-001` — acceptance continuity update | CLOSED | #37 | `606b1ee323106d8b35866de81658eb036a9f5180` |
-| `ORDER-OPS-RECONNECT-UX-001` — clear stale reconnect error banner | ACTIVE / MERGE GATE | pending | pending |
-
-## Reconnect test result
-
-PASS for reconnect/catch-up transport behavior:
-
-- offline period caused expected fetch failures
-- app entered fallback/degraded state
-- network restoration caused Realtime re-subscribe
-- trace showed degraded → connecting → connected
-- final state returned to `Realtime ổn định`
+| `ORDER-OPS-RECONNECT-UX-001` — clear stale reconnect error banner | CLOSED / RUNTIME VERIFIED | #38 | `f296da213eddf20a08c62265e4eff58800b9c9c4` |
 
 ## Active task
 
-`ORDER-OPS-RECONNECT-UX-001`
+`ORDER-OPS-NOTIFY-008 — runtime acceptance`
 
-Bug found during reconnect test:
+Verified:
 
-- stale `Failed to fetch` banner remains after recovery
+- admin remains responsive after login
+- Realtime connected/stable
+- notification permission granted
+- background notification enabled
+- local toast self-test delivered
+- system/browser notification visibly delivered
+- reconnect/fallback/catch-up behavior verified
+- stale reconnect error banner now clears automatically after recovery
+- diagnostics trace recorded expected events
+- no production test order created
 
-Fix:
+Pending:
 
-- clear only that stale order-fetch notice after a successful reload
-- retain all unrelated admin notices
-
-## Remaining ORDER-OPS-NOTIFY-008 validation
-
-- Owner audible-sound confirmation
-- real-order Realtime arrival
+- Owner confirmation that the test sound was audibly heard
+- real-order arrival
 - dedupe on real/new order
 - cross-device unread/read sync
 
-Do not create synthetic production orders unless Sky explicitly authorizes it.
+## Boundary
+
+Do not create synthetic production orders unless Sky explicitly authorizes that test data.
