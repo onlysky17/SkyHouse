@@ -43,6 +43,8 @@ const SEEN_ORDER_IDS_KEY = 'skyhouse_admin_seen_order_ids_v2'
 const LEGACY_SEEN_THROUGH_KEY = 'skyhouse_admin_orders_seen_through_v1'
 const SOUND_KEY = 'skyhouse_admin_order_sound_v1'
 const BACKGROUND_NOTIFICATION_KEY = 'skyhouse_admin_background_notifications_v1'
+const RECENT_NOTIFIED_KEY = 'skyhouse_admin_recent_notified_orders_v1'
+const NOTIFICATION_DEDUPE_MS = 24 * 60 * 60 * 1000
 let orders: OrderRow[] = []
 let filter: OrderFilter = 'all'
 let selectedId: number | null = null
@@ -60,6 +62,7 @@ let seenOrderIds = loadSeenOrderIds()
 let legacySeenThroughOrderId = loadLegacySeenThroughOrderId()
 let soundEnabled = loadSoundPreference()
 let backgroundNotificationsEnabled = loadBackgroundNotificationPreference()
+let recentlyNotifiedOrders = loadRecentNotifiedOrders()
 let audioContext: AudioContext | null = null
 let currentAdminUserId: string | null = null
 let realtimeChannel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
@@ -166,6 +169,55 @@ function loadSoundPreference() {
 
 function loadBackgroundNotificationPreference() {
   try { return localStorage.getItem(BACKGROUND_NOTIFICATION_KEY) === '1' } catch { return false }
+}
+
+function loadRecentNotifiedOrders() {
+  const result = new Map<number, number>()
+  try {
+    const raw = localStorage.getItem(RECENT_NOTIFIED_KEY)
+    if (!raw) return result
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return result
+    const now = Date.now()
+    for (const entry of parsed) {
+      if (!Array.isArray(entry) || entry.length !== 2) continue
+      const id = Number(entry[0])
+      const notifiedAt = Number(entry[1])
+      if (!Number.isSafeInteger(id) || id <= 0 || !Number.isFinite(notifiedAt)) continue
+      if (now - notifiedAt < NOTIFICATION_DEDUPE_MS) result.set(id, notifiedAt)
+    }
+  } catch {
+    return new Map<number, number>()
+  }
+  return result
+}
+
+function persistRecentNotifiedOrders() {
+  const now = Date.now()
+  const recent = Array.from(recentlyNotifiedOrders.entries())
+    .filter(([id, notifiedAt]) => Number.isSafeInteger(id) && id > 0 && now - notifiedAt < NOTIFICATION_DEDUPE_MS)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 200)
+  recentlyNotifiedOrders = new Map(recent)
+  try { localStorage.setItem(RECENT_NOTIFIED_KEY, JSON.stringify(recent)) } catch { /* ignore storage errors */ }
+}
+
+function refreshRecentNotifiedOrders() {
+  recentlyNotifiedOrders = loadRecentNotifiedOrders()
+}
+
+function wasOrderRecentlyNotified(id: number) {
+  refreshRecentNotifiedOrders()
+  const notifiedAt = recentlyNotifiedOrders.get(id)
+  return notifiedAt != null && Date.now() - notifiedAt < NOTIFICATION_DEDUPE_MS
+}
+
+function markOrdersNotified(ids: number[]) {
+  const now = Date.now()
+  for (const id of ids) {
+    if (Number.isSafeInteger(id) && id > 0) recentlyNotifiedOrders.set(id, now)
+  }
+  persistRecentNotifiedOrders()
 }
 
 function browserNotificationsSupported() {
@@ -438,11 +490,15 @@ function showSystemNotification(input: { title: string; body: string; tag: strin
   }
 }
 
-function showBackgroundOrderNotification(order: OrderRow) {
+function showBackgroundOrderNotification(order: OrderRow, arrivalCount = 1) {
   if (!backgroundNotificationsEnabled || !document.hidden) return false
   return showSystemNotification({
-    title: `Đơn mới #${order.id} · ${order.customer_name}`,
-    body: `${itemCount(order)} món · ${totalLabel(order)}`,
+    title: arrivalCount > 1
+      ? `${arrivalCount} đơn mới vừa tới · Sky's house`
+      : `Đơn mới #${order.id} · ${order.customer_name}`,
+    body: arrivalCount > 1
+      ? `Mới nhất #${order.id} · ${order.customer_name} · ${itemCount(order)} món`
+      : `${itemCount(order)} món · ${totalLabel(order)}`,
     tag: `skyhouse-order-${order.id}`,
     orderId: order.id,
   })
@@ -480,23 +536,51 @@ function ensureOrderToast() {
   return toastRoot
 }
 
-function showOrderToast(order: OrderRow) {
+function showOrderToast(order: OrderRow, arrivalCount = 1) {
   const toast = ensureOrderToast()
   toast.classList.remove('diagnostic')
   toast.innerHTML = `
     <button type="button" class="adminOrderToastClose" data-order-toast-close aria-label="Đóng thông báo">×</button>
     <div class="adminOrderToastIcon">✦</div>
     <div class="adminOrderToastCopy">
-      <small>ĐƠN MỚI VỪA TỚI</small>
-      <strong>#${order.id} · ${escapeHtml(order.customer_name)}</strong>
+      <small>${arrivalCount > 1 ? `${arrivalCount} ĐƠN MỚI VỪA TỚI` : 'ĐƠN MỚI VỪA TỚI'}</small>
+      <strong>${arrivalCount > 1 ? 'Mới nhất ' : ''}#${order.id} · ${escapeHtml(order.customer_name)}</strong>
       <span>${itemCount(order)} món · ${escapeHtml(totalLabel(order))}</span>
     </div>
-    <button type="button" class="adminOrderToastOpen" data-order-toast-open="${order.id}">Xem đơn</button>
+    <button type="button" class="adminOrderToastOpen" data-order-toast-open="${order.id}">${arrivalCount > 1 ? 'Xem đơn mới nhất' : 'Xem đơn'}</button>
   `
   requestAnimationFrame(() => toast.classList.add('show'))
   playOrderChime()
   if (toastTimer != null) window.clearTimeout(toastTimer)
   toastTimer = window.setTimeout(hideOrderToast, 12000)
+}
+
+function announceOrderArrivals(discovered: OrderRow[]) {
+  const candidates = discovered.filter(order => {
+    const id = Number(order.id)
+    return Number.isSafeInteger(id) && id > 0 && !wasOrderRecentlyNotified(id)
+  })
+  if (!candidates.length) return
+
+  const newest = candidates[0]
+  markOrdersNotified(candidates.map(order => Number(order.id)))
+
+  if (panelOpen) {
+    noticeText = candidates.length === 1
+      ? `Có đơn mới #${newest.id} vừa tới.`
+      : `Có ${candidates.length} đơn mới vừa tới. Đơn mới nhất #${newest.id}.`
+    noticeState = 'ok'
+    playOrderChime()
+    renderPanel()
+    return
+  }
+
+  if (showBackgroundOrderNotification(newest, candidates.length)) {
+    playOrderChime()
+    return
+  }
+
+  showOrderToast(newest, candidates.length)
 }
 
 function testNotification() {
@@ -754,19 +838,7 @@ async function loadOrders(silent = true) {
   renderNotificationState()
   startRealtime()
 
-  if (newlyDiscovered.length > 0) {
-    if (panelOpen) {
-      noticeText = newlyDiscovered.length === 1
-        ? `Có đơn mới #${newlyDiscovered[0].id} vừa tới.`
-        : `Có ${newlyDiscovered.length} đơn mới vừa tới.`
-      noticeState = 'ok'
-      playOrderChime()
-    } else {
-      const newest = newlyDiscovered[0]
-      if (!showBackgroundOrderNotification(newest)) showOrderToast(newest)
-      else playOrderChime()
-    }
-  }
+  if (newlyDiscovered.length > 0) announceOrderArrivals(newlyDiscovered)
 
   if (panelOpen) renderPanel()
 }
@@ -897,15 +969,7 @@ function handleRealtimeInsert(raw: Record<string, unknown>) {
   if (!seenOrderIds.has(id)) unseenOrderIds.add(id)
 
   renderNotificationState()
-  if (panelOpen) {
-    noticeText = `Có đơn mới #${id} vừa tới.`
-    noticeState = 'ok'
-    playOrderChime()
-    renderPanel()
-  } else {
-    if (!showBackgroundOrderNotification(order)) showOrderToast(order)
-    else playOrderChime()
-  }
+  announceOrderArrivals([order])
 }
 
 function startRealtime() {
@@ -1057,6 +1121,9 @@ export function installAdminOrders() {
   document.addEventListener('visibilitychange', refreshAfterResume)
   window.addEventListener('online', refreshAfterResume)
   window.addEventListener('offline', handleOffline)
+  window.addEventListener('storage', event => {
+    if (event.key === RECENT_NOTIFIED_KEY) refreshRecentNotifiedOrders()
+  })
 
   supabase.auth.onAuthStateChange((_event, session) => {
     if (session) {
