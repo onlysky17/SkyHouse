@@ -221,3 +221,33 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
 @media(max-width:560px){
   .adminOrdersHeaderActions .adminOrdersBrowserToggle{padding:8px 10px!important;font-size:10px!important}
 }
+
+
+.adminOrdersTrace{margin:10px 18px 0;border:1px solid rgba(36,22,15,.09);border-radius:15px;background:rgba(255,255,255,.55);overflow:hidden}
+.adminOrdersTrace summary{display:flex;align-items:center;gap:8px;min-height:38px;padding:8px 11px;color:#4b3930;font-size:10px;font-weight:900;cursor:pointer;list-style:none}
+.adminOrdersTrace summary::-webkit-details-marker{display:none}
+.adminOrdersTrace summary::before{content:'›';font-size:17px;line-height:1;transition:transform .16s ease}
+.adminOrdersTrace[open] summary::before{transform:rotate(90deg)}
+.adminOrdersTrace summary b{display:grid;place-items:center;min-width:21px;height:21px;margin-left:auto;padding:0 6px;border-radius:999px;background:rgba(36,22,15,.08);font-size:9px}
+.adminOrdersTraceToolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 11px;border-top:1px solid rgba(36,22,15,.07);border-bottom:1px solid rgba(36,22,15,.07);background:#f7efe4}
+.adminOrdersTraceToolbar p{margin:0;color:rgba(36,22,15,.52);font-size:9px;line-height:1.4}
+.adminOrdersTraceToolbar>div{display:flex;gap:6px;flex:0 0 auto}
+.adminOrdersTraceToolbar button{min-height:30px;border:1px solid rgba(36,22,15,.11);border-radius:999px;background:#fff;color:#4b3930;padding:6px 9px;font-size:9px;font-weight:850;cursor:pointer}
+.adminOrdersTraceList{display:grid;max-height:160px;overflow:auto;padding:7px 10px 9px}
+.adminOrdersTraceRow{display:grid;grid-template-columns:62px minmax(0,1fr);gap:9px;padding:6px 2px;border-bottom:1px solid rgba(36,22,15,.06);font-size:9px;line-height:1.4}
+.adminOrdersTraceRow:last-child{border-bottom:0}
+.adminOrdersTraceRow time{color:rgba(36,22,15,.42);font-variant-numeric:tabular-nums}
+.adminOrdersTraceRow span{color:#4b3930;overflow-wrap:anywhere}
+.adminOrdersTraceRow.ok span{color:#3f6431}
+.adminOrdersTraceRow.warn span{color:#9a641f}
+.adminOrdersTraceRow.error span{color:#983b2c}
+.adminOrdersTraceEmpty{padding:12px 2px;color:rgba(36,22,15,.46);font-size:9px;text-align:center}
+
+@media(max-width:560px){
+  .adminOrdersTrace{margin:8px 10px 0}
+  .adminOrdersTraceToolbar{align-items:stretch;flex-direction:column}
+  .adminOrdersTraceToolbar>div{width:100%}
+  .adminOrdersTraceToolbar button{flex:1}
+  .adminOrdersTraceList{max-height:130px}
+  .adminOrdersTraceRow{grid-template-columns:54px minmax(0,1fr)}
+}

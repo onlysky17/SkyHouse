@@ -3,6 +3,8 @@ import { supabase } from './lib/supabase'
 type OrderStatus = 'new' | 'confirmed' | 'shipping' | 'completed' | 'cancelled'
 type OrderFilter = 'all' | 'unread' | OrderStatus
 type RealtimeState = 'connecting' | 'connected' | 'degraded' | 'offline'
+type NotificationTraceTone = 'info' | 'ok' | 'warn' | 'error'
+type NotificationTrace = { at: number; tone: NotificationTraceTone; message: string }
 
 type OrderItem = {
   name?: string
@@ -44,7 +46,9 @@ const LEGACY_SEEN_THROUGH_KEY = 'skyhouse_admin_orders_seen_through_v1'
 const SOUND_KEY = 'skyhouse_admin_order_sound_v1'
 const BACKGROUND_NOTIFICATION_KEY = 'skyhouse_admin_background_notifications_v1'
 const RECENT_NOTIFIED_KEY = 'skyhouse_admin_recent_notified_orders_v1'
+const NOTIFICATION_TRACE_KEY = 'skyhouse_admin_notification_trace_v1'
 const NOTIFICATION_DEDUPE_MS = 24 * 60 * 60 * 1000
+const NOTIFICATION_TRACE_LIMIT = 40
 let orders: OrderRow[] = []
 let filter: OrderFilter = 'all'
 let selectedId: number | null = null
@@ -63,6 +67,7 @@ let legacySeenThroughOrderId = loadLegacySeenThroughOrderId()
 let soundEnabled = loadSoundPreference()
 let backgroundNotificationsEnabled = loadBackgroundNotificationPreference()
 let recentlyNotifiedOrders = loadRecentNotifiedOrders()
+let notificationTrace = loadNotificationTrace()
 let audioContext: AudioContext | null = null
 let currentAdminUserId: string | null = null
 let realtimeChannel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
@@ -118,7 +123,9 @@ function realtimeMeta() {
 
 function setRealtimeState(next: RealtimeState) {
   if (realtimeState === next) return
+  const previous = realtimeState
   realtimeState = next
+  recordNotificationTrace(`Realtime: ${previous} → ${next}.`, next === 'connected' ? 'ok' : next === 'offline' ? 'error' : 'warn')
   if (panelOpen) renderPanel()
 }
 
@@ -169,6 +176,98 @@ function loadSoundPreference() {
 
 function loadBackgroundNotificationPreference() {
   try { return localStorage.getItem(BACKGROUND_NOTIFICATION_KEY) === '1' } catch { return false }
+}
+
+function loadNotificationTrace() {
+  try {
+    const raw = localStorage.getItem(NOTIFICATION_TRACE_KEY)
+    if (!raw) return [] as NotificationTrace[]
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return [] as NotificationTrace[]
+    return parsed
+      .map(item => ({
+        at: Number(item?.at),
+        tone: item?.tone as NotificationTraceTone,
+        message: String(item?.message ?? ''),
+      }))
+      .filter(item => Number.isFinite(item.at) && ['info', 'ok', 'warn', 'error'].includes(item.tone) && item.message)
+      .slice(0, NOTIFICATION_TRACE_LIMIT)
+  } catch {
+    return [] as NotificationTrace[]
+  }
+}
+
+function persistNotificationTrace() {
+  notificationTrace = notificationTrace.slice(0, NOTIFICATION_TRACE_LIMIT)
+  try { localStorage.setItem(NOTIFICATION_TRACE_KEY, JSON.stringify(notificationTrace)) } catch { /* ignore storage errors */ }
+}
+
+function recordNotificationTrace(message: string, tone: NotificationTraceTone = 'info') {
+  notificationTrace = [{ at: Date.now(), tone, message }, ...notificationTrace].slice(0, NOTIFICATION_TRACE_LIMIT)
+  persistNotificationTrace()
+}
+
+function clearNotificationTrace() {
+  notificationTrace = []
+  persistNotificationTrace()
+  noticeText = 'Đã xóa nhật ký chẩn đoán trên thiết bị này.'
+  noticeState = 'ok'
+  if (panelOpen) renderPanel()
+}
+
+function formatTraceTime(value: number) {
+  try {
+    return new Intl.DateTimeFormat('vi-VN', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    }).format(new Date(value))
+  } catch {
+    return new Date(value).toLocaleTimeString()
+  }
+}
+
+function notificationTraceHtml() {
+  if (!notificationTrace.length) return '<div class="adminOrdersTraceEmpty">Chưa có sự kiện chẩn đoán trên thiết bị này.</div>'
+  return notificationTrace.map(entry => `
+    <div class="adminOrdersTraceRow ${entry.tone}">
+      <time>${escapeHtml(formatTraceTime(entry.at))}</time>
+      <span>${escapeHtml(entry.message)}</span>
+    </div>
+  `).join('')
+}
+
+function diagnosticSnapshotText() {
+  const realtime = realtimeMeta()
+  const lines = [
+    "SKY'S HOUSE · NOTIFICATION DIAGNOSTICS",
+    `Realtime: ${realtime.label}`,
+    `Online: ${navigator.onLine ? 'yes' : 'no'}`,
+    `Tab hidden: ${document.hidden ? 'yes' : 'no'}`,
+    `Last sync: ${lastSyncAt ? lastSyncAt.toISOString() : 'none'}`,
+    `Unread: ${unseenOrderIds.size}`,
+    `New-status backlog: ${countStatus('new')}`,
+    `Sound: ${soundEnabled ? 'on' : 'off'}`,
+    `Browser notification setting: ${backgroundNotificationsEnabled ? 'on' : 'off'}`,
+    `Browser notification permission: ${browserNotificationPermission()}`,
+    `Recent alerted IDs cached: ${recentlyNotifiedOrders.size}`,
+    '',
+    'Recent diagnostic events:',
+    ...notificationTrace.map(entry => `${new Date(entry.at).toISOString()} [${entry.tone}] ${entry.message}`),
+  ]
+  return lines.join('\n')
+}
+
+async function copyNotificationDiagnostics() {
+  try {
+    await navigator.clipboard.writeText(diagnosticSnapshotText())
+    noticeText = 'Đã sao chép chẩn đoán thông báo. Nội dung không chứa tên, SĐT hay ghi chú khách.'
+    noticeState = 'ok'
+    recordNotificationTrace('Đã sao chép snapshot chẩn đoán không chứa PII.', 'ok')
+  } catch {
+    noticeText = 'Trình duyệt không cho sao chép chẩn đoán tự động.'
+    noticeState = 'error'
+    recordNotificationTrace('Không sao chép được snapshot chẩn đoán do quyền clipboard.', 'error')
+  }
+  if (panelOpen) renderPanel()
 }
 
 function loadRecentNotifiedOrders() {
@@ -259,6 +358,7 @@ function persistSoundPreference() {
 
 async function toggleBackgroundNotifications() {
   if (!browserNotificationsSupported()) {
+    recordNotificationTrace('Trình duyệt không hỗ trợ Notification API.', 'warn')
     noticeText = 'Trình duyệt này không hỗ trợ thông báo hệ thống.'
     noticeState = 'error'
     if (panelOpen) renderPanel()
@@ -268,6 +368,7 @@ async function toggleBackgroundNotifications() {
   if (backgroundNotificationsEnabled && Notification.permission === 'granted') {
     backgroundNotificationsEnabled = false
     persistBackgroundNotificationPreference()
+    recordNotificationTrace('Admin tắt thông báo nền trên thiết bị.', 'info')
     noticeText = 'Đã tắt thông báo nền trên thiết bị này.'
     noticeState = 'ok'
     if (panelOpen) renderPanel()
@@ -281,6 +382,7 @@ async function toggleBackgroundNotifications() {
   if (permission !== 'granted') {
     backgroundNotificationsEnabled = false
     persistBackgroundNotificationPreference()
+    recordNotificationTrace(`Quyền thông báo nền không được cấp: ${permission}.`, permission === 'denied' ? 'error' : 'warn')
     noticeText = permission === 'denied'
       ? 'Thông báo hệ thống đang bị trình duyệt chặn. Hãy cho phép notification trong cài đặt site nếu muốn bật lại.'
       : 'Chưa cấp quyền thông báo nền.'
@@ -291,6 +393,7 @@ async function toggleBackgroundNotifications() {
 
   backgroundNotificationsEnabled = true
   persistBackgroundNotificationPreference()
+  recordNotificationTrace('Admin bật thông báo nền; quyền trình duyệt = granted.', 'ok')
   noticeText = 'Đã bật thông báo nền. Tính năng hoạt động khi tab admin vẫn đang mở.'
   noticeState = 'ok'
   showSystemNotification({
@@ -555,15 +658,23 @@ function showOrderToast(order: OrderRow, arrivalCount = 1) {
   toastTimer = window.setTimeout(hideOrderToast, 12000)
 }
 
-function announceOrderArrivals(discovered: OrderRow[]) {
+function announceOrderArrivals(discovered: OrderRow[], source: 'realtime' | 'catch-up' = 'realtime') {
   const candidates = discovered.filter(order => {
     const id = Number(order.id)
     return Number.isSafeInteger(id) && id > 0 && !wasOrderRecentlyNotified(id)
   })
+  const suppressed = discovered.length - candidates.length
+  if (suppressed > 0) {
+    recordNotificationTrace(`Dedupe chặn ${suppressed} cảnh báo lặp từ ${source}.`, 'ok')
+  }
   if (!candidates.length) return
 
   const newest = candidates[0]
   markOrdersNotified(candidates.map(order => Number(order.id)))
+  recordNotificationTrace(
+    `${source === 'realtime' ? 'Realtime' : 'Catch-up'} phát hiện ${candidates.length} đơn mới; mới nhất #${newest.id}.`,
+    'ok',
+  )
 
   if (panelOpen) {
     noticeText = candidates.length === 1
@@ -571,16 +682,19 @@ function announceOrderArrivals(discovered: OrderRow[]) {
       : `Có ${candidates.length} đơn mới vừa tới. Đơn mới nhất #${newest.id}.`
     noticeState = 'ok'
     playOrderChime()
+    recordNotificationTrace('Đã cảnh báo trong panel admin.', 'info')
     renderPanel()
     return
   }
 
   if (showBackgroundOrderNotification(newest, candidates.length)) {
     playOrderChime()
+    recordNotificationTrace('Đã gửi browser system notification cho đơn mới.', 'info')
     return
   }
 
   showOrderToast(newest, candidates.length)
+  recordNotificationTrace('Đã hiển thị in-page toast cho đơn mới.', 'info')
 }
 
 function testNotification() {
@@ -606,6 +720,10 @@ function testNotification() {
         tag: 'skyhouse-notification-test',
       })
     : false
+  recordNotificationTrace(
+    systemShown ? 'Self-test: toast + audio + system notification.' : 'Self-test: toast + audio cục bộ.',
+    'ok',
+  )
   noticeText = systemShown
     ? 'Đã chạy thử toast + âm báo + thông báo hệ thống. Không tạo đơn test.'
     : 'Đã chạy thử toast + âm báo cục bộ. Không tạo đơn test.'
@@ -762,6 +880,14 @@ function renderPanel() {
         <button type="button" class="adminOrderMarkAllSeen" data-orders-mark-all-seen ${unseenOrderIds.size === 0 ? 'disabled' : ''}>✓ Đã xem hết</button>
       </nav>
       ${noticeText ? `<div class="adminOrdersNotice ${noticeState}">${escapeHtml(noticeText)}</div>` : ''}
+      <details class="adminOrdersTrace">
+        <summary><span>Nhật ký cảnh báo</span><b>${notificationTrace.length}</b></summary>
+        <div class="adminOrdersTraceToolbar">
+          <p>Chỉ lưu cục bộ trên thiết bị; không ghi tên, SĐT hay ghi chú khách.</p>
+          <div><button type="button" data-orders-copy-diagnostics>Sao chép chẩn đoán</button><button type="button" data-orders-clear-diagnostics>Xóa nhật ký</button></div>
+        </div>
+        <div class="adminOrdersTraceList">${notificationTraceHtml()}</div>
+      </details>
       <div class="adminOrdersWorkspace">
         <aside class="adminOrdersList">${orderListHtml()}</aside>
         <article class="adminOrdersDetail">${orderDetailHtml()}</article>
@@ -817,6 +943,7 @@ async function loadOrders(silent = true) {
 
   if (error) {
     loading = false
+    recordNotificationTrace(`Tải đơn thất bại: ${error.message}`, 'error')
     noticeText = `Không tải được đơn hàng: ${error.message}`
     noticeState = 'error'
     if (panelOpen) renderPanel()
@@ -838,7 +965,7 @@ async function loadOrders(silent = true) {
   renderNotificationState()
   startRealtime()
 
-  if (newlyDiscovered.length > 0) announceOrderArrivals(newlyDiscovered)
+  if (newlyDiscovered.length > 0) announceOrderArrivals(newlyDiscovered, 'catch-up')
 
   if (panelOpen) renderPanel()
 }
@@ -969,7 +1096,7 @@ function handleRealtimeInsert(raw: Record<string, unknown>) {
   if (!seenOrderIds.has(id)) unseenOrderIds.add(id)
 
   renderNotificationState()
-  announceOrderArrivals([order])
+  announceOrderArrivals([order], 'realtime')
 }
 
 function startRealtime() {
@@ -985,9 +1112,11 @@ function startRealtime() {
     })
     .subscribe(status => {
       if (status === 'SUBSCRIBED') {
+        recordNotificationTrace('Supabase Realtime subscribed.', 'ok')
         setRealtimeState('connected')
         void loadOrders(true)
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        recordNotificationTrace(`Supabase Realtime status: ${status}; chuyển sang catch-up.`, 'warn')
         setRealtimeState(navigator.onLine ? 'degraded' : 'offline')
         const failedChannel = realtimeChannel
         realtimeChannel = null
@@ -1018,7 +1147,16 @@ function ensurePanel() {
       return
     }
     if (target.closest('[data-orders-refresh]')) {
+      recordNotificationTrace('Admin yêu cầu làm mới đơn thủ công.', 'info')
       void loadOrders(false)
+      return
+    }
+    if (target.closest('[data-orders-copy-diagnostics]')) {
+      void copyNotificationDiagnostics()
+      return
+    }
+    if (target.closest('[data-orders-clear-diagnostics]')) {
+      clearNotificationTrace()
       return
     }
     if (target.closest('[data-orders-test-notification]')) {
@@ -1117,9 +1255,15 @@ export function installAdminOrders() {
     if (realtimeState === 'offline') setRealtimeState('connecting')
     void loadOrders(true)
   }
-  const handleOffline = () => setRealtimeState('offline')
+  const handleOffline = () => {
+    recordNotificationTrace('Browser phát hiện mất mạng.', 'error')
+    setRealtimeState('offline')
+  }
   document.addEventListener('visibilitychange', refreshAfterResume)
-  window.addEventListener('online', refreshAfterResume)
+  window.addEventListener('online', () => {
+    recordNotificationTrace('Browser online trở lại; chạy catch-up.', 'ok')
+    refreshAfterResume()
+  })
   window.addEventListener('offline', handleOffline)
   window.addEventListener('storage', event => {
     if (event.key === RECENT_NOTIFIED_KEY) refreshRecentNotifiedOrders()

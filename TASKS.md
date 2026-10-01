@@ -14,6 +14,8 @@ Live Git evidence overrides this file if stale.
 | `ORDER-OPS-NOTIFY-005` — diagnostics/self-test | CLOSED | #30 | `4862d49ae9db0789e6be1a9cb43a900113313745` |
 | `ORDER-OPS-NOTIFY-006` — optional browser background notification | CLOSED | #31 | `1bde18c509d1e8b232809bcc8d42311a5ba9cb08` |
 | `ORDER-OPS-NOTIFY-007` — duplicate-alert lifecycle | CLOSED | #32 | `fb29fb87185f1c55d7dc3031b579016878aebe32` |
+| `PROJECT-CONTINUITY-001` — root-level Work/agent continuity | CLOSED | #34 | `1da1fab945a6f555932ef3d049fa89a70eccb2a9` |
+| `ORDER-OPS-NOTIFY-008` — runtime acceptance instrumentation | ACTIVE / MERGE GATE | #35 | pending |
 
 ## Superseded continuity attempt
 
@@ -23,12 +25,18 @@ Live Git evidence overrides this file if stale.
 
 ## Active task
 
-`PROJECT-CONTINUITY-001`
+`ORDER-OPS-NOTIFY-008 — Runtime acceptance instrumentation`
 
-Goal: place continuity files directly at the SkyHouse repository root so a new agent/ChatGPT Work session can immediately understand state and continue correctly.
+Scope:
 
-## Product task after this
+- local notification event trace
+- Realtime/catch-up/dedupe/delivery-path observability
+- safe diagnostic copy-out without customer PII
+- local trace clear control
+- no production order mutation
 
-No next product task is currently authorized in this snapshot.
+## Next state
 
-A new product task must come from Sky or from an already-recorded authorized successor.
+If PR #35 is merged, verify the actual merge commit and Vercel main deployment, then perform the runtime acceptance sweep using the new diagnostic trace.
+
+Creating synthetic production orders remains a separate Owner boundary.
