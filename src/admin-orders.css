@@ -132,3 +132,29 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
   .adminOrderToast{left:10px;right:10px;top:auto;bottom:12px;width:auto;grid-template-columns:auto minmax(0,1fr);padding:12px}
   .adminOrderToastOpen{grid-column:1/-1;width:100%;min-height:40px}
 }
+
+
+.adminOrderRow.unread{border-color:rgba(214,92,44,.34);background:linear-gradient(135deg,#fff8f2 0%,#fff 68%);box-shadow:0 0 0 2px rgba(214,92,44,.05),0 10px 26px rgba(68,43,23,.07)}
+.adminOrderRow.unread::before{content:'';position:absolute;width:8px;height:8px;border-radius:999px;background:#d65c2c;box-shadow:0 0 0 4px rgba(214,92,44,.10);transform:translate(-4px,-4px)}
+.adminOrderRow{position:relative}
+.adminOrderRowBadges{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:0 0 auto}
+.adminOrderUnread{display:inline-flex;align-items:center;min-height:23px;padding:5px 7px;border-radius:999px;background:#d65c2c;color:#fff;font-size:7px;font-weight:950;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+
+.adminOrdersSoundToggle{min-width:126px}
+.adminOrdersSoundToggle.on{border-color:rgba(76,109,62,.24)!important;background:#f0f7e9!important;color:#35572b!important}
+
+@media(max-width:700px){
+  .adminOrdersHeader{flex-wrap:wrap}
+  .adminOrdersHeaderActions{width:100%;justify-content:flex-end;flex-wrap:wrap}
+  .adminOrdersSoundToggle{min-width:0}
+}
+
+@media(max-width:560px){
+  .adminOrdersHeaderActions{gap:6px}
+  .adminOrdersHeaderActions .adminOrdersSoundToggle{width:auto;max-width:none;padding:8px 10px!important;font-size:10px!important}
+  .adminOrderRowBadges{gap:4px}
+  .adminOrderUnread{font-size:6px;padding:4px 6px;min-height:21px}
+  .adminOrderToast{bottom:max(12px,env(safe-area-inset-bottom));border-radius:18px}
+  .adminOrderToastClose{right:7px;top:6px;width:28px;height:28px;border-radius:999px;background:rgba(36,22,15,.06)}
+  .adminOrderToastCopy{padding-right:24px}
+}
