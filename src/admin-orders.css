@@ -18,12 +18,16 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
 .adminOrdersHeaderActions button{min-height:40px;border:1px solid rgba(36,22,15,.12);border-radius:999px;background:#fff;color:#24160f;padding:8px 13px;font-weight:850;cursor:pointer}
 .adminOrdersHeaderActions button:last-child{width:40px;padding:0;font-size:22px}
 
-.adminOrderFilters{display:flex;gap:8px;padding:12px 18px;overflow:auto;border-bottom:1px solid rgba(36,22,15,.08);background:#f4eadc;scrollbar-width:none}
-.adminOrderFilters::-webkit-scrollbar{display:none}
+.adminOrderFilters{display:flex;align-items:center;gap:8px;padding:12px 18px;overflow:hidden;border-bottom:1px solid rgba(36,22,15,.08);background:#f4eadc}
+.adminOrderFilterScroller{display:flex;gap:8px;min-width:0;flex:1;overflow:auto;scrollbar-width:none}
+.adminOrderFilterScroller::-webkit-scrollbar{display:none}
 .adminOrderFilters button{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;border:1px solid rgba(36,22,15,.10);border-radius:999px;background:#fff;color:#4b3930;padding:8px 11px;font-size:11px;font-weight:850;cursor:pointer}
 .adminOrderFilters button b{display:grid;place-items:center;min-width:21px;height:21px;padding:0 6px;border-radius:999px;background:rgba(36,22,15,.08);font-size:10px}
 .adminOrderFilters button.active{background:#24160f;color:#fff;border-color:#24160f}
 .adminOrderFilters button.active b{background:rgba(255,255,255,.14)}
+.adminOrderFilters .adminOrderMarkAllSeen{margin-left:auto;border-color:rgba(76,109,62,.18);background:#f0f7e9;color:#35572b}
+.adminOrderFilters .adminOrderMarkAllSeen:hover:not(:disabled){border-color:rgba(76,109,62,.34);background:#e5f1dc}
+.adminOrderFilters .adminOrderMarkAllSeen:disabled{opacity:.42;cursor:default}
 
 .adminOrdersNotice{margin:10px 18px 0;padding:10px 12px;border:1px solid #ead2aa;border-radius:13px;background:#fff5df;color:#7e531e;font-size:12px;font-weight:750}
 .adminOrdersNotice.ok{border-color:#bfd6ae;background:#f0f7e9;color:#3f6431}
@@ -97,6 +101,7 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
   .adminOrdersHeaderActions button:first-child{font-size:0;width:40px;padding:0}
   .adminOrdersHeaderActions button:first-child::after{content:'↻';font-size:18px}
   .adminOrderFilters{padding:9px 10px}
+  .adminOrderFilters .adminOrderMarkAllSeen{padding:8px 9px;font-size:9px}
   .adminOrdersNotice{margin:8px 10px 0}
   .adminOrdersList{padding:9px;max-height:34dvh}
   .adminOrderRow{padding:11px;border-radius:15px}
@@ -157,4 +162,16 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
   .adminOrderToast{bottom:max(12px,env(safe-area-inset-bottom));border-radius:18px}
   .adminOrderToastClose{right:7px;top:6px;width:28px;height:28px;border-radius:999px;background:rgba(36,22,15,.06)}
   .adminOrderToastCopy{padding-right:24px}
+}
+
+
+.adminOrderFilters button[data-order-filter="unread"]{border-color:rgba(214,92,44,.18);color:#a53f1a}
+.adminOrderFilters button[data-order-filter="unread"] b{background:#fff0e7;color:#b65120}
+.adminOrderFilters button[data-order-filter="unread"].active{border-color:#d65c2c;background:#d65c2c;color:#fff}
+.adminOrderFilters button[data-order-filter="unread"].active b{background:rgba(255,255,255,.18);color:#fff}
+
+@media(max-width:560px){
+  .adminOrderFilters{gap:6px}
+  .adminOrderFilterScroller{gap:6px}
+  .adminOrderFilters .adminOrderMarkAllSeen{max-width:92px;white-space:normal;line-height:1.15;text-align:center;justify-content:center}
 }

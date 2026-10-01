@@ -1,7 +1,7 @@
 import { supabase } from './lib/supabase'
 
 type OrderStatus = 'new' | 'confirmed' | 'shipping' | 'completed' | 'cancelled'
-type OrderFilter = 'all' | OrderStatus
+type OrderFilter = 'all' | 'unread' | OrderStatus
 
 type OrderItem = {
   name?: string
@@ -176,6 +176,18 @@ function markOrderSeen(id: number) {
   renderNotificationState()
 }
 
+function markAllOrdersSeen() {
+  if (unseenOrderIds.size === 0) return
+  for (const id of unseenOrderIds) seenOrderIds.add(id)
+  unseenOrderIds.clear()
+  persistSeenOrderIds()
+  if (filter === 'unread') selectedId = null
+  noticeText = 'Đã đánh dấu tất cả đơn đang hiển thị là đã xem.'
+  noticeState = 'ok'
+  renderNotificationState()
+  if (panelOpen) renderPanel()
+}
+
 function renderTrigger() {
   if (!trigger) return
   const newCount = countStatus('new')
@@ -295,7 +307,11 @@ function showOrderToast(order: OrderRow) {
 }
 
 function filteredOrders() {
-  return filter === 'all' ? orders : orders.filter(order => order.status === filter)
+  if (filter === 'all') return orders
+  if (filter === 'unread') {
+    return orders.filter(order => unseenOrderIds.has(Number(order.id)) || Number(order.id) === selectedId)
+  }
+  return orders.filter(order => order.status === filter)
 }
 
 function ensureSelection() {
@@ -401,9 +417,17 @@ function orderDetailHtml() {
 function renderPanel() {
   if (!panelRoot) return
   ensureSelection()
-  const counts = { all: orders.length, new: countStatus('new'), confirmed: countStatus('confirmed'), shipping: countStatus('shipping'), completed: countStatus('completed'), cancelled: countStatus('cancelled') }
+  const counts: Record<OrderFilter, number> = {
+    all: orders.length,
+    unread: unseenOrderIds.size,
+    new: countStatus('new'),
+    confirmed: countStatus('confirmed'),
+    shipping: countStatus('shipping'),
+    completed: countStatus('completed'),
+    cancelled: countStatus('cancelled'),
+  }
   const filterButtons: Array<[OrderFilter, string]> = [
-    ['all', 'Tất cả'], ['new', 'Đơn mới'], ['confirmed', 'Đã xác nhận'], ['shipping', 'Đang giao'], ['completed', 'Hoàn tất'], ['cancelled', 'Đã hủy'],
+    ['all', 'Tất cả'], ['unread', 'Chưa xem'], ['new', 'Đơn mới'], ['confirmed', 'Đã xác nhận'], ['shipping', 'Đang giao'], ['completed', 'Hoàn tất'], ['cancelled', 'Đã hủy'],
   ]
   const filters = filterButtons.map(([value, label]) => `
     <button type="button" data-order-filter="${value}" class="${filter === value ? 'active' : ''}"><span>${escapeHtml(label)}</span><b>${counts[value]}</b></button>
@@ -416,7 +440,10 @@ function renderPanel() {
         <div><small>SKY'S HOUSE · ADMIN</small><h1 class="serif">Đơn hàng.</h1><p>Theo dõi từ lúc khách gửi giỏ đến khi giao xong.</p></div>
         <div class="adminOrdersHeaderActions"><button type="button" data-orders-refresh>↻ Làm mới</button><button type="button" class="adminOrdersSoundToggle ${soundEnabled ? 'on' : ''}" data-orders-sound-toggle aria-pressed="${soundEnabled}">${soundEnabled ? '🔔 Âm báo: Bật' : '🔕 Âm báo: Tắt'}</button><button type="button" data-orders-close aria-label="Đóng">×</button></div>
       </header>
-      <nav class="adminOrderFilters">${filters}</nav>
+      <nav class="adminOrderFilters">
+        <div class="adminOrderFilterScroller">${filters}</div>
+        <button type="button" class="adminOrderMarkAllSeen" data-orders-mark-all-seen ${unseenOrderIds.size === 0 ? 'disabled' : ''}>✓ Đã xem hết</button>
+      </nav>
       ${noticeText ? `<div class="adminOrdersNotice ${noticeState}">${escapeHtml(noticeText)}</div>` : ''}
       <div class="adminOrdersWorkspace">
         <aside class="adminOrdersList">${orderListHtml()}</aside>
@@ -687,6 +714,10 @@ function ensurePanel() {
       toggleSound()
       return
     }
+    if (target.closest('[data-orders-mark-all-seen]')) {
+      markAllOrdersSeen()
+      return
+    }
     const settlementSave = target.closest<HTMLElement>('[data-order-settlement-save]')
     if (settlementSave) {
       void saveSettlement(Number(settlementSave.dataset.orderSettlementSave))
@@ -700,7 +731,7 @@ function ensurePanel() {
     const filterButton = target.closest<HTMLElement>('[data-order-filter]')
     if (filterButton) {
       const next = filterButton.dataset.orderFilter as OrderFilter
-      if (next === 'all' || statusOrder.includes(next as OrderStatus)) {
+      if (next === 'all' || next === 'unread' || statusOrder.includes(next as OrderStatus)) {
         filter = next
         ensureSelection()
         renderPanel()
