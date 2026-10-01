@@ -4,58 +4,60 @@ This file exists so a new agent does not have to guess what happens next.
 
 ## Current authorized work
 
-`PROJECT-CONTINUITY-001 — root-level agent / ChatGPT Work continuity`
+`ORDER-OPS-NOTIFY-008 — Runtime acceptance instrumentation`
 
-Current intent:
+Branch:
 
-- continuity files belong directly in the SkyHouse repository root
-- the SkyHouse workspace itself is the project
-- do not create a nested `project/` folder
-- PR #33 is superseded and must remain unmerged
+`task/order-ops-notify-008`
 
-## What the current agent must do
+PR:
 
-1. Finish the root continuity files.
-2. Verify the branch is based on the latest canonical `main`.
-3. Verify no unrelated files changed.
-4. Verify Vercel/check status if the repository integration runs for docs-only changes.
-5. Open a PR.
-6. Stop at Sky's merge gate.
-7. After Sky merges, verify the actual merge commit and new `main`.
+**#35 — Add notification diagnostic trace**
 
-## What a new agent should do if it receives the folder later
+## What has been implemented
 
-1. Read `00_READ_ME_FIRST.md`.
-2. Verify local Git root/branch/HEAD/status.
-3. Fetch/compare `origin/main`.
-4. Check open PRs.
-5. Determine whether `PROJECT-CONTINUITY-001` is still open or already merged.
-6. If already merged, treat continuity bootstrap as CLOSED.
-7. Continue the currently Owner-authorized product task recorded here/TASKS/HANDOFF.
-8. If no product task is authorized, do not invent one.
+- local diagnostic event trace in the admin order panel
+- Realtime state transition logging
+- reconnect/fallback logging
+- duplicate-alert suppression logging
+- notification delivery-path logging
+- browser notification permission/toggle logging
+- manual refresh and network online/offline logging
+- self-test logging
+- privacy-safe diagnostic snapshot copy
+- local trace cleanup
 
-## Recommended next product validation — NOT AUTHORIZED
+The trace intentionally avoids customer name, phone, customer note and admin note.
 
-Before expanding the notification feature set further, the logical validation candidate is a runtime acceptance sweep of the existing notification chain:
+## Current next step
 
-- Realtime arrival
-- polling/reconnect catch-up
-- duplicate-alert suppression
-- unread/read sync across two devices
-- browser permission flow
-- background-tab notification
-- sound behavior
-- mobile visual layout
+1. Verify PR #35 is mergeable and Vercel is green.
+2. Stop at Sky's merge gate.
+3. After Sky merges #35, verify the actual merge commit and `main`.
+4. Run a runtime acceptance sweep with the new trace:
+   - Realtime arrival
+   - reconnect/polling catch-up
+   - duplicate suppression
+   - unread/read synchronization across devices
+   - browser permission flow
+   - background-tab notification
+   - sound
+   - mobile layout
+5. Capture diagnostic output when behavior is unclear.
 
-This is a **candidate validation step**, not permission to create production test orders or start a new task.
+## Hard boundary
 
-## Continuity protocol for future tasks
+Do **not** create a synthetic production order merely to exercise notification flow unless Sky explicitly authorizes production test data.
 
-Before each future PR is considered ready for Owner merge, update:
+A real naturally occurring order may be observed read-only without that additional authorization.
+
+## Continuity protocol
+
+Before each material PR is presented as ready for merge, update:
 
 - `PROJECT_STATE.md`
 - `TASKS.md`
 - `NEXT_STEP.md`
 - `HANDOFF.md` when context/boundaries changed
 
-That update must state the exact successor or explicitly state that no successor is authorized.
+The files must state the exact successor or clearly state that no successor is authorized.
