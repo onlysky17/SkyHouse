@@ -30,6 +30,7 @@ const CUSTOMER_INFO_KEY = 'skyhouse_customer_info_v1'
 const emptyInfo: CustomerInfo = { name: '', phone: '', deliveryMethod: 'delivery', address: '', note: '' }
 let lastSavedFingerprint = ''
 let lastSavedAt = 0
+let lastSavedOrderId: number | null = null
 
 function loadInfo(): CustomerInfo {
   try {
@@ -232,9 +233,9 @@ function collectOrderSnapshot(drawer: Element | null): OrderSnapshot {
 }
 
 async function saveOrder(drawer: Element | null, info: CustomerInfo) {
-  if (!supabase) return { saved: false, reused: false }
+  if (!supabase) return { saved: false, reused: false, orderId: null as number | null }
   const snapshot = collectOrderSnapshot(drawer)
-  if (!snapshot.items.length) return { saved: false, reused: false }
+  if (!snapshot.items.length) return { saved: false, reused: false, orderId: null as number | null }
 
   const payload = {
     customer_name: info.name.trim(),
@@ -243,20 +244,52 @@ async function saveOrder(drawer: Element | null, info: CustomerInfo) {
     items: snapshot.items,
     subtotal_known: snapshot.subtotal_known,
     has_contact_price: snapshot.has_contact_price,
-    status: 'new',
-    source: 'zalo',
   }
   const fingerprint = JSON.stringify(payload)
   const now = Date.now()
-  if (fingerprint === lastSavedFingerprint && now - lastSavedAt < 120000) {
-    return { saved: true, reused: true }
+  if (fingerprint === lastSavedFingerprint && now - lastSavedAt < 120000 && lastSavedOrderId) {
+    return { saved: true, reused: true, orderId: lastSavedOrderId }
   }
 
-  const { error } = await supabase.from('orders').insert(payload)
+  const { data, error } = await supabase.rpc('create_storefront_order', {
+    p_customer_name: payload.customer_name,
+    p_customer_phone: payload.customer_phone,
+    p_customer_note: payload.customer_note,
+    p_items: payload.items,
+    p_subtotal_known: payload.subtotal_known,
+    p_has_contact_price: payload.has_contact_price,
+  })
   if (error) throw new Error(error.message)
+
+  const orderId = Number(data)
+  if (!Number.isSafeInteger(orderId) || orderId <= 0) throw new Error('invalid_order_id')
+
   lastSavedFingerprint = fingerprint
   lastSavedAt = now
-  return { saved: true, reused: false }
+  lastSavedOrderId = orderId
+  return { saved: true, reused: false, orderId }
+}
+
+function renderOrderConfirmation(drawer: Element | null, orderId: number) {
+  const customerBlock = drawer?.querySelector<HTMLElement>('[data-customer-info]')
+  if (!customerBlock) return
+
+  let confirmation = customerBlock.querySelector<HTMLElement>('[data-order-confirmation]')
+  if (!confirmation) {
+    confirmation = document.createElement('section')
+    confirmation.className = 'cartOrderConfirmation'
+    confirmation.dataset.orderConfirmation = 'true'
+    customerBlock.appendChild(confirmation)
+  }
+
+  confirmation.innerHTML = `
+    <div>
+      <small>Đã ghi nhận đơn</small>
+      <strong>Đơn #${orderId}</strong>
+      <span>Sky’s house đã lưu đơn này. Ní có thể mở trang theo dõi ngay.</span>
+    </div>
+    <a href="/track?order=${encodeURIComponent(String(orderId))}">Theo dõi đơn này →</a>
+  `
 }
 
 function enhanceDrawer(drawer: HTMLElement) {
@@ -378,10 +411,12 @@ async function openZaloWithCopiedOrder(link: HTMLAnchorElement) {
   setSendNotice(drawer, 'Đang lưu đơn vào hệ thống…', 'ok')
   let stored = false
   let reused = false
+  let orderId: number | null = null
   try {
     const result = await saveOrder(drawer, info)
     stored = result.saved
     reused = result.reused
+    orderId = result.orderId
   } catch {
     stored = false
   }
@@ -391,11 +426,13 @@ async function openZaloWithCopiedOrder(link: HTMLAnchorElement) {
   const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
 
   if (stored) {
+    if (orderId) renderOrderConfirmation(drawer, orderId)
+    const orderLabel = orderId ? `Mã đơn #${orderId}. ` : ''
     setSendNotice(
       drawer,
       copied
-        ? `${reused ? 'Đơn này đã được lưu trước đó. ' : 'Đã lưu đơn vào hệ thống. '}Nội dung đã sao chép; sang Zalo rồi ${mobile ? 'chạm giữ và chọn Dán' : 'nhấn Ctrl+V'} để gửi.`
-        : `${reused ? 'Đơn này đã được lưu trước đó. ' : 'Đã lưu đơn vào hệ thống. '}Trình duyệt chặn sao chép; dùng nút “Sao chép danh sách” rồi dán vào Zalo.`,
+        ? `${reused ? 'Đơn này đã được lưu trước đó. ' : 'Đã lưu đơn vào hệ thống. '}${orderLabel}Nội dung đã sao chép; sang Zalo rồi ${mobile ? 'chạm giữ và chọn Dán' : 'nhấn Ctrl+V'} để gửi.`
+        : `${reused ? 'Đơn này đã được lưu trước đó. ' : 'Đã lưu đơn vào hệ thống. '}${orderLabel}Trình duyệt chặn sao chép; dùng nút “Sao chép danh sách” rồi dán vào Zalo.`,
       copied ? 'ok' : 'error',
     )
   } else {
