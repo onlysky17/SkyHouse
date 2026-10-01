@@ -206,3 +206,18 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
   .adminOrdersHeaderActions .adminOrdersTestNotification{padding:8px 10px!important;font-size:10px!important}
   .adminOrderToast.diagnostic{grid-template-columns:auto minmax(0,1fr)}
 }
+
+
+.adminOrdersBrowserToggle{min-width:156px}
+.adminOrdersBrowserToggle.on{border-color:rgba(76,109,62,.24)!important;background:#f0f7e9!important;color:#35572b!important}
+.adminOrdersBrowserToggle.off{border-color:rgba(36,22,15,.12)!important;background:#fff!important;color:#4b3930!important}
+.adminOrdersBrowserToggle.blocked{border-color:#e9b7ad!important;background:#fff1ee!important;color:#963b32!important}
+.adminOrdersBrowserToggle.unsupported{opacity:.48!important;cursor:not-allowed!important}
+
+@media(max-width:700px){
+  .adminOrdersHeaderActions .adminOrdersBrowserToggle{order:4;min-width:0}
+}
+
+@media(max-width:560px){
+  .adminOrdersHeaderActions .adminOrdersBrowserToggle{padding:8px 10px!important;font-size:10px!important}
+}
