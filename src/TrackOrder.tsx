@@ -107,8 +107,20 @@ function OrderCard({ order }: { order: TrackOrderRow }) {
   </article>
 }
 
+function directOrderIdFromLocation() {
+  try {
+    const raw = new URLSearchParams(location.search).get('order')
+    if (!raw || !/^\d+$/.test(raw)) return null
+    const id = Number(raw)
+    return Number.isSafeInteger(id) && id > 0 ? id : null
+  } catch {
+    return null
+  }
+}
+
 export default function TrackOrder() {
   const initial = useMemo(prefillCustomer, [])
+  const directOrderId = useMemo(directOrderIdFromLocation, [])
   const [name, setName] = useState(initial.name)
   const [phone, setPhone] = useState(initial.phone)
   const [orders, setOrders] = useState<TrackOrderRow[]>([])
@@ -116,26 +128,68 @@ export default function TrackOrder() {
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => { document.title = "Tra cứu đơn · Sky's house" }, [])
+  useEffect(() => {
+    document.title = directOrderId ? `Đơn #${directOrderId} · Sky's house` : "Tra cứu đơn · Sky's house"
+  }, [directOrderId])
+
+  useEffect(() => {
+    if (!directOrderId || !initial.phone.trim() || !supabase) return
+    let cancelled = false
+
+    const openDirectOrder = async () => {
+      setLoading(true)
+      setError('')
+      setSearched(false)
+      const { data, error: rpcError } = await supabase.rpc('track_order', {
+        p_order_id: directOrderId,
+        p_phone: initial.phone.trim(),
+      })
+      if (cancelled) return
+
+      setLoading(false)
+      setSearched(true)
+      if (rpcError) {
+        setOrders([])
+        setError('Chưa mở được đơn lúc này. Ní thử lại sau một chút nhé.')
+        return
+      }
+      setOrders((data ?? []) as TrackOrderRow[])
+    }
+
+    void openDirectOrder()
+    return () => { cancelled = true }
+  }, [directOrderId, initial.phone])
 
   const lookup = async (event: FormEvent) => {
     event.preventDefault()
     setError('')
     setSearched(false)
-    if (!name.trim() || !phone.trim()) {
+
+    if (directOrderId) {
+      if (!phone.trim()) {
+        setError(`Nhập số điện thoại đã dùng khi đặt đơn #${directOrderId} nhé.`)
+        return
+      }
+    } else if (!name.trim() || !phone.trim()) {
       setError('Nhập đúng tên người đặt và số điện thoại để tra cứu nhé.')
       return
     }
+
     if (!supabase) {
       setError('Hệ thống tra cứu đang tạm unavailable. Thử lại sau giúp Sky nhé.')
       return
     }
 
     setLoading(true)
-    const { data, error: rpcError } = await supabase.rpc('track_orders', {
-      p_phone: phone.trim(),
-      p_customer_name: name.trim(),
-    })
+    const { data, error: rpcError } = directOrderId
+      ? await supabase.rpc('track_order', {
+          p_order_id: directOrderId,
+          p_phone: phone.trim(),
+        })
+      : await supabase.rpc('track_orders', {
+          p_phone: phone.trim(),
+          p_customer_name: name.trim(),
+        })
     setLoading(false)
     setSearched(true)
 
@@ -152,20 +206,23 @@ export default function TrackOrder() {
 
     <section className="trackHero">
       <div className="trackEyebrow">Order tracking</div>
-      <h1 className="serif">Tra cứu<br /><i>đơn của ní.</i></h1>
-      <p>Nhập đúng <b>tên người đặt + số điện thoại</b>. Hệ thống chỉ trả về những đơn khớp cả hai thông tin.</p>
+      <h1 className="serif">{directOrderId ? <>Theo dõi<br /><i>đơn #{directOrderId}.</i></> : <>Tra cứu<br /><i>đơn của ní.</i></>}</h1>
+      <p>{directOrderId
+        ? <>Đây là link theo dõi riêng cho đơn <b>#{directOrderId}</b>. Trên máy vừa đặt hàng, hệ thống sẽ dùng số điện thoại đã lưu để mở đơn tự động; nếu chưa có thì chỉ cần nhập số điện thoại.</>
+        : <>Nhập đúng <b>tên người đặt + số điện thoại</b>. Hệ thống chỉ trả về những đơn khớp cả hai thông tin.</>}</p>
 
       <form className="trackForm" onSubmit={lookup}>
-        <label><span>Tên người đặt</span><input value={name} onChange={event => setName(event.target.value)} autoComplete="name" placeholder="Ví dụ: Thiên" /></label>
+        {!directOrderId && <label><span>Tên người đặt</span><input value={name} onChange={event => setName(event.target.value)} autoComplete="name" placeholder="Ví dụ: Thiên" /></label>}
         <label><span>Số điện thoại</span><input value={phone} onChange={event => setPhone(event.target.value)} inputMode="tel" autoComplete="tel" placeholder="Số đã dùng khi đặt hàng" /></label>
-        <button type="submit" disabled={loading}>{loading ? 'Đang tra cứu…' : 'Tra cứu đơn'}</button>
+        <button type="submit" disabled={loading}>{loading ? 'Đang tra cứu…' : directOrderId ? `Mở đơn #${directOrderId}` : 'Tra cứu đơn'}</button>
       </form>
+      {directOrderId && <p><a href="/track">Tra cứu đơn khác →</a></p>}
       {error && <div className="trackError">{error}</div>}
     </section>
 
     <section className="trackResults">
-      {searched && !error && orders.length === 0 && <div className="trackEmpty"><b>Chưa thấy đơn phù hợp.</b><span>Kiểm tra lại đúng tên người đặt và số điện thoại. Nếu vừa đặt xong, thử tải lại sau vài giây.</span></div>}
-      {orders.length > 0 && <div className="trackResultsHead"><div><small>Đơn gần đây</small><h2 className="serif">Tìm thấy {orders.length} đơn.</h2></div><p>Hiển thị tối đa 5 đơn mới nhất.</p></div>}
+      {searched && !error && orders.length === 0 && <div className="trackEmpty"><b>{directOrderId ? `Không mở được đơn #${directOrderId}.` : 'Chưa thấy đơn phù hợp.'}</b><span>{directOrderId ? 'Kiểm tra đúng số điện thoại đã dùng khi đặt đơn.' : 'Kiểm tra lại đúng tên người đặt và số điện thoại. Nếu vừa đặt xong, thử tải lại sau vài giây.'}</span></div>}
+      {orders.length > 0 && <div className="trackResultsHead"><div><small>{directOrderId ? 'Đơn đang theo dõi' : 'Đơn gần đây'}</small><h2 className="serif">{directOrderId ? `Đơn #${directOrderId}` : `Tìm thấy ${orders.length} đơn.`}</h2></div><p>{directOrderId ? 'Trạng thái mới nhất của đơn.' : 'Hiển thị tối đa 5 đơn mới nhất.'}</p></div>}
       <div className="trackCards">{orders.map(order => <OrderCard key={order.id} order={order} />)}</div>
     </section>
 
