@@ -13,40 +13,40 @@ Use this file when moving the project to ChatGPT Work, another agent, or a new c
 - PR #35: notification diagnostic instrumentation
 - PR #36: admin freeze fix
 - PR #37: runtime acceptance evidence
-- current canonical main: `606b1ee323106d8b35866de81658eb036a9f5180`
-
-## Current active task
-
-`ORDER-OPS-RECONNECT-UX-001`
-
-Branch:
-
-`task/order-ops-reconnect-ux-001`
+- PR #38: reconnect stale-banner UX fix
+- current canonical main: `f296da213eddf20a08c62265e4eff58800b9c9c4`
 
 ## Runtime evidence
 
-Owner reconnect test proved:
+Verified by Owner:
 
-- network loss triggers fetch failures/fallback
-- app reconnects after network restoration
-- Realtime re-subscribes
-- diagnostic trace shows degraded → connecting → connected
-- final health returns to `Realtime ổn định`
+- admin login/dashboard responsive
+- order panel responsive
+- Realtime stable/connected
+- browser notification permission granted
+- background notification enabled
+- local toast self-test delivered
+- browser/system notification visibly delivered
+- offline/fallback/reconnect/catch-up behavior works
+- after PR #38, stale `Failed to fetch` banner clears automatically after successful recovery
+- diagnostic trace shows recovery back to connected state
 
-A stale red fetch-error banner remained after successful recovery.
+## Current active task
 
-## Current fix
+`ORDER-OPS-NOTIFY-008 — runtime acceptance`
 
-`src/admin-orders.ts` now clears only the stale `Không tải được đơn hàng: ...` error after a later successful order reload and records recovery in the diagnostic trace.
+State:
 
-No DB/schema/order behavior is changed.
+**PARTIAL RUNTIME PASS**
 
-## Remaining notification acceptance
+Remaining:
 
 - audible sound confirmation from Sky
 - real order Realtime arrival
 - duplicate suppression on real/new order
 - cross-device unread/read synchronization
+
+Production had no orders during the validation sessions.
 
 Do not create synthetic production orders without explicit Owner authorization.
 
@@ -54,4 +54,4 @@ Do not create synthetic production orders without explicit Owner authorization.
 
 Sky controls merge.
 
-After this PR merges, re-test reconnect once to verify the stale error banner disappears after recovery.
+If no real order exists, wait rather than inventing an acceptance result.
