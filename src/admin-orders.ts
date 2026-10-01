@@ -962,6 +962,11 @@ async function loadOrders(silent = true) {
   lastSyncAt = new Date()
   loading = false
   loadedOnce = true
+  if (noticeState === 'error' && noticeText.startsWith('Không tải được đơn hàng:')) {
+    noticeText = ''
+    noticeState = ''
+    recordNotificationTrace('Tải đơn thành công sau lỗi mạng; đã xóa cảnh báo lỗi cũ.', 'ok')
+  }
   rebuildUnseenOrders()
   ensureSelection()
   renderNotificationState()
