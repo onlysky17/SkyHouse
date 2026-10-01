@@ -513,8 +513,10 @@ function renderTrigger() {
   const unseenCount = unseenOrderIds.size
   const badge = trigger.querySelector<HTMLElement>('b')
   if (badge) {
-    badge.textContent = String(unseenCount > 0 ? unseenCount : newCount)
-    badge.hidden = unseenCount === 0 && newCount === 0
+    const nextBadgeText = String(unseenCount > 0 ? unseenCount : newCount)
+    const shouldHideBadge = unseenCount === 0 && newCount === 0
+    if (badge.textContent !== nextBadgeText) badge.textContent = nextBadgeText
+    if (badge.hidden !== shouldHideBadge) badge.hidden = shouldHideBadge
   }
   trigger.classList.toggle('hasNew', newCount > 0)
   trigger.classList.toggle('hasUnseen', unseenCount > 0)
@@ -1219,8 +1221,9 @@ function ensureTrigger() {
   if (!userArea) return
   const existing = userArea.querySelector<HTMLButtonElement>('[data-admin-orders-trigger]')
   if (existing) {
+    const triggerChanged = trigger !== existing
     trigger = existing
-    renderNotificationState()
+    if (triggerChanged) renderNotificationState()
     return
   }
 
