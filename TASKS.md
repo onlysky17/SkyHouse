@@ -15,7 +15,8 @@ Live Git evidence overrides this file if stale.
 | `ORDER-OPS-NOTIFY-006` — optional browser background notification | CLOSED | #31 | `1bde18c509d1e8b232809bcc8d42311a5ba9cb08` |
 | `ORDER-OPS-NOTIFY-007` — duplicate-alert lifecycle | CLOSED | #32 | `fb29fb87185f1c55d7dc3031b579016878aebe32` |
 | `PROJECT-CONTINUITY-001` — root-level Work/agent continuity | CLOSED | #34 | `1da1fab945a6f555932ef3d049fa89a70eccb2a9` |
-| `ORDER-OPS-NOTIFY-008` — runtime acceptance instrumentation | ACTIVE / MERGE GATE | #35 | pending |
+| `ORDER-OPS-NOTIFY-008` — runtime acceptance instrumentation | IMPLEMENTED / RUNTIME VALIDATION PENDING | #35 | `af71874517eba99604630ecc2a41b360a022cb1e` |
+| `ADMIN-RUNTIME-FREEZE-001` — admin MutationObserver freeze fix | ACTIVE | pending | pending |
 
 ## Superseded continuity attempt
 
@@ -25,18 +26,31 @@ Live Git evidence overrides this file if stale.
 
 ## Active task
 
-`ORDER-OPS-NOTIFY-008 — Runtime acceptance instrumentation`
+`ADMIN-RUNTIME-FREEZE-001`
 
-Scope:
+Observed blocker:
 
-- local notification event trace
-- Realtime/catch-up/dedupe/delivery-path observability
-- safe diagnostic copy-out without customer PII
-- local trace clear control
-- no production order mutation
+- Supabase password login succeeds
+- authenticated API calls succeed
+- browser becomes unresponsive when authenticated admin UI mounts
+
+Root cause:
+
+- admin order-trigger MutationObserver recursively retriggered itself through unconditional badge text-node writes.
+
+Fix scope:
+
+- guard badge DOM writes
+- avoid rerendering an already-bound trigger for every body mutation
+- no DB/schema/order mutation
 
 ## Next state
 
-If PR #35 is merged, verify the actual merge commit and Vercel main deployment, then perform the runtime acceptance sweep using the new diagnostic trace.
+After this fix is merged and production deploy is live:
+
+1. log into `/admin`
+2. verify dashboard remains responsive
+3. run local notification self-test
+4. continue the remaining `ORDER-OPS-NOTIFY-008` runtime acceptance sweep
 
 Creating synthetic production orders remains a separate Owner boundary.

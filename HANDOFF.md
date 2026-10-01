@@ -7,14 +7,13 @@ Use this file when moving the project to ChatGPT Work, another agent, or a new c
 - Owner: Sky
 - Repository: `onlysky17/SkyHouse`
 - Known local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Always verify the actual Git root/workspace before mutation.
+- Always verify actual Git root/workspace before mutation.
 
-## Canonical continuity checkpoint
+## Canonical checkpoint
 
-- root continuity bootstrap: merged in PR #34
-- continuity merge commit: `1da1fab945a6f555932ef3d049fa89a70eccb2a9`
+- root continuity bootstrap: PR #34 / merge `1da1fab945a6f555932ef3d049fa89a70eccb2a9`
+- notification runtime instrumentation: PR #35 / merge `af71874517eba99604630ecc2a41b360a022cb1e`
 - PR #33: CLOSED / NOT MERGED / superseded
-- latest completed product task before current work: `ORDER-OPS-NOTIFY-007`
 
 ## Rehydrate procedure
 
@@ -30,61 +29,46 @@ Before changing anything:
 
 ## Current active task
 
-`ORDER-OPS-NOTIFY-008 — Runtime acceptance instrumentation`
+`ADMIN-RUNTIME-FREEZE-001`
 
-- branch: `task/order-ops-notify-008`
-- PR: #35
-- base main at task start: `1da1fab945a6f555932ef3d049fa89a70eccb2a9`
+Branch:
 
-Purpose: make the existing notification system observable during real browser use without inserting fake production orders.
+`task/admin-runtime-freeze-001`
 
-Current implementation provides a local event trace and privacy-safe copied diagnostic snapshot.
+Production symptom:
 
-## Product continuity
+- login form appears
+- password login succeeds at Supabase
+- authenticated REST requests succeed
+- browser becomes non-responsive around authenticated admin mount
 
-The order notification lane now contains:
+Root cause in `src/admin-orders.ts`:
 
-- Realtime order arrival
-- polling fallback
-- unread inbox
-- cross-device read sync
-- diagnostics/self-test
-- opt-in browser notifications
-- duplicate alert de-duplication
-- runtime trace instrumentation (current task)
+- `MutationObserver` watches body child-list changes
+- existing order-trigger callback rerendered notification state
+- rerender unconditionally rewrote badge `textContent`
+- text-node replacement generated another observed mutation
+- loop repeated indefinitely and saturated the browser main thread
 
-## Validation still required
+Fix:
 
-Build/deploy evidence is not enough to close timing-sensitive notification behavior.
+- guard badge DOM writes
+- do not rerender an unchanged existing trigger during observer callbacks
 
-After #35 merges, the next acceptance activity is runtime observation of:
+No DB/schema/order change is part of this bugfix.
 
-- Realtime arrival
-- reconnect/catch-up
-- dedupe behavior
-- multi-device read sync
-- browser permission/system notification
-- sound
-- mobile presentation
+## Runtime acceptance after bugfix
 
-Do not silently create production test orders. That is a separate Owner authorization boundary.
+Once merged/deployed:
+
+- verify admin dashboard responsive after login
+- run local notification self-test
+- inspect diagnostic trace
+- continue reconnect/dedupe/browser-notification/audio/mobile checks
+- do not create fake production orders without explicit Owner authorization
 
 ## Merge boundary
 
 Sky controls merge.
 
-If PR #35 is open, finish evidence and stop at the merge gate.
-
-If #35 is merged, verify the actual merge commit and main deployment before continuing the runtime acceptance sweep.
-
-## Required handoff maintenance
-
-Every material task must leave enough state here/root continuity files that another agent can answer:
-
-- What task is active?
-- What is already complete?
-- What is blocked?
-- What evidence exists?
-- What still needs validation?
-- What exact step is next?
-- Is that next step authorized or gated?
+A green preview/build does not equal Owner runtime PASS.
