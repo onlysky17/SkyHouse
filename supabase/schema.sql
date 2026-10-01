@@ -161,3 +161,20 @@ create policy "authenticated delete product images"
 on storage.objects for delete
 to authenticated
 using (bucket_id = 'product-images');
+
+
+-- Admin order notifications use Supabase Realtime for INSERT events.
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1
+       from pg_publication_tables
+       where pubname = 'supabase_realtime'
+         and schemaname = 'public'
+         and tablename = 'orders'
+     ) then
+    alter publication supabase_realtime add table public.orders;
+  end if;
+end
+$$;
