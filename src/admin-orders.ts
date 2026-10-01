@@ -38,6 +38,7 @@ const statusMeta: Record<OrderStatus, { label: string; tone: string }> = {
 }
 
 const statusOrder: OrderStatus[] = ['new', 'confirmed', 'shipping', 'completed', 'cancelled']
+const SEEN_THROUGH_KEY = 'skyhouse_admin_orders_seen_through_v1'
 let orders: OrderRow[] = []
 let filter: OrderFilter = 'all'
 let selectedId: number | null = null
@@ -46,8 +47,14 @@ let loading = false
 let loadedOnce = false
 let trigger: HTMLButtonElement | null = null
 let panelRoot: HTMLElement | null = null
+let toastRoot: HTMLElement | null = null
+let toastTimer: number | null = null
 let noticeText = ''
 let noticeState: 'ok' | 'error' | '' = ''
+let unseenOrderIds = new Set<number>()
+let seenThroughOrderId = loadSeenThroughOrderId()
+let realtimeChannel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
+const baseDocumentTitle = document.title
 
 function escapeHtml(value: unknown) {
   return String(value ?? '')
@@ -97,16 +104,113 @@ function countStatus(status: OrderStatus) {
   return orders.filter(order => order.status === status).length
 }
 
+function loadSeenThroughOrderId() {
+  try {
+    const value = Number(localStorage.getItem(SEEN_THROUGH_KEY) || '0')
+    return Number.isSafeInteger(value) && value > 0 ? value : 0
+  } catch {
+    return 0
+  }
+}
+
+function highestOrderId() {
+  return orders.reduce((max, order) => Math.max(max, Number(order.id) || 0), 0)
+}
+
+function persistSeenThroughOrderId() {
+  try { localStorage.setItem(SEEN_THROUGH_KEY, String(seenThroughOrderId)) } catch { /* ignore storage errors */ }
+}
+
+function rebuildUnseenOrders() {
+  unseenOrderIds = new Set(
+    orders
+      .map(order => Number(order.id))
+      .filter(id => Number.isSafeInteger(id) && id > seenThroughOrderId),
+  )
+}
+
+function markOrdersSeen() {
+  const highest = highestOrderId()
+  if (highest > seenThroughOrderId) {
+    seenThroughOrderId = highest
+    persistSeenThroughOrderId()
+  }
+  unseenOrderIds.clear()
+  renderNotificationState()
+}
+
 function renderTrigger() {
   if (!trigger) return
-  const count = countStatus('new')
+  const newCount = countStatus('new')
+  const unseenCount = unseenOrderIds.size
   const badge = trigger.querySelector<HTMLElement>('b')
   if (badge) {
-    badge.textContent = String(count)
-    badge.hidden = count === 0
+    badge.textContent = String(unseenCount > 0 ? unseenCount : newCount)
+    badge.hidden = unseenCount === 0 && newCount === 0
   }
-  trigger.classList.toggle('hasNew', count > 0)
-  trigger.title = count > 0 ? `${count} đơn mới đang chờ xử lý` : 'Mở quản lý đơn hàng'
+  trigger.classList.toggle('hasNew', newCount > 0)
+  trigger.classList.toggle('hasUnseen', unseenCount > 0)
+  trigger.title = unseenCount > 0
+    ? `${unseenCount} đơn vừa tới chưa xem · ${newCount} đơn mới đang chờ xử lý`
+    : newCount > 0
+      ? `${newCount} đơn mới đang chờ xử lý`
+      : 'Mở quản lý đơn hàng'
+}
+
+function renderNotificationState() {
+  renderTrigger()
+  document.title = unseenOrderIds.size > 0
+    ? `(${unseenOrderIds.size}) Đơn mới · Sky's house`
+    : baseDocumentTitle
+}
+
+function hideOrderToast() {
+  if (toastTimer != null) {
+    window.clearTimeout(toastTimer)
+    toastTimer = null
+  }
+  toastRoot?.classList.remove('show')
+}
+
+function ensureOrderToast() {
+  if (toastRoot) return toastRoot
+  toastRoot = document.createElement('aside')
+  toastRoot.className = 'adminOrderToast'
+  toastRoot.dataset.adminOrderToast = 'true'
+  toastRoot.setAttribute('role', 'status')
+  toastRoot.setAttribute('aria-live', 'polite')
+  document.body.appendChild(toastRoot)
+
+  toastRoot.addEventListener('click', event => {
+    const target = event.target as Element | null
+    if (!target) return
+    const open = target.closest<HTMLElement>('[data-order-toast-open]')
+    if (open) {
+      const id = Number(open.dataset.orderToastOpen)
+      hideOrderToast()
+      void openPanel(Number.isSafeInteger(id) ? id : undefined)
+      return
+    }
+    if (target.closest('[data-order-toast-close]')) hideOrderToast()
+  })
+  return toastRoot
+}
+
+function showOrderToast(order: OrderRow) {
+  const toast = ensureOrderToast()
+  toast.innerHTML = `
+    <button type="button" class="adminOrderToastClose" data-order-toast-close aria-label="Đóng thông báo">×</button>
+    <div class="adminOrderToastIcon">✦</div>
+    <div class="adminOrderToastCopy">
+      <small>ĐƠN MỚI VỪA TỚI</small>
+      <strong>#${order.id} · ${escapeHtml(order.customer_name)}</strong>
+      <span>${itemCount(order)} món · ${escapeHtml(totalLabel(order))}</span>
+    </div>
+    <button type="button" class="adminOrderToastOpen" data-order-toast-open="${order.id}">Xem đơn</button>
+  `
+  requestAnimationFrame(() => toast.classList.add('show'))
+  if (toastTimer != null) window.clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(hideOrderToast, 12000)
 }
 
 function filteredOrders() {
@@ -241,13 +345,20 @@ function closePanel() {
   document.documentElement.classList.remove('adminOrdersOpen')
 }
 
-async function openPanel() {
+async function openPanel(preferredId?: number) {
   ensurePanel()
+  if (preferredId != null) {
+    filter = 'all'
+    selectedId = preferredId
+  }
   panelOpen = true
   panelRoot?.classList.add('open')
   document.documentElement.classList.add('adminOrdersOpen')
   renderPanel()
   await loadOrders(false)
+  if (preferredId != null && orders.some(order => order.id === preferredId)) selectedId = preferredId
+  markOrdersSeen()
+  renderPanel()
 }
 
 async function loadOrders(silent = true) {
@@ -280,9 +391,15 @@ async function loadOrders(silent = true) {
   }
 
   orders = (data ?? []) as OrderRow[]
+  if (!loadedOnce && seenThroughOrderId === 0) {
+    seenThroughOrderId = highestOrderId()
+    persistSeenThroughOrderId()
+  }
   loadedOnce = true
+  rebuildUnseenOrders()
   ensureSelection()
-  renderTrigger()
+  renderNotificationState()
+  startRealtime()
   if (panelOpen) renderPanel()
 }
 
@@ -307,7 +424,7 @@ async function updateStatus(id: number, status: OrderStatus) {
   }
   noticeText = `Đã chuyển đơn #${id} sang “${statusMeta[status].label}”.`
   noticeState = 'ok'
-  renderTrigger()
+  renderNotificationState()
   renderPanel()
 }
 
@@ -402,6 +519,42 @@ async function copyConfirmation(id: number) {
   renderPanel()
 }
 
+function handleRealtimeInsert(raw: Record<string, unknown>) {
+  const id = Number(raw.id)
+  if (!Number.isSafeInteger(id) || id <= 0 || orders.some(order => order.id === id)) return
+
+  const order = raw as unknown as OrderRow
+  orders = [order, ...orders].slice(0, 300)
+  loadedOnce = true
+  if (id > seenThroughOrderId) unseenOrderIds.add(id)
+
+  if (panelOpen) {
+    noticeText = `Có đơn mới #${id} vừa tới.`
+    noticeState = 'ok'
+    markOrdersSeen()
+    renderPanel()
+  } else {
+    renderNotificationState()
+    showOrderToast(order)
+  }
+}
+
+function startRealtime() {
+  if (!supabase || realtimeChannel) return
+  realtimeChannel = supabase
+    .channel('skyhouse-admin-order-notifications')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
+      handleRealtimeInsert(payload.new as Record<string, unknown>)
+    })
+    .subscribe()
+}
+
+function stopRealtime() {
+  if (!supabase || !realtimeChannel) return
+  void supabase.removeChannel(realtimeChannel)
+  realtimeChannel = null
+}
+
 function ensurePanel() {
   if (panelRoot) return panelRoot
   panelRoot = document.createElement('div')
@@ -464,7 +617,7 @@ function ensureTrigger() {
   const existing = userArea.querySelector<HTMLButtonElement>('[data-admin-orders-trigger]')
   if (existing) {
     trigger = existing
-    renderTrigger()
+    renderNotificationState()
     return
   }
 
@@ -479,7 +632,7 @@ function ensureTrigger() {
   if (logoutButton) userArea.insertBefore(trigger, logoutButton)
   else userArea.appendChild(trigger)
 
-  renderTrigger()
+  renderNotificationState()
   if (!loadedOnce) void loadOrders(true)
 }
 
@@ -497,11 +650,15 @@ export function installAdminOrders() {
         void loadOrders(true)
       }, 80)
     } else {
+      stopRealtime()
       orders = []
+      unseenOrderIds.clear()
       loadedOnce = false
       closePanel()
+      hideOrderToast()
       trigger?.remove()
       trigger = null
+      document.title = baseDocumentTitle
     }
   })
 
