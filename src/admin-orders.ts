@@ -2,6 +2,7 @@ import { supabase } from './lib/supabase'
 
 type OrderStatus = 'new' | 'confirmed' | 'shipping' | 'completed' | 'cancelled'
 type OrderFilter = 'all' | 'unread' | OrderStatus
+type RealtimeState = 'connecting' | 'connected' | 'degraded' | 'offline'
 
 type OrderItem = {
   name?: string
@@ -60,6 +61,8 @@ let soundEnabled = loadSoundPreference()
 let audioContext: AudioContext | null = null
 let currentAdminUserId: string | null = null
 let realtimeChannel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
+let realtimeState: RealtimeState = navigator.onLine ? 'connecting' : 'offline'
+let lastSyncAt: Date | null = null
 const baseDocumentTitle = document.title
 
 function escapeHtml(value: unknown) {
@@ -88,6 +91,30 @@ function formatDate(value: string) {
 
 function phoneDigits(value: string) {
   return value.replace(/\D/g, '')
+}
+
+function formatClockTime(value: Date | null) {
+  if (!value) return 'Chưa đồng bộ'
+  try {
+    return new Intl.DateTimeFormat('vi-VN', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    }).format(value)
+  } catch {
+    return value.toLocaleTimeString()
+  }
+}
+
+function realtimeMeta() {
+  if (realtimeState === 'connected') return { label: 'Realtime ổn định', tone: 'ok' }
+  if (realtimeState === 'connecting') return { label: 'Đang kết nối', tone: 'connecting' }
+  if (realtimeState === 'offline') return { label: 'Mất mạng', tone: 'offline' }
+  return { label: 'Đang dùng fallback', tone: 'degraded' }
+}
+
+function setRealtimeState(next: RealtimeState) {
+  if (realtimeState === next) return
+  realtimeState = next
+  if (panelOpen) renderPanel()
 }
 
 function itemCount(order: OrderRow) {
@@ -287,8 +314,8 @@ function ensureAudioContext() {
   return audioContext
 }
 
-function playOrderChime() {
-  if (!soundEnabled) return
+function playOrderChime(force = false) {
+  if (!soundEnabled && !force) return
   const context = ensureAudioContext()
   if (!context) return
 
@@ -357,6 +384,7 @@ function ensureOrderToast() {
 
 function showOrderToast(order: OrderRow) {
   const toast = ensureOrderToast()
+  toast.classList.remove('diagnostic')
   toast.innerHTML = `
     <button type="button" class="adminOrderToastClose" data-order-toast-close aria-label="Đóng thông báo">×</button>
     <div class="adminOrderToastIcon">✦</div>
@@ -371,6 +399,27 @@ function showOrderToast(order: OrderRow) {
   playOrderChime()
   if (toastTimer != null) window.clearTimeout(toastTimer)
   toastTimer = window.setTimeout(hideOrderToast, 12000)
+}
+
+function testNotification() {
+  const toast = ensureOrderToast()
+  toast.classList.add('diagnostic')
+  toast.innerHTML = `
+    <button type="button" class="adminOrderToastClose" data-order-toast-close aria-label="Đóng thông báo">×</button>
+    <div class="adminOrderToastIcon">✓</div>
+    <div class="adminOrderToastCopy">
+      <small>KIỂM TRA THÔNG BÁO</small>
+      <strong>Cảnh báo cục bộ đang hoạt động</strong>
+      <span>Không tạo đơn và không ghi dữ liệu đơn hàng.</span>
+    </div>
+  `
+  requestAnimationFrame(() => toast.classList.add('show'))
+  playOrderChime(true)
+  if (toastTimer != null) window.clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(hideOrderToast, 8000)
+  noticeText = 'Đã chạy thử toast + âm báo cục bộ. Không tạo đơn test.'
+  noticeState = 'ok'
+  if (panelOpen) renderPanel()
 }
 
 function filteredOrders() {
@@ -484,6 +533,7 @@ function orderDetailHtml() {
 function renderPanel() {
   if (!panelRoot) return
   ensureSelection()
+  const realtime = realtimeMeta()
   const counts: Record<OrderFilter, number> = {
     all: orders.length,
     unread: unseenOrderIds.size,
@@ -504,8 +554,16 @@ function renderPanel() {
     <button type="button" class="adminOrdersBackdrop" data-orders-close aria-label="Đóng quản lý đơn"></button>
     <section class="adminOrdersPanel" role="dialog" aria-modal="true" aria-label="Quản lý đơn hàng">
       <header class="adminOrdersHeader">
-        <div><small>SKY'S HOUSE · ADMIN</small><h1 class="serif">Đơn hàng.</h1><p>Theo dõi từ lúc khách gửi giỏ đến khi giao xong.</p></div>
-        <div class="adminOrdersHeaderActions"><button type="button" data-orders-refresh>↻ Làm mới</button><button type="button" class="adminOrdersSoundToggle ${soundEnabled ? 'on' : ''}" data-orders-sound-toggle aria-pressed="${soundEnabled}">${soundEnabled ? '🔔 Âm báo: Bật' : '🔕 Âm báo: Tắt'}</button><button type="button" data-orders-close aria-label="Đóng">×</button></div>
+        <div>
+          <small>SKY'S HOUSE · ADMIN</small>
+          <h1 class="serif">Đơn hàng.</h1>
+          <p>Theo dõi từ lúc khách gửi giỏ đến khi giao xong.</p>
+          <div class="adminOrdersHealth">
+            <span class="${realtime.tone}"><i></i>${escapeHtml(realtime.label)}</span>
+            <small>Đồng bộ gần nhất: ${escapeHtml(formatClockTime(lastSyncAt))}</small>
+          </div>
+        </div>
+        <div class="adminOrdersHeaderActions"><button type="button" data-orders-refresh>↻ Làm mới</button><button type="button" class="adminOrdersTestNotification" data-orders-test-notification>✦ Thử cảnh báo</button><button type="button" class="adminOrdersSoundToggle ${soundEnabled ? 'on' : ''}" data-orders-sound-toggle aria-pressed="${soundEnabled}">${soundEnabled ? '🔔 Âm báo: Bật' : '🔕 Âm báo: Tắt'}</button><button type="button" data-orders-close aria-label="Đóng">×</button></div>
       </header>
       <nav class="adminOrderFilters">
         <div class="adminOrderFilterScroller">${filters}</div>
@@ -580,6 +638,7 @@ async function loadOrders(silent = true) {
 
   orders = nextOrders
   await syncRemoteSeenState(sessionData.session.user.id)
+  lastSyncAt = new Date()
   loading = false
   loadedOnce = true
   rebuildUnseenOrders()
@@ -740,6 +799,7 @@ function handleRealtimeInsert(raw: Record<string, unknown>) {
 
 function startRealtime() {
   if (!supabase || realtimeChannel) return
+  setRealtimeState(navigator.onLine ? 'connecting' : 'offline')
   realtimeChannel = supabase
     .channel('skyhouse-admin-order-notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
@@ -750,8 +810,13 @@ function startRealtime() {
     })
     .subscribe(status => {
       if (status === 'SUBSCRIBED') {
+        setRealtimeState('connected')
         void loadOrders(true)
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        setRealtimeState(navigator.onLine ? 'degraded' : 'offline')
+        const failedChannel = realtimeChannel
+        realtimeChannel = null
+        if (failedChannel) void supabase.removeChannel(failedChannel)
         window.setTimeout(() => void loadOrders(true), 1200)
       }
     })
@@ -779,6 +844,10 @@ function ensurePanel() {
     }
     if (target.closest('[data-orders-refresh]')) {
       void loadOrders(false)
+      return
+    }
+    if (target.closest('[data-orders-test-notification]')) {
+      testNotification()
       return
     }
     if (target.closest('[data-orders-sound-toggle]')) {
@@ -862,10 +931,17 @@ export function installAdminOrders() {
 
   const refreshAfterResume = () => {
     if (document.hidden) return
+    if (!navigator.onLine) {
+      setRealtimeState('offline')
+      return
+    }
+    if (realtimeState === 'offline') setRealtimeState('connecting')
     void loadOrders(true)
   }
+  const handleOffline = () => setRealtimeState('offline')
   document.addEventListener('visibilitychange', refreshAfterResume)
   window.addEventListener('online', refreshAfterResume)
+  window.addEventListener('offline', handleOffline)
 
   supabase.auth.onAuthStateChange((_event, session) => {
     if (session) {
@@ -879,6 +955,8 @@ export function installAdminOrders() {
       orders = []
       unseenOrderIds.clear()
       loadedOnce = false
+      lastSyncAt = null
+      realtimeState = navigator.onLine ? 'connecting' : 'offline'
       closePanel()
       hideOrderToast()
       trigger?.remove()
