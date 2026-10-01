@@ -175,3 +175,34 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
   .adminOrderFilterScroller{gap:6px}
   .adminOrderFilters .adminOrderMarkAllSeen{max-width:92px;white-space:normal;line-height:1.15;text-align:center;justify-content:center}
 }
+
+
+.adminOrdersHealth{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.adminOrdersHealth>span{display:inline-flex;align-items:center;gap:6px;min-height:27px;padding:5px 9px;border-radius:999px;background:#fff;border:1px solid rgba(36,22,15,.09);font-size:9px;font-weight:900;letter-spacing:.03em}
+.adminOrdersHealth>span i{width:7px;height:7px;border-radius:999px;background:#958980;box-shadow:0 0 0 3px rgba(149,137,128,.12)}
+.adminOrdersHealth>span.ok{color:#3f6431;border-color:#bfd6ae;background:#f0f7e9}
+.adminOrdersHealth>span.ok i{background:#5c8b48;box-shadow:0 0 0 3px rgba(92,139,72,.13)}
+.adminOrdersHealth>span.connecting{color:#80601f;border-color:#ead2aa;background:#fff5df}
+.adminOrdersHealth>span.connecting i{background:#d89b2b;box-shadow:0 0 0 3px rgba(216,155,43,.13);animation:adminOrderHealthPulse 1.2s ease-in-out infinite}
+.adminOrdersHealth>span.degraded{color:#a25b25;border-color:#edc29d;background:#fff4e9}
+.adminOrdersHealth>span.degraded i{background:#d77b32;box-shadow:0 0 0 3px rgba(215,123,50,.13)}
+.adminOrdersHealth>span.offline{color:#963b32;border-color:#e9b7ad;background:#fff1ee}
+.adminOrdersHealth>span.offline i{background:#c95447;box-shadow:0 0 0 3px rgba(201,84,71,.13)}
+.adminOrdersHealth>small{color:rgba(36,22,15,.48);font-size:9px;font-weight:750;letter-spacing:0;text-transform:none}
+@keyframes adminOrderHealthPulse{0%,100%{opacity:.55;transform:scale(.9)}50%{opacity:1;transform:scale(1.12)}}
+
+.adminOrdersTestNotification{border-color:rgba(214,92,44,.20)!important;background:#fff7f0!important;color:#a53f1a!important}
+.adminOrderToast.diagnostic{grid-template-columns:auto minmax(0,1fr);border-color:rgba(76,109,62,.20);background:rgba(247,252,243,.98)}
+.adminOrderToast.diagnostic .adminOrderToastIcon{background:#5c8b48;box-shadow:0 8px 20px rgba(92,139,72,.20)}
+.adminOrderToast.diagnostic .adminOrderToastCopy small{color:#4f763a}
+
+@media(max-width:700px){
+  .adminOrdersHealth{margin-top:8px}
+  .adminOrdersHeaderActions .adminOrdersTestNotification{order:3}
+}
+
+@media(max-width:560px){
+  .adminOrdersHealth>small{width:100%}
+  .adminOrdersHeaderActions .adminOrdersTestNotification{padding:8px 10px!important;font-size:10px!important}
+  .adminOrderToast.diagnostic{grid-template-columns:auto minmax(0,1fr)}
+}
