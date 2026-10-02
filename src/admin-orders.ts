@@ -13,6 +13,7 @@ type OrderItem = {
   price?: number | null
   price_text?: string
   unit?: string
+  image_url?: string
 }
 
 type OrderRow = {
@@ -778,12 +779,29 @@ function orderDetailHtml() {
 
   const phone = phoneDigits(order.customer_phone)
   const items = Array.isArray(order.items) ? order.items : []
-  const itemRows = items.map((item, index) => `
-    <div class="adminOrderItem">
-      <div><small>Món ${index + 1}</small><strong>${escapeHtml(item.name || 'Sản phẩm')}</strong>${item.category ? `<span>${escapeHtml(item.category)}</span>` : ''}</div>
-      <div class="adminOrderItemPrice"><b>×${Number(item.qty) || 0}</b><span>${escapeHtml(item.price_text || (item.price == null ? 'Liên hệ giá' : money(Number(item.price))))}</span></div>
-    </div>
-  `).join('')
+  const itemRows = items.map((item, index) => {
+    const imageUrl = String(item.image_url || '').trim()
+    const productImage = imageUrl
+      ? `<img class="adminOrderItemImage" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name || 'Sản phẩm')}" loading="lazy" decoding="async" />`
+      : '<div class="adminOrderItemImage adminOrderItemImageFallback" aria-hidden="true">Ảnh</div>'
+
+    return `
+      <div class="adminOrderItem">
+        <div class="adminOrderItemMain">
+          ${productImage}
+          <div class="adminOrderItemInfo">
+            <small>Món ${index + 1}</small>
+            <strong>${escapeHtml(item.name || 'Sản phẩm')}</strong>
+            ${item.category ? `<span>${escapeHtml(item.category)}</span>` : ''}
+          </div>
+        </div>
+        <div class="adminOrderItemPrice">
+          <b>×${Number(item.qty) || 0}</b>
+          <span>${escapeHtml(item.price_text || (item.price == null ? 'Liên hệ giá' : money(Number(item.price))))}</span>
+        </div>
+      </div>
+    `
+  }).join('')
 
   const statusOptions = statusOrder.map(status => `<option value="${status}" ${order.status === status ? 'selected' : ''}>${escapeHtml(statusMeta[status].label)}</option>`).join('')
   const shippingFee = Number(order.shipping_fee || 0)

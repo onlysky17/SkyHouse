@@ -4,9 +4,10 @@
 .adminOrderSettlement .adminOrdersSectionTitle{margin-bottom:12px}
 .adminOrderSettlement .adminOrdersSectionTitle b{display:inline-flex;align-items:center;min-height:24px;padding:5px 8px;border-radius:999px;background:#fff0de;color:#b65120;font-size:9px;letter-spacing:.02em}
 .adminOrderSettlementGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.adminOrderSettlementGrid label{display:grid;gap:7px;color:rgba(36,22,15,.62);font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
+.adminOrderSettlementGrid label{display:grid;align-content:start;gap:7px;color:rgba(36,22,15,.62);font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
 .adminOrderSettlementGrid label.wide{grid-column:1/-1}
 .adminOrderSettlementGrid input,.adminOrderSettlementGrid textarea{width:100%;box-sizing:border-box;border:1px solid rgba(36,22,15,.13);border-radius:13px;background:#fff;color:#24160f;padding:11px 12px;font:inherit;font-weight:750;outline:none;transition:border-color .18s ease,box-shadow .18s ease}
+.adminOrderSettlementGrid input{min-height:44px}
 .adminOrderSettlementGrid textarea{min-height:72px;resize:vertical;line-height:1.45;text-transform:none;letter-spacing:normal}
 .adminOrderSettlementGrid input:focus,.adminOrderSettlementGrid textarea:focus{border-color:rgba(214,92,44,.48);box-shadow:0 0 0 3px rgba(214,92,44,.09)}
 .adminOrderSettlementGrid label>small{color:rgba(36,22,15,.47);font-size:9px;font-weight:700;line-height:1.4;text-transform:none;letter-spacing:normal}
