@@ -57,18 +57,6 @@ function deliveryLabel(info: CustomerInfo) {
   return info.deliveryMethod === 'pickup' ? 'Tự đến lấy' : 'Giao tận nơi'
 }
 
-function customerPrefix(info: CustomerInfo) {
-  const lines = [
-    'THÔNG TIN NGƯỜI ĐẶT',
-    `Tên khách: ${info.name.trim()}`,
-    `Số điện thoại: ${info.phone.trim()}`,
-    `Nhận hàng: ${deliveryLabel(info)}`,
-    info.deliveryMethod === 'delivery' ? `Địa chỉ: ${info.address.trim()}` : '',
-    info.note.trim() ? `Ghi chú: ${info.note.trim()}` : '',
-  ].filter(Boolean)
-  return `${lines.join('\n')}\n\n`
-}
-
 function adminNote(info: CustomerInfo) {
   const parts = [deliveryLabel(info)]
   if (info.deliveryMethod === 'delivery' && info.address.trim()) parts.push(`Địa chỉ: ${info.address.trim()}`)
@@ -138,59 +126,6 @@ function validateInfo(drawer: Element | null, info: CustomerInfo) {
   firstMissing?.focus({ preventScroll: true })
   firstMissing?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   return false
-}
-
-function extractBaseOrderText(text: string) {
-  const marker = "Chào Sky's house"
-  const markerIndex = text.indexOf(marker)
-  return markerIndex >= 0 ? text.slice(markerIndex) : text
-}
-
-function orderTextFromZaloLink(link: HTMLAnchorElement, info: CustomerInfo) {
-  try {
-    const url = new URL(link.href)
-    const baseText = extractBaseOrderText(url.searchParams.get('text') || '')
-    return `${customerPrefix(info)}${baseText}`.trim()
-  } catch {
-    return customerPrefix(info).trim()
-  }
-}
-
-function zaloChatUrl(link: HTMLAnchorElement) {
-  try {
-    const url = new URL(link.href)
-    const phone = url.pathname.split('/').filter(Boolean).pop() || ''
-    const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-    return mobile
-      ? `https://zalo.me/${encodeURIComponent(phone)}`
-      : `https://chat.zalo.me/?phone=${encodeURIComponent(phone)}`
-  } catch {
-    return link.href.split('?')[0]
-  }
-}
-
-function copyTextFallback(text: string) {
-  const textarea = document.createElement('textarea')
-  textarea.value = text
-  textarea.setAttribute('readonly', '')
-  textarea.style.position = 'fixed'
-  textarea.style.opacity = '0'
-  textarea.style.pointerEvents = 'none'
-  document.body.appendChild(textarea)
-  textarea.select()
-  textarea.setSelectionRange(0, textarea.value.length)
-  let copied = false
-  try { copied = document.execCommand('copy') } catch { copied = false }
-  textarea.remove()
-  return copied
-}
-
-function copyOrderText(text: string) {
-  const copiedSynchronously = copyTextFallback(text)
-  if (!copiedSynchronously && navigator.clipboard?.writeText) {
-    void navigator.clipboard.writeText(text).catch(() => { /* keep the page usable if browser blocks clipboard */ })
-  }
-  return copiedSynchronously || Boolean(navigator.clipboard?.writeText)
 }
 
 function parseMoney(text: string) {
@@ -341,10 +276,10 @@ function enhanceDrawer(drawer: HTMLElement) {
   const customerSlot = drawer.querySelector('.cartCustomerSlot')
   if (customerSlot) customerSlot.appendChild(block)
   else footer.insertBefore(block, footer.firstChild)
-  const zaloButton = footer.querySelector<HTMLAnchorElement>('.cartPrimary')
-  if (zaloButton) {
-    zaloButton.textContent = 'Sao chép đơn & mở Zalo'
-    zaloButton.title = 'Đơn sẽ được lưu vào hệ thống và sao chép trước khi mở Zalo'
+  const placeOrderButton = footer.querySelector<HTMLButtonElement>('[data-place-order]')
+  if (placeOrderButton) {
+    placeOrderButton.textContent = 'Đặt hàng'
+    placeOrderButton.title = 'Gửi trực tiếp đơn hàng và thông tin người đặt cho Sky'
   }
 
   const nameInput = block.querySelector<HTMLInputElement>('[data-customer-field="name"]')!
@@ -395,84 +330,38 @@ function enhanceDrawer(drawer: HTMLElement) {
   noteInput.addEventListener('input', persist)
 }
 
-async function openZaloWithCopiedOrder(link: HTMLAnchorElement) {
-  const drawer = link.closest('.cartDrawer')
+async function submitOrder(button: HTMLButtonElement) {
+  const drawer = button.closest('.cartDrawer')
   const info = readInfo(drawer)
   saveInfo(info)
   if (!validateInfo(drawer, info)) return
 
-  const popup = window.open('', '_blank')
-  if (popup) {
-    try {
-      popup.opener = null
-      popup.document.title = 'Sky’s house · Đang mở Zalo'
-      popup.document.body.textContent = 'Đang lưu đơn và mở Zalo…'
-    } catch { /* navigation fallback below */ }
-  }
+  const originalText = button.textContent || 'Đặt hàng'
+  button.disabled = true
+  button.textContent = 'Đang gửi đơn…'
+  setSendNotice(drawer, 'Đang gửi đơn vào hệ thống Sky’s house…', 'ok')
 
-  setSendNotice(drawer, 'Đang lưu đơn vào hệ thống…', 'ok')
-  let stored = false
-  let reused = false
-  let orderId: number | null = null
   try {
     const result = await saveOrder(drawer, info)
-    stored = result.saved
-    reused = result.reused
-    orderId = result.orderId
-  } catch {
-    stored = false
-  }
+    if (!result.saved || !result.orderId) throw new Error('order_not_saved')
 
-  const text = orderTextFromZaloLink(link, info)
-  const copied = copyOrderText(text)
-  const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-
-  if (stored) {
-    if (orderId) renderOrderConfirmation(drawer, orderId)
-    const orderLabel = orderId ? `Mã đơn #${orderId}. ` : ''
+    renderOrderConfirmation(drawer, result.orderId)
     setSendNotice(
       drawer,
-      copied
-        ? `${reused ? 'Đơn này đã được lưu trước đó. ' : 'Đã lưu đơn vào hệ thống. '}${orderLabel}Nội dung đã sao chép; sang Zalo rồi ${mobile ? 'chạm giữ và chọn Dán' : 'nhấn Ctrl+V'} để gửi.`
-        : `${reused ? 'Đơn này đã được lưu trước đó. ' : 'Đã lưu đơn vào hệ thống. '}${orderLabel}Trình duyệt chặn sao chép; dùng nút “Sao chép danh sách” rồi dán vào Zalo.`,
-      copied ? 'ok' : 'error',
+      result.reused
+        ? `Đơn #${result.orderId} đã được gửi trước đó. Sky đã nhận được thông tin đơn này.`
+        : `Đặt hàng thành công · Đơn #${result.orderId}. Sky đã nhận được danh sách món và thông tin người đặt.`,
+      'ok',
     )
-  } else {
-    setSendNotice(
-      drawer,
-      copied
-        ? `Chưa lưu được đơn vào hệ thống, nhưng nội dung đã được sao chép. Sang Zalo rồi ${mobile ? 'Dán' : 'nhấn Ctrl+V'} để gửi.`
-        : 'Chưa lưu được đơn và trình duyệt cũng chặn sao chép tự động. Hãy thử lại.',
-      'error',
-    )
-  }
-
-  const chatUrl = zaloChatUrl(link)
-  if (popup && !popup.closed) {
-    try { popup.location.replace(chatUrl) } catch { popup.location.href = chatUrl }
-  } else {
-    window.open(chatUrl, '_blank', 'noopener,noreferrer')
-  }
-}
-
-async function copyAugmentedOrder(button: HTMLButtonElement) {
-  const drawer = button.closest('.cartDrawer')
-  const zalo = drawer?.querySelector<HTMLAnchorElement>('.cartPrimary')
-  if (!zalo) return
-  const info = readInfo(drawer)
-  saveInfo(info)
-  if (!validateInfo(drawer, info)) return
-
-  const text = orderTextFromZaloLink(zalo, info)
-  try {
-    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text)
-    else if (!copyTextFallback(text)) throw new Error('clipboard unavailable')
-    const original = button.textContent || 'Sao chép danh sách'
-    button.textContent = 'Đã sao chép ✓'
-    setSendNotice(drawer, 'Đã sao chép đầy đủ thông tin người đặt, địa chỉ nhận hàng và danh sách món.', 'ok')
-    window.setTimeout(() => { button.textContent = original }, 1800)
+    button.textContent = result.reused ? 'Đơn đã được gửi ✓' : 'Đặt hàng thành công ✓'
+    window.setTimeout(() => {
+      if (button.isConnected) button.textContent = originalText
+    }, 2200)
   } catch {
-    setSendNotice(drawer, 'Không sao chép được tự động. Hãy thử lại hoặc cho phép trình duyệt truy cập clipboard.', 'error')
+    setSendNotice(drawer, 'Chưa gửi được đơn vào hệ thống. Vui lòng thử lại.', 'error')
+    button.textContent = 'Thử đặt hàng lại'
+  } finally {
+    button.disabled = false
   }
 }
 
@@ -486,19 +375,11 @@ export function installCartCustomerInfo() {
     const target = event.target as Element | null
     if (!target) return
 
-    const zalo = target.closest<HTMLAnchorElement>('.cartPrimary')
-    if (zalo) {
+    const placeOrder = target.closest<HTMLButtonElement>('[data-place-order]')
+    if (placeOrder) {
       event.preventDefault()
       event.stopPropagation()
-      void openZaloWithCopiedOrder(zalo)
-      return
-    }
-
-    const copy = target.closest<HTMLButtonElement>('.cartSecondary button')
-    if (copy) {
-      event.preventDefault()
-      event.stopPropagation()
-      void copyAugmentedOrder(copy)
+      void submitOrder(placeOrder)
     }
   }, true)
 }
