@@ -145,7 +145,7 @@ function setRealtimeState(next: RealtimeState) {
   const previous = realtimeState
   realtimeState = next
   recordNotificationTrace(`Realtime: ${previous} → ${next}.`, next === 'connected' ? 'ok' : next === 'offline' ? 'error' : 'warn')
-  if (panelOpen) renderPanel()
+  updatePanelRuntimeChrome()
 }
 
 function itemCount(order: OrderRow) {
@@ -983,15 +983,30 @@ function restoreAdminPanelViewState(state: AdminPanelViewState | null, renderEpo
   })
 }
 
-function updatePanelHealthOnly() {
+function updatePanelRuntimeChrome() {
   if (!panelRoot || !panelOpen) return
+
   const health = panelRoot.querySelector<HTMLElement>('.adminOrdersHealth')
-  if (!health) return
-  const realtime = realtimeMeta()
-  health.innerHTML = `
-    <span class="${realtime.tone}"><i></i>${escapeHtml(realtime.label)}</span>
-    <small>Đồng bộ gần nhất: ${escapeHtml(formatClockTime(lastSyncAt))}</small>
-  `
+  if (health) {
+    const realtime = realtimeMeta()
+    health.innerHTML = `
+      <span class="${realtime.tone}"><i></i>${escapeHtml(realtime.label)}</span>
+      <small>Đồng bộ gần nhất: ${escapeHtml(formatClockTime(lastSyncAt))}</small>
+    `
+  }
+
+  const trace = panelRoot.querySelector<HTMLDetailsElement>('.adminOrdersTrace')
+  const traceCount = trace?.querySelector<HTMLElement>('summary b')
+  if (traceCount) traceCount.textContent = String(notificationTrace.length)
+
+  if (trace?.open) {
+    const traceList = trace.querySelector<HTMLElement>('.adminOrdersTraceList')
+    if (traceList) {
+      const previousScrollTop = traceList.scrollTop
+      traceList.innerHTML = notificationTraceHtml()
+      traceList.scrollTop = previousScrollTop
+    }
+  }
 }
 
 function orderDataSignature(value: OrderRow[]) {
@@ -1151,7 +1166,7 @@ async function loadOrders(silent = true) {
     const shouldRebuildPanel = !silent || ordersChanged || unseenChanged || noticeChanged
 
     if (shouldRebuildPanel) renderPanel()
-    else updatePanelHealthOnly()
+    else updatePanelRuntimeChrome()
   }
 }
 
