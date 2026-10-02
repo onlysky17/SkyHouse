@@ -21,14 +21,16 @@ Live Git evidence overrides this file if stale.
 | `CART-UX-001` | CLOSED / MERGED | #40 | `400d5dc41726fa688828f657fc46631b1e20937e` |
 | `ADMIN-ORDER-PACKING-UX-001` | CLOSED / MERGED | #41 | `0396ad59c0f9e0f6959c4e03eb6eee46ab281bdb` |
 | `ADMIN-SCROLL-PRESERVE-001` | MERGED / RUNTIME INCOMPLETE | #42 | `581a13d3d381511edc54244dd6d8eb3bba72dfd6` |
-| `ADMIN-SCROLL-PRESERVE-002` | ACTIVE | pending | pending |
+| `ADMIN-SCROLL-PRESERVE-002` | MERGED / RUNTIME INCOMPLETE | #43 | `a5ca9dc0eff9028e40e523a969cb5963a4b75f61` |
+| `ADMIN-RESUME-NO-RERENDER-001` | ACTIVE | pending | pending |
 
 ## Active task
 
-`ADMIN-SCROLL-PRESERVE-002`
+`ADMIN-RESUME-NO-RERENDER-001`
 
 Scope:
-- preserve exact near-bottom position after tab resume
-- restore after layout settles, not only immediately after DOM replacement
-- prevent native scroll anchoring from shifting the detail
-- keep prior scroll/focus preservation behavior
+- keep resume/catch-up behavior
+- skip destructive full-panel rerender when fetched data is unchanged
+- update health/last-sync display in place
+- still rerender if order data, unread state or notices actually changed
+- preserve current order/cart business logic
