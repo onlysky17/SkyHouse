@@ -2,27 +2,28 @@
 
 ## Current active task
 
-`ADMIN-SCROLL-PRESERVE-001 — preserve admin order position across tab switches`
+`ADMIN-SCROLL-PRESERVE-002 — keep exact admin detail position after tab resume`
 
 Branch:
 
-`task/admin-scroll-preserve-001`
+`task/admin-scroll-preserve-002`
 
 ## Implemented
 
-1. Capture order-detail and order-list scroll positions before a panel rerender.
-2. Preserve filter horizontal position.
-3. Preserve diagnostic trace open state and trace scroll position.
-4. Restore detail scroll only if the same order is still selected.
-5. Preserve the active settlement field value/focus/selection without scrolling it into view.
-6. Keep normal behavior when the Owner deliberately selects a different order.
+1. Capture both absolute detail scrollTop and distance from bottom.
+2. Detect when the Owner is near the bottom.
+3. Restore near-bottom views by bottom-gap rather than absolute pixels.
+4. Restore once immediately and again after two animation frames.
+5. Guard delayed restore with a render epoch.
+6. Disable browser `overflow-anchor` on the order detail.
+7. Preserve all PR #42 list/filter/trace/focused-field protections.
 
 ## Next step
 
-1. Verify branch diff only contains this admin UI-state fix + continuity.
+1. Verify branch diff.
 2. Wait for Vercel preview/build success.
 3. Open PR.
 4. Stop at Owner merge gate.
-5. After merge, production-test: scroll down in an order → switch browser tab → return → verify the same position is retained.
+5. After merge: scroll to the bottom → switch tab/window → return → confirm the exact bottom-area position remains stable.
 
 No synthetic production order is authorized.
