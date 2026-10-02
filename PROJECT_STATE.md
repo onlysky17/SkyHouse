@@ -8,32 +8,27 @@ Live repository/runtime evidence overrides this snapshot.
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `80316bf5f5200e5ed6e7f9de2a6b66f7c9c3953f`
-- PR #47 is merged at that commit.
-- No open PR existed when this continuity closeout started.
+- Current canonical `main`: `aabfafbe39d7f19223cdd4a0d754bcc560582d5d`
+- PR #48 is merged at that commit.
+- No open PR existed when this notification closeout started.
 
 ## Recent runtime state
 
 - Admin tab-resume jump: CLOSED / RUNTIME VERIFIED after PR #45.
 - Mobile product modal dismissal: CLOSED / RUNTIME VERIFIED after PR #47.
-- Realtime new-order arrival: PASS from a real production order.
+- Realtime new-order arrival: PASS from real order #2.
 - Cross-browser/device read-state sync: PASS.
-- Duplicate-alert suppression: still pending explicit runtime confirmation.
+- Duplicate-alert suppression: PASS from real order #2; Owner observed one alert only for that order.
 
-## Closed task
+## Notification task state
 
-`MOBILE-PRODUCT-MODAL-UX-001` — **CLOSED / RUNTIME VERIFIED**
+`ORDER-OPS-NOTIFY-008` — **CLOSED / RUNTIME VERIFIED**
 
-Owner confirmed on the same phone:
-- open product detail
-- scroll down
-- close control remains reachable
-- modal closes normally
+Runtime evidence used:
+- real production order #2 arrived while admin was open
+- arrival banner/counts updated
+- order #2 appeared as unread
+- second browser saw the same unread state
+- Owner confirmed order #2 produced only one alert, with no duplicate 2–3x announcement
 
-## Remaining acceptance
-
-`ORDER-OPS-NOTIFY-008` still has one open runtime case:
-
-- duplicate-alert suppression
-
-Do not create synthetic production orders without explicit Owner authorization.
+No synthetic production order was created.
