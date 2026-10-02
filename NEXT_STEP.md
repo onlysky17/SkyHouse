@@ -2,21 +2,27 @@
 
 ## Current active task
 
-`ADMIN-SCROLL-PRESERVE-002 — keep exact admin detail position after tab resume`
+`ADMIN-RESUME-NO-RERENDER-001 — avoid full panel rebuild on unchanged tab resume`
 
 Branch:
 
-`task/admin-scroll-preserve-002`
+`task/admin-resume-no-rerender-001`
+
+## Why the direction changed
+
+Owner video proves PR #42/#43 scroll restoration is not enough: the full DOM replacement is itself visible as a jump.
+
+The cleaner fix is to stop rebuilding the panel when a resume refresh returns the same UI-relevant data.
 
 ## Implemented
 
-1. Capture both absolute detail scrollTop and distance from bottom.
-2. Detect when the Owner is near the bottom.
-3. Restore near-bottom views by bottom-gap rather than absolute pixels.
-4. Restore once immediately and again after two animation frames.
-5. Guard delayed restore with a render epoch.
-6. Disable browser `overflow-anchor` on the order detail.
-7. Preserve all PR #42 list/filter/trace/focused-field protections.
+1. Capture a signature of current orders before a silent refresh.
+2. Compare it with the fetched order payload.
+3. Compare unread state before/after remote seen sync.
+4. Compare notice state.
+5. If all are unchanged, skip `renderPanel()`.
+6. Update only Realtime health / last-sync text in place.
+7. Preserve full rendering for explicit refreshes or actual data changes.
 
 ## Next step
 
@@ -24,6 +30,10 @@ Branch:
 2. Wait for Vercel preview/build success.
 3. Open PR.
 4. Stop at Owner merge gate.
-5. After merge: scroll to the bottom → switch tab/window → return → confirm the exact bottom-area position remains stable.
+5. After merge, runtime-test the same video sequence:
+   - scroll near the bottom of an order
+   - switch to ChatGPT
+   - return to SkyHouse
+   - confirm there is no visible redraw/jump while the sync time still updates
 
 No synthetic production order is authorized.
