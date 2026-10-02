@@ -8,29 +8,31 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 ## Canonical checkpoint
 
-Current main at closeout start:
+Current main at task start:
 
-`aabfafbe39d7f19223cdd4a0d754bcc560582d5d`
+`554fe5d74a5a904483629570e26a1631339f1735`
 
-PR #48 is merged.
+PR #49 is merged and notification runtime acceptance is closed.
 
-## Notification acceptance
+## Current active task
 
-`ORDER-OPS-NOTIFY-008` is now **CLOSED / RUNTIME VERIFIED**.
+`ORDER-CHECKOUT-UX-001`
 
-Evidence:
-- real production order #2 arrived through the live storefront while admin was open
-- admin arrival banner/counts updated
-- read/unread state synchronized across browsers
-- Owner confirmed the same new order generated one alert only, not duplicate alerts
+Branch:
 
-No synthetic production order was created.
+`task/order-checkout-ux-001`
 
-## Current task state
+Owner direction:
+- customers should place orders directly in SkyHouse
+- remove copy-to-clipboard / automatic Zalo checkout because the app already sends the order and customer information to admin
 
-No active authorized product task.
-
-Wait for Sky's next direction. Do not invent a new roadmap item.
+Implementation:
+- cart primary CTA is a direct `Đặt hàng` button
+- uses existing `create_storefront_order` RPC
+- retains customer validation, order confirmation, tracking link and duplicate-submit guard
+- removes `Sao chép danh sách`
+- keeps optional phone contact
+- no DB/schema changes
 
 ## Merge boundary
 

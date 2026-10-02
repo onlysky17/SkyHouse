@@ -156,7 +156,6 @@ function Catalog({ products, selected, onSelect, onClose, onAdd }: { products: P
 }
 
 function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear }: { open: boolean; products: Product[]; cart: CartMap; onClose: () => void; onChange: (id: number, qty: number) => void; onRemove: (id: number) => void; onClear: () => void }) {
-  const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!open) return
     document.documentElement.classList.add('cartOpen')
@@ -166,32 +165,12 @@ function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear
   const itemCount = items.reduce((sum, p) => sum + (cart[String(p.id)] || 0), 0)
   const total = items.reduce((sum, p) => sum + (p.price == null ? 0 : p.price * (cart[String(p.id)] || 0)), 0)
   const hasUnknown = items.some(p => p.price == null)
-  const orderText = items.length ? [
-    "Chào Sky's house, mình muốn đặt các món:",
-    ...items.map((p, i) => `${i + 1}. ${p.name} ×${cart[String(p.id)] || 0} — ${priceText(p)}`),
-    '',
-    total > 0 ? `Tạm tính các món đã có giá: ${money(total)}` : '',
-    hasUnknown ? 'Có món đang để Liên hệ giá.' : '',
-    'Nhờ Sky xác nhận tồn kho và tổng tiền giúp mình nhé.',
-  ].filter(Boolean).join('\n') : ''
-
-  const copyOrder = async () => {
-    if (!orderText) return
-    try {
-      await navigator.clipboard.writeText(orderText)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1800)
-    } catch {
-      setCopied(false)
-    }
-  }
-
   return <AnimatePresence>{open && <motion.div className="cartLayer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
     <button className="cartBackdrop" aria-label="Đóng giỏ hàng" onClick={onClose} />
     <motion.aside className="cartDrawer" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 260 }}>
       <div className="cartHeader"><div><span>Sky's house</span><h2 className="serif">Giỏ hàng của ní.</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></div>
       <div className="cartBody">
-        <p className="cartHint">Gom món rồi gửi một lần cho Sky xác nhận. Không thanh toán online.</p>
+        <p className="cartHint">Gom món rồi bấm “Đặt hàng”. Sky sẽ nhận ngay đơn và thông tin người đặt trong hệ thống. Không thanh toán online.</p>
         <div className="cartItems">
           {items.length === 0 && <div className="cartEmpty"><b>Giỏ đang trống.</b><span>Mở một sản phẩm rồi bấm “Thêm vào giỏ”.</span></div>}
           {items.map(p => {
@@ -222,14 +201,14 @@ function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear
         </div>
         {items.length > 0 && <>
           <div className="cartCustomerSlot" />
-          <div className="cartSecondary"><button type="button" onClick={copyOrder}>{copied ? 'Đã sao chép ✓' : 'Sao chép danh sách'}</button><a href={`tel:${SHOP.phone}`}>Gọi Sky</a></div>
+          <div className="cartSecondary cartSecondarySingle"><a href={`tel:${SHOP.phone}`}>Gọi Sky</a></div>
           <button className="clearCart" type="button" onClick={onClear}>Xóa toàn bộ giỏ</button>
         </>}
       </div>
       {items.length > 0 && <div className="cartFooter">
         <div className="cartTotal"><div><span>{hasUnknown ? 'Tạm tính món đã có giá' : 'Tạm tính'}</span><small>{itemCount} món · {items.length} sản phẩm</small></div><b className="serif">{hasUnknown && total === 0 ? 'Chờ chốt giá' : money(total)}</b></div>
         {hasUnknown && <p>Chưa gồm món chưa niêm yết giá. Tổng cuối có thể thay đổi khi Sky chốt đơn.</p>}
-        <a className="cartPrimary" href={`${SHOP.zalo}?text=${encodeURIComponent(orderText)}`} target="_blank">Sao chép đơn &amp; mở Zalo</a>
+        <button className="cartPrimary" type="button" data-place-order>Đặt hàng</button>
       </div>}
     </motion.aside>
   </motion.div>}</AnimatePresence>
