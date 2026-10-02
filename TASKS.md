@@ -20,7 +20,7 @@ Live Git evidence overrides this file if stale.
 | `RUNTIME-ACCEPTANCE-EVIDENCE-001` — acceptance continuity update | CLOSED | #37 | `606b1ee323106d8b35866de81658eb036a9f5180` |
 | `ORDER-OPS-RECONNECT-UX-001` — clear stale reconnect error banner | CLOSED / RUNTIME VERIFIED | #38 | `f296da213eddf20a08c62265e4eff58800b9c9c4` |
 | `RUNTIME-ACCEPTANCE-RECONNECT-CLOSE-001` — record reconnect runtime evidence | CLOSED | #39 | `f228de79aa40885e535bd76e216183e1e957eed2` |
-| `CART-UX-001` — redesign mobile cart item presentation | IMPLEMENTED / OWNER VISUAL REVIEW / MERGE GATE | branch `task/cart-ux-001` | Not merged |
+| `CART-UX-001` — redesign mobile cart item presentation | IMPLEMENTED / OWNER VISUAL REVIEW / MERGE GATE | [#40](https://github.com/onlysky17/SkyHouse/pull/40) | Not merged |
 
 ## Active task
 

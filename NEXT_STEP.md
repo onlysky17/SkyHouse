@@ -7,6 +7,7 @@ This file exists so a new agent does not have to guess what happens next.
 `CART-UX-001 — Redesign mobile cart item presentation`
 
 Implementation is on `task/cart-ux-001`, based on verified main / PR #39 merge `f228de79aa40885e535bd76e216183e1e957eed2`.
+PR [#40](https://github.com/onlysky17/SkyHouse/pull/40) is OPEN / NOT MERGED.
 
 ## Current next step
 

@@ -57,6 +57,7 @@ No synthetic production order was created.
 
 - Owner explicitly authorized this task on 2026-10-02.
 - Branch: `task/cart-ux-001`, based on verified PR #39 merge.
+- PR: [#40](https://github.com/onlysky17/SkyHouse/pull/40), OPEN / NOT MERGED.
 - Implementation and local validation complete; **OWNER VISUAL REVIEW / MERGE GATE**.
 - Cart cards show 88–96px images, name/category/unit/price, larger quantity controls, item-specific removal and item totals.
 - Unpriced items carry the exact Owner-requested notice; the summary separates known-price subtotal from final confirmation and shows quantity/product count.

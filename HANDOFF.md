@@ -37,6 +37,7 @@ Verified by Owner:
 `CART-UX-001 — Redesign mobile cart item presentation`
 
 - Branch: `task/cart-ux-001`; base: verified main / PR #39 merge above.
+- PR: [#40](https://github.com/onlysky17/SkyHouse/pull/40), OPEN / NOT MERGED.
 - Managed checkout: `C:\Users\NHAT THIEN\.codex\worktrees\cart-ux-001\SkyHouse`.
 - Original `D:\PRIVATE\APP\SkyHouse` remains on `task/order-ops-notify-008-runtime-acceptance`; its five unrelated continuity WIP files and local build/dependency folders were preserved.
 - Changes: larger product cards/images and touch targets, item-scoped removal and totals, explicit unpriced notice, quantity/subtotal summary, one content scroller with pinned checkout CTA.
