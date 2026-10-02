@@ -1,6 +1,6 @@
 # SkyHouse — Project State
 
-Snapshot date: **2026-10-01**
+Snapshot date: **2026-10-02**
 
 This file is a continuity snapshot. Live repository/runtime evidence overrides it.
 
@@ -8,8 +8,8 @@ This file is a continuity snapshot. Live repository/runtime evidence overrides i
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `f296da213eddf20a08c62265e4eff58800b9c9c4`
-- PR #38 merged at that commit.
+- Current verified canonical `main`: `f228de79aa40885e535bd76e216183e1e957eed2`
+- PR #39 merged at that commit; PR #38 remains merged at `f296da213eddf20a08c62265e4eff58800b9c9c4`.
 - PR #33 remains CLOSED / NOT MERGED / superseded.
 - Root continuity files are part of `main`.
 
@@ -52,6 +52,22 @@ No synthetic production order was created.
 - merge `f296da213eddf20a08c62265e4eff58800b9c9c4`
 
 ## Current active task
+
+`CART-UX-001 — Redesign mobile cart item presentation`
+
+- Owner explicitly authorized this task on 2026-10-02.
+- Branch: `task/cart-ux-001`, based on verified PR #39 merge.
+- Implementation and local validation complete; **OWNER VISUAL REVIEW / MERGE GATE**.
+- Cart cards show 88–96px images, name/category/unit/price, larger quantity controls, item-specific removal and item totals.
+- Unpriced items carry the exact Owner-requested notice; the summary separates known-price subtotal from final confirmation and shows quantity/product count.
+- Items and customer information share one scroller; summary and `Sao chép đơn & mở Zalo` stay visible.
+- Existing cart persistence, quantity cap, order snapshot, customer validation and submission behavior are preserved.
+- Build and TypeScript check passed. Real-catalog UI checks passed at 320×640, 375×667, 390×844, 414×896, 390×500 and 1280×800.
+- Evidence and screenshots: `_meta/cart-ux-001/validation.md`.
+- No production order was submitted. No merge or production deployment performed; Owner visual PASS is pending.
+- Original checkout's unrelated notification-continuity WIP is preserved; this task uses a separate managed worktree.
+
+## Retained notification acceptance
 
 `ORDER-OPS-NOTIFY-008 — runtime acceptance`
 

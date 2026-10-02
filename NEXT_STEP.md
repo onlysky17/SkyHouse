@@ -4,7 +4,26 @@ This file exists so a new agent does not have to guess what happens next.
 
 ## Current authorized work
 
-`ORDER-OPS-NOTIFY-008 — runtime acceptance`
+`CART-UX-001 — Redesign mobile cart item presentation`
+
+Implementation is on `task/cart-ux-001`, based on verified main / PR #39 merge `f228de79aa40885e535bd76e216183e1e957eed2`.
+
+## Current next step
+
+**STOP AT OWNER VISUAL REVIEW / MERGE GATE.**
+
+1. Sky reviews the mobile screenshots in `_meta/cart-ux-001/validation.md` and the task PR.
+2. Apply any Owner-requested adjustments within this task and recheck affected behavior.
+3. Merge only after Sky explicitly instructs it. A green build or preview does not authorize merge.
+4. After an authorized merge, verify the actual merge commit, main/origin/main, deployment status and production mobile layout; update continuity with that evidence.
+
+Local preview used `http://127.0.0.1:5178/` with the real public catalog. Build/typecheck and local interaction checks passed; Owner visual PASS and production acceptance are pending. No production order was submitted.
+
+No successor product task is authorized here.
+
+## Retained notification acceptance
+
+`ORDER-OPS-NOTIFY-008` remains **PARTIAL RUNTIME PASS / ORDER-DEPENDENT CASES PENDING**. It is not the cart task's merge gate.
 
 ## Completed runtime evidence
 
@@ -23,7 +42,7 @@ After PR #38 deployed:
 
 No synthetic production order was created.
 
-## Current next step
+## Remaining notification checks
 
 The remaining transport/UI checks are complete.
 

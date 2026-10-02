@@ -19,8 +19,20 @@ Live Git evidence overrides this file if stale.
 | `ADMIN-RUNTIME-FREEZE-001` — admin MutationObserver freeze fix | CLOSED / RUNTIME VERIFIED | #36 | `57d195253473a44a92911cb14d46e297c7fd35a7` |
 | `RUNTIME-ACCEPTANCE-EVIDENCE-001` — acceptance continuity update | CLOSED | #37 | `606b1ee323106d8b35866de81658eb036a9f5180` |
 | `ORDER-OPS-RECONNECT-UX-001` — clear stale reconnect error banner | CLOSED / RUNTIME VERIFIED | #38 | `f296da213eddf20a08c62265e4eff58800b9c9c4` |
+| `RUNTIME-ACCEPTANCE-RECONNECT-CLOSE-001` — record reconnect runtime evidence | CLOSED | #39 | `f228de79aa40885e535bd76e216183e1e957eed2` |
+| `CART-UX-001` — redesign mobile cart item presentation | IMPLEMENTED / OWNER VISUAL REVIEW / MERGE GATE | branch `task/cart-ux-001` | Not merged |
 
 ## Active task
+
+`CART-UX-001 — Redesign mobile cart item presentation`
+
+- Authorized by Sky on 2026-10-02; based on verified main `f228de79aa40885e535bd76e216183e1e957eed2`.
+- Source implementation, build, TypeScript and local real-catalog interaction/viewport checks passed.
+- Evidence: `_meta/cart-ux-001/validation.md`; screenshots are in the same folder.
+- Pending: Sky's visual review and explicit merge instruction. After an authorized merge, verify live deployment and production mobile layout.
+- No order submission, synthetic production order, production deployment or merge during this task.
+
+## Retained acceptance task
 
 `ORDER-OPS-NOTIFY-008 — runtime acceptance`
 

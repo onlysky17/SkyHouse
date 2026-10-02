@@ -140,7 +140,13 @@ function Catalog({ products, selected, onSelect, onClose, onAdd }: { products: P
 
 function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear }: { open: boolean; products: Product[]; cart: CartMap; onClose: () => void; onChange: (id: number, qty: number) => void; onRemove: (id: number) => void; onClear: () => void }) {
   const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!open) return
+    document.documentElement.classList.add('cartOpen')
+    return () => document.documentElement.classList.remove('cartOpen')
+  }, [open])
   const items = products.filter(p => (cart[String(p.id)] || 0) > 0)
+  const itemCount = items.reduce((sum, p) => sum + (cart[String(p.id)] || 0), 0)
   const total = items.reduce((sum, p) => sum + (p.price == null ? 0 : p.price * (cart[String(p.id)] || 0)), 0)
   const hasUnknown = items.some(p => p.price == null)
   const orderText = items.length ? [
@@ -167,24 +173,46 @@ function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear
     <button className="cartBackdrop" aria-label="Đóng giỏ hàng" onClick={onClose} />
     <motion.aside className="cartDrawer" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 260 }}>
       <div className="cartHeader"><div><span>Sky's house</span><h2 className="serif">Giỏ hàng của ní.</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></div>
-      <p className="cartHint">Gom nhiều món ở đây rồi gửi một lần cho Sky xác nhận. Không thanh toán online.</p>
-      <div className="cartItems">
-        {items.length === 0 && <div className="cartEmpty"><b>Giỏ đang trống.</b><span>Mở một sản phẩm rồi bấm “Thêm vào giỏ”.</span></div>}
-        {items.map(p => {
-          const qty = cart[String(p.id)] || 0
-          return <div className="cartItem" key={p.id}>
-            <img src={p.image_url || ''} alt={p.name} />
-            <div className="cartItemMain"><small>{p.category}</small><strong>{p.name}</strong><span>{priceText(p)}</span><div className="qtyControl"><button type="button" onClick={() => onChange(p.id, qty - 1)}>−</button><b>{qty}</b><button type="button" onClick={() => onChange(p.id, qty + 1)}>＋</button></div></div>
-            <button className="removeCartItem" type="button" onClick={() => onRemove(p.id)}>Xóa</button>
-          </div>
-        })}
+      <div className="cartBody">
+        <p className="cartHint">Gom món rồi gửi một lần cho Sky xác nhận. Không thanh toán online.</p>
+        <div className="cartItems">
+          {items.length === 0 && <div className="cartEmpty"><b>Giỏ đang trống.</b><span>Mở một sản phẩm rồi bấm “Thêm vào giỏ”.</span></div>}
+          {items.map(p => {
+            const qty = cart[String(p.id)] || 0
+            return <div className="cartItem" key={p.id}>
+              <img src={p.image_url || ''} alt={p.name} />
+              <div className="cartItemMain">
+                <strong>{p.name}</strong>
+                <small>{p.category}</small>
+                {p.unit && <div className="cartItemUnit">Đơn vị: {p.unit}</div>}
+                <span>{priceText(p)}</span>
+                <div className="cartItemControls">
+                  <div className="cartQuantity">
+                    <label>Số lượng</label>
+                    <div className="qtyControl" role="group" aria-label={`Số lượng ${p.name}`}>
+                      <button type="button" aria-label={`Giảm số lượng ${p.name}`} onClick={() => onChange(p.id, qty - 1)}>−</button>
+                      <b aria-live="polite">{qty}</b>
+                      <button type="button" aria-label={`Tăng số lượng ${p.name}`} disabled={qty >= 99} onClick={() => onChange(p.id, qty + 1)}>＋</button>
+                    </div>
+                  </div>
+                  <button className="removeCartItem" type="button" aria-label={`Xóa ${p.name} khỏi giỏ`} onClick={() => onRemove(p.id)}>Xóa</button>
+                </div>
+              </div>
+              {p.price == null && <p className="cartUnpricedMessage">Chưa niêm yết giá — Sky sẽ xác nhận khi chốt đơn</p>}
+              <div className="cartItemTotal"><span>Thành tiền</span><b>{p.price == null ? 'Chờ xác nhận' : money(p.price * qty)}</b></div>
+            </div>
+          })}
+        </div>
+        {items.length > 0 && <>
+          <div className="cartCustomerSlot" />
+          <div className="cartSecondary"><button type="button" onClick={copyOrder}>{copied ? 'Đã sao chép ✓' : 'Sao chép danh sách'}</button><a href={`tel:${SHOP.phone}`}>Gọi Sky</a></div>
+          <button className="clearCart" type="button" onClick={onClear}>Xóa toàn bộ giỏ</button>
+        </>}
       </div>
       {items.length > 0 && <div className="cartFooter">
-        <div className="cartTotal"><span>Tạm tính</span><b className="serif">{total > 0 ? money(total) : 'Liên hệ giá'}</b></div>
-        {hasUnknown && <p>Có món chưa niêm yết giá; Sky sẽ xác nhận lại khi nhận danh sách.</p>}
-        <a className="cartPrimary" href={`${SHOP.zalo}?text=${encodeURIComponent(orderText)}`} target="_blank">Gửi danh sách qua Zalo</a>
-        <div className="cartSecondary"><button type="button" onClick={copyOrder}>{copied ? 'Đã sao chép ✓' : 'Sao chép danh sách'}</button><a href={`tel:${SHOP.phone}`}>Gọi Sky</a></div>
-        <button className="clearCart" type="button" onClick={onClear}>Xóa toàn bộ giỏ</button>
+        <div className="cartTotal"><div><span>{hasUnknown ? 'Tạm tính món đã có giá' : 'Tạm tính'}</span><small>{itemCount} món · {items.length} sản phẩm</small></div><b className="serif">{hasUnknown && total === 0 ? 'Chờ chốt giá' : money(total)}</b></div>
+        {hasUnknown && <p>Chưa gồm món chưa niêm yết giá. Tổng cuối có thể thay đổi khi Sky chốt đơn.</p>}
+        <a className="cartPrimary" href={`${SHOP.zalo}?text=${encodeURIComponent(orderText)}`} target="_blank">Sao chép đơn &amp; mở Zalo</a>
       </div>}
     </motion.aside>
   </motion.div>}</AnimatePresence>
