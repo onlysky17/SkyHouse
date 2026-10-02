@@ -28,11 +28,13 @@ type OrderSnapshot = {
 }
 
 const CUSTOMER_INFO_KEY = 'skyhouse_customer_info_v1'
+const ORDER_MERGE_TOKEN_KEY = 'skyhouse_order_merge_token_v1'
 const emptyInfo: CustomerInfo = { name: '', phone: '', deliveryMethod: 'delivery', address: '', note: '' }
 let lastSavedFingerprint = ''
 let lastSavedAt = 0
 let lastSavedOrderId: number | null = null
 let lastSavedMerged = false
+let volatileMergeToken = ''
 
 function loadInfo(): CustomerInfo {
   try {
@@ -53,6 +55,26 @@ function loadInfo(): CustomerInfo {
 
 function saveInfo(info: CustomerInfo) {
   try { localStorage.setItem(CUSTOMER_INFO_KEY, JSON.stringify(info)) } catch { /* ignore storage errors */ }
+}
+
+function createMergeToken() {
+  const bytes = new Uint8Array(24)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+function orderMergeToken() {
+  try {
+    const stored = localStorage.getItem(ORDER_MERGE_TOKEN_KEY)
+    if (stored && /^[a-f0-9]{48}$/i.test(stored)) return stored
+
+    const token = createMergeToken()
+    localStorage.setItem(ORDER_MERGE_TOKEN_KEY, token)
+    return token
+  } catch {
+    if (!volatileMergeToken) volatileMergeToken = createMergeToken()
+    return volatileMergeToken
+  }
 }
 
 function deliveryLabel(info: CustomerInfo) {
@@ -198,11 +220,15 @@ async function saveOrder(drawer: Element | null, info: CustomerInfo) {
     p_subtotal_known: payload.subtotal_known,
     p_has_contact_price: payload.has_contact_price,
   }
+  const secureRpcArgs = {
+    ...rpcArgs,
+    p_merge_token: orderMergeToken(),
+  }
 
   let orderId: number | null = null
   let merged = false
 
-  const preferred = await supabase.rpc('submit_storefront_order', rpcArgs)
+  const preferred = await supabase.rpc('submit_storefront_order', secureRpcArgs)
   if (!preferred.error) {
     const response = preferred.data as { order_id?: unknown; merged?: unknown } | null
     orderId = Number(response?.order_id)

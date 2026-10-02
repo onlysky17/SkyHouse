@@ -51,6 +51,7 @@ create table if not exists public.orders (
   admin_note text not null default '',
   status text not null default 'new' check (status in ('new','confirmed','shipping','completed','cancelled')),
   source text not null default 'zalo',
+  customer_merge_key_hash text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -58,7 +59,8 @@ create table if not exists public.orders (
 alter table public.orders
   add column if not exists shipping_fee bigint not null default 0 check (shipping_fee >= 0),
   add column if not exists final_total bigint check (final_total is null or final_total >= 0),
-  add column if not exists admin_note text not null default '';
+  add column if not exists admin_note text not null default '',
+  add column if not exists customer_merge_key_hash text;
 
 create index if not exists orders_status_created_at_idx on public.orders (status, created_at desc);
 create index if not exists orders_created_at_idx on public.orders (created_at desc);

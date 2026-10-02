@@ -8,46 +8,54 @@ Live repository/runtime evidence overrides this snapshot.
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `d94162bdc80ff630f42bb7770822c4fbaa51e853`
-- PR #50 is merged at that commit.
-- No open PR existed when the current pending-order merge task started.
+- Current canonical `main`: `78c653c133898886b30fbffbd533311ef785eac6`
+- PR #51 is merged at that commit.
+- No open PR existed when the current security-hardening task started.
 
 ## Recent runtime state
 
 - Admin tab-resume jump: CLOSED / RUNTIME VERIFIED.
 - Mobile product modal dismissal: CLOSED / RUNTIME VERIFIED.
 - `ORDER-OPS-NOTIFY-008`: CLOSED / RUNTIME VERIFIED.
-- `ORDER-CHECKOUT-UX-001`: MERGED via PR #50; storefront now has direct `Đặt hàng`.
+- `ORDER-CHECKOUT-UX-001`: CLOSED / MERGED via PR #50.
+- `ORDER-PENDING-MERGE-001`: merged via PR #51, but production runtime acceptance is not complete.
+
+## Production DB state
+
+Migration `merge_pending_storefront_orders` was applied to production after PR #51 merged.
+
+That first implementation matched pending orders using normalized phone only.
+
+Owner selected security rule **A** before runtime acceptance:
+
+- same normalized phone
+- same random secret stored only in the customer's browser/device
+- latest matching order is still `status = new`
+- only then may a later checkout merge into that existing order
+
+A different browser/device using the same phone must create a separate order.
 
 ## Current active task
 
-`ORDER-PENDING-MERGE-001 — merge repeat checkout into the latest still-new order for the same customer phone`
+`ORDER-PENDING-MERGE-SEC-001 — bind pending-order merge to same-browser secret`
 
 Branch:
 
-`task/order-pending-merge-001`
+`task/order-pending-merge-sec-001`
 
-Owner rule:
-- same normalized customer phone
-- latest matching order is still `status = new`
-- a later checkout is appended into that existing order instead of creating a second order
-- once the prior order leaves `new`, the next checkout creates a new order
+Implemented on branch:
 
-## Implemented on branch
-
-- new RPC `submit_storefront_order` returns `order_id` + `merged`
-- serializes same-phone checkout attempts with an advisory transaction lock
-- merges item quantities by normalized product name + unit so legacy snapshots without product IDs remain compatible
-- latest storefront product metadata wins while quantity accumulates
-- subtotal/contact-price state is recalculated after merge
-- customer name, phone, delivery note and updated timestamp refresh to latest submission
-- any stale final total is cleared when new items arrive
-- prior admin read rows for that order are cleared so the customer update becomes unread again
-- storefront confirmation says `Đã bổ sung vào đơn #...` when merged
-- admin Realtime now listens for order UPDATE events and alerts `Khách vừa bổ sung đơn`
-- cross-device read-state sync treats server read rows as authoritative for current orders
-- existing direct checkout remains backward-compatible until the DB migration is applied
+- storefront generates a 192-bit random merge token and stores it in localStorage
+- token is sent only as RPC input; it is not put in URLs or order text
+- DB stores only a SHA-256 hash of the token
+- new secure RPC overload requires the token
+- phone-only six-argument merge RPC is removed by migration
+- legacy orders with no merge-key hash are never silently adopted
+- old cached storefront builds safely fall back to create-only checkout when the removed RPC signature is unavailable
+- canonical schema includes `customer_merge_key_hash`
 
 ## Deployment boundary
 
-The migration file is committed but **must not be applied to production before Owner merges the PR**.
+The secure migration is committed but **not yet applied to production**.
+
+Do not runtime-test merge behavior until this hardening PR is merged and the migration is applied.
