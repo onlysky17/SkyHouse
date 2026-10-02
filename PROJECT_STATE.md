@@ -8,14 +8,15 @@ Live repository/runtime evidence overrides this snapshot.
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `0396ad59c0f9e0f6959c4e03eb6eee46ab281bdb`
-- PR #41 (`ADMIN-ORDER-PACKING-UX-001`) is merged at that commit.
-- No open PR existed when the current task started.
+- Current canonical `main`: `581a13d3d381511edc54244dd6d8eb3bba72dfd6`
+- PR #42 is merged at that commit.
+- No open PR existed when this task started.
 
 ## Recent completed work
 
 - `CART-UX-001` — CLOSED / MERGED — PR #40
 - `ADMIN-ORDER-PACKING-UX-001` — CLOSED / MERGED — PR #41
+- `ADMIN-SCROLL-PRESERVE-001` — MERGED / runtime still failed at bottom-position preservation — PR #42
 
 ## Retained notification acceptance
 
@@ -30,29 +31,31 @@ Do not create synthetic production orders without explicit Owner authorization.
 
 ## Current active task
 
-`ADMIN-SCROLL-PRESERVE-001 — preserve admin order position across tab switches/background refresh`
+`ADMIN-SCROLL-PRESERVE-002 — keep exact admin detail position after tab resume`
 
 Branch:
 
-`task/admin-scroll-preserve-001`
+`task/admin-scroll-preserve-002`
 
-Owner symptom:
-- scroll down inside an order detail
-- switch to another browser tab to paste/share a screenshot
-- return to SkyHouse admin
-- order detail jumps away from the previous position
+Owner runtime evidence after PR #42:
+- scroll to the bottom area of an order
+- switch to another tab/window
+- return to SkyHouse
+- detail still jumps upward even though absolute `scrollTop` was restored
 
-Root cause:
-- `visibilitychange` intentionally triggers a silent order refresh when the admin tab becomes visible
-- a successful refresh calls `renderPanel()`
-- `renderPanel()` replaces the whole admin panel DOM with `innerHTML`
-- replacing the detail DOM discards scroll position, trace state and focused settlement field state
+Refined root cause:
+- tab resume causes a silent refresh and full panel DOM replacement
+- PR #42 restored the old absolute `scrollTop` immediately
+- the new detail layout can settle/expand after that immediate restore
+- absolute pixel restoration therefore no longer guarantees the same distance from the bottom
+- browser scroll anchoring can also interfere while the new DOM settles
 
-Implemented:
-- capture list/detail scroll positions before panel rerender
-- preserve horizontal filter position and diagnostic trace open/scroll state
-- restore detail scroll only when the same order remains selected
-- preserve the currently focused settlement field value/focus/selection using `focus({ preventScroll: true })`
-- deliberate order selection still opens the newly selected order normally
+Implemented in this task:
+- capture the exact distance from the bottom
+- if Owner was near the bottom, restore by bottom-gap instead of absolute scrollTop
+- restore immediately and again after two animation frames when layout has settled
+- use a render epoch so an old delayed restore cannot overwrite a newer render
+- disable native scroll anchoring on the order detail
+- retain PR #42 protections for list/filter/trace/focused settlement field state
 
 No DB/schema/order mutation is part of this task.
