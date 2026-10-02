@@ -2,18 +2,17 @@
 
 ## Current state
 
-`MOBILE-PRODUCT-MODAL-UX-001` is CLOSED / RUNTIME VERIFIED.
+`ORDER-OPS-NOTIFY-008` is CLOSED / RUNTIME VERIFIED.
 
-No further mobile-modal work is active.
+Verified:
+- real new-order Realtime arrival
+- cross-browser/device read-state sync
+- duplicate-alert suppression
 
-## Next product acceptance step
+No synthetic production order was needed.
 
-`ORDER-OPS-NOTIFY-008` has one runtime case left:
+## Next step
 
-**duplicate-alert suppression**
+There is currently no active authorized product task in continuity.
 
-The next time a genuinely new order arrives while admin is open:
-1. observe how many alert/toast/browser-notification events are produced for that one order
-2. confirm the same order is not announced multiple times through Realtime + catch-up
-
-Do not create synthetic production order data without explicit Owner authorization.
+Do not invent a roadmap successor. Wait for Sky's next product direction or bug report.
