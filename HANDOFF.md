@@ -10,31 +10,27 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 Current main at task start:
 
-`0396ad59c0f9e0f6959c4e03eb6eee46ab281bdb`
+`581a13d3d381511edc54244dd6d8eb3bba72dfd6`
 
-That is PR #41 merge (`ADMIN-ORDER-PACKING-UX-001`).
+That is PR #42 merge.
 
 ## Current active task
 
-`ADMIN-SCROLL-PRESERVE-001`
+`ADMIN-SCROLL-PRESERVE-002`
 
 Branch:
 
-`task/admin-scroll-preserve-001`
+`task/admin-scroll-preserve-002`
 
-Owner symptom:
-- switching away from the admin tab and returning makes the open order detail jump away from its previous scroll position
+PR #42 preserved absolute scroll state but Owner runtime testing showed a remaining jump specifically when returning from another tab while positioned near the bottom.
 
-Cause:
-- tab resume triggers silent `loadOrders(true)`
-- panel rerender replaces DOM and loses UI state
-
-Implementation in `src/admin-orders.ts`:
-- capture/restore order detail and list scroll
-- preserve filter scroller position
-- preserve diagnostic trace open/scroll state
-- preserve focused settlement field draft/focus/selection
-- only restore order-detail scroll when the same order remains selected
+Refined implementation:
+- capture distance from bottom
+- restore near-bottom position using that gap
+- repeat restore after two animation frames so layout has settled
+- cancel stale delayed restores with a render epoch
+- disable native scroll anchoring on `.adminOrdersDetail`
+- retain list/filter/diagnostic/focused-field state preservation
 
 No DB/schema/auth/order mutation.
 
@@ -44,4 +40,4 @@ No DB/schema/auth/order mutation.
 
 ## Merge boundary
 
-Sky controls merge. A green preview is not production/runtime PASS.
+Sky controls merge. Green preview does not equal runtime PASS.

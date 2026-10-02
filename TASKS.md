@@ -17,19 +17,18 @@ Live Git evidence overrides this file if stale.
 | `PROJECT-CONTINUITY-001` | CLOSED | #34 | `1da1fab945a6f555932ef3d049fa89a70eccb2a9` |
 | `ORDER-OPS-NOTIFY-008` | PARTIAL RUNTIME PASS | #35 | `af71874517eba99604630ecc2a41b360a022cb1e` |
 | `ADMIN-RUNTIME-FREEZE-001` | CLOSED / RUNTIME VERIFIED | #36 | `57d195253473a44a92911cb14d46e297c7fd35a7` |
-| `RUNTIME-ACCEPTANCE-EVIDENCE-001` | CLOSED | #37 | `606b1ee323106d8b35866de81658eb036a9f5180` |
 | `ORDER-OPS-RECONNECT-UX-001` | CLOSED / RUNTIME VERIFIED | #38 | `f296da213eddf20a08c62265e4eff58800b9c9c4` |
-| `RUNTIME-ACCEPTANCE-RECONNECT-CLOSE-001` | CLOSED | #39 | `f228de79aa40885e535bd76e216183e1e957eed2` |
 | `CART-UX-001` | CLOSED / MERGED | #40 | `400d5dc41726fa688828f657fc46631b1e20937e` |
 | `ADMIN-ORDER-PACKING-UX-001` | CLOSED / MERGED | #41 | `0396ad59c0f9e0f6959c4e03eb6eee46ab281bdb` |
-| `ADMIN-SCROLL-PRESERVE-001` | ACTIVE | pending | pending |
+| `ADMIN-SCROLL-PRESERVE-001` | MERGED / RUNTIME INCOMPLETE | #42 | `581a13d3d381511edc54244dd6d8eb3bba72dfd6` |
+| `ADMIN-SCROLL-PRESERVE-002` | ACTIVE | pending | pending |
 
 ## Active task
 
-`ADMIN-SCROLL-PRESERVE-001`
+`ADMIN-SCROLL-PRESERVE-002`
 
 Scope:
-- preserve admin order detail scroll across background/tab-resume rerenders
-- preserve list/filter/diagnostic trace position
-- avoid losing the actively edited settlement field during background refresh
-- preserve current order/cart business logic
+- preserve exact near-bottom position after tab resume
+- restore after layout settles, not only immediately after DOM replacement
+- prevent native scroll anchoring from shifting the detail
+- keep prior scroll/focus preservation behavior

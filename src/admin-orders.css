@@ -51,7 +51,7 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
 .adminOrderStatus.completed{background:#eaf5e2;color:#4f763a}
 .adminOrderStatus.cancelled{background:#f1efed;color:#756a63}
 
-.adminOrdersDetail{min-width:0;min-height:0;overflow:auto;padding:24px 26px 30px}
+.adminOrdersDetail{min-width:0;min-height:0;overflow:auto;overflow-anchor:none;padding:24px 26px 30px}
 .adminOrdersDetailEmpty,.adminOrdersEmpty{display:grid;place-items:center;min-height:160px;padding:24px;border:1px dashed rgba(36,22,15,.15);border-radius:18px;color:rgba(36,22,15,.48);font-size:12px;font-weight:750;text-align:center;background:rgba(255,255,255,.42)}
 .adminOrderDetailHead{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:20px;border-bottom:1px solid rgba(36,22,15,.08)}
 .adminOrderDetailHead small{display:block;color:#d65c2c;font-size:9px;font-weight:900;letter-spacing:.18em}

@@ -9,6 +9,8 @@ type AdminPanelFieldKey = 'shipping_fee' | 'final_total' | 'admin_note'
 type AdminPanelViewState = {
   renderedOrderId: number | null
   detailScrollTop: number
+  detailBottomGap: number
+  detailWasAtBottom: boolean
   listScrollTop: number
   filterScrollLeft: number
   traceOpen: boolean
@@ -73,6 +75,7 @@ let loading = false
 let loadedOnce = false
 let trigger: HTMLButtonElement | null = null
 let panelRoot: HTMLElement | null = null
+let panelRenderEpoch = 0
 let toastRoot: HTMLElement | null = null
 let toastTimer: number | null = null
 let noticeText = ''
@@ -899,9 +902,15 @@ function captureAdminPanelViewState(): AdminPanelViewState | null {
     ? activeElement
     : null
 
+  const detailBottomGap = detail
+    ? Math.max(0, detail.scrollHeight - detail.clientHeight - detail.scrollTop)
+    : 0
+
   return {
     renderedOrderId: Number.isFinite(renderedOrderId) ? renderedOrderId : null,
     detailScrollTop: detail?.scrollTop ?? 0,
+    detailBottomGap,
+    detailWasAtBottom: Boolean(detail && detailBottomGap <= 24),
     listScrollTop: list?.scrollTop ?? 0,
     filterScrollLeft: filters?.scrollLeft ?? 0,
     traceOpen: Boolean(trace?.open),
@@ -923,8 +932,8 @@ function panelFieldSelector(key: AdminPanelFieldKey) {
   return '[data-order-admin-note]'
 }
 
-function restoreAdminPanelViewState(state: AdminPanelViewState | null) {
-  if (!panelRoot || !state) return
+function restoreAdminPanelScrollState(state: AdminPanelViewState, renderEpoch: number) {
+  if (!panelRoot || renderEpoch !== panelRenderEpoch) return
 
   const trace = panelRoot.querySelector<HTMLDetailsElement>('.adminOrdersTrace')
   const traceList = panelRoot.querySelector<HTMLElement>('.adminOrdersTraceList')
@@ -939,28 +948,45 @@ function restoreAdminPanelViewState(state: AdminPanelViewState | null) {
   if (state.renderedOrderId !== selectedId) return
 
   const detail = panelRoot.querySelector<HTMLElement>('.adminOrdersDetail')
-  if (detail) detail.scrollTop = state.detailScrollTop
+  if (!detail) return
 
-  if (!state.activeField) return
-  const field = panelRoot.querySelector<HTMLInputElement | HTMLTextAreaElement>(panelFieldSelector(state.activeField.key))
-  if (!field) return
+  detail.scrollTop = state.detailWasAtBottom
+    ? Math.max(0, detail.scrollHeight - detail.clientHeight - state.detailBottomGap)
+    : state.detailScrollTop
+}
 
-  field.value = state.activeField.value
-  try {
-    field.focus({ preventScroll: true })
-    if (state.activeField.selectionStart != null && state.activeField.selectionEnd != null) {
-      field.setSelectionRange(state.activeField.selectionStart, state.activeField.selectionEnd)
+function restoreAdminPanelViewState(state: AdminPanelViewState | null, renderEpoch: number) {
+  if (!panelRoot || !state || renderEpoch !== panelRenderEpoch) return
+
+  restoreAdminPanelScrollState(state, renderEpoch)
+
+  if (state.renderedOrderId === selectedId && state.activeField) {
+    const field = panelRoot.querySelector<HTMLInputElement | HTMLTextAreaElement>(panelFieldSelector(state.activeField.key))
+    if (field) {
+      field.value = state.activeField.value
+      try {
+        field.focus({ preventScroll: true })
+        if (state.activeField.selectionStart != null && state.activeField.selectionEnd != null) {
+          field.setSelectionRange(state.activeField.selectionStart, state.activeField.selectionEnd)
+        }
+      } catch {
+        // Number inputs do not support text selection in every browser.
+      }
+      restoreAdminPanelScrollState(state, renderEpoch)
     }
-  } catch {
-    // Number inputs do not support text selection in every browser.
   }
 
-  if (detail) detail.scrollTop = state.detailScrollTop
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      restoreAdminPanelScrollState(state, renderEpoch)
+    })
+  })
 }
 
 function renderPanel() {
   if (!panelRoot) return
   const viewState = captureAdminPanelViewState()
+  const renderEpoch = ++panelRenderEpoch
   ensureSelection()
   const realtime = realtimeMeta()
   const browserNotification = backgroundNotificationMeta()
@@ -1015,7 +1041,7 @@ function renderPanel() {
     </section>
   `
 
-  restoreAdminPanelViewState(viewState)
+  restoreAdminPanelViewState(viewState, renderEpoch)
 }
 
 function closePanel() {
