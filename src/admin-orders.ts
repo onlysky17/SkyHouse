@@ -86,6 +86,7 @@ let legacySeenThroughOrderId = loadLegacySeenThroughOrderId()
 let soundEnabled = loadSoundPreference()
 let backgroundNotificationsEnabled = loadBackgroundNotificationPreference()
 let recentlyNotifiedOrders = loadRecentNotifiedOrders()
+let recentlyAlertedOrderUpdates = new Set<string>()
 let notificationTrace = loadNotificationTrace()
 let audioContext: AudioContext | null = null
 let currentAdminUserId: string | null = null
@@ -478,18 +479,18 @@ async function syncRemoteSeenState(userId: string) {
       .filter(id => Number.isSafeInteger(id) && id > 0),
   )
 
-  if (remoteIds.size > 0) {
-    for (const id of remoteIds) seenOrderIds.add(id)
-  } else if (!hadLocalSeenState) {
-    seedSeenStateForExistingOrders()
-  }
-
-  persistSeenOrderIds()
-
   const currentOrderIds = new Set(orders.map(order => Number(order.id)))
-  const missingRemote = Array.from(seenOrderIds)
-    .filter(id => currentOrderIds.has(id) && !remoteIds.has(id))
-  if (missingRemote.length) await persistRemoteSeenOrderIds(missingRemote)
+
+  if (remoteIds.size > 0 || hadLocalSeenState) {
+    // Remote read rows are authoritative for current orders. A customer append may
+    // intentionally remove a read row so the pending order becomes unread again.
+    for (const id of currentOrderIds) seenOrderIds.delete(id)
+    for (const id of remoteIds) seenOrderIds.add(id)
+    persistSeenOrderIds()
+  } else {
+    seedSeenStateForExistingOrders()
+    await persistRemoteSeenOrderIds(Array.from(seenOrderIds).filter(id => currentOrderIds.has(id)))
+  }
 }
 
 function handleRealtimeSeenInsert(raw: Record<string, unknown>) {
@@ -677,6 +678,75 @@ function showOrderToast(order: OrderRow, arrivalCount = 1) {
   playOrderChime()
   if (toastTimer != null) window.clearTimeout(toastTimer)
   toastTimer = window.setTimeout(hideOrderToast, 12000)
+}
+
+function orderUpdateAlertKey(order: OrderRow) {
+  return `${order.id}:${order.updated_at || ''}`
+}
+
+function rememberOrderUpdateAlert(order: OrderRow) {
+  const key = orderUpdateAlertKey(order)
+  if (recentlyAlertedOrderUpdates.has(key)) return false
+  recentlyAlertedOrderUpdates.add(key)
+  if (recentlyAlertedOrderUpdates.size > 200) {
+    recentlyAlertedOrderUpdates = new Set(Array.from(recentlyAlertedOrderUpdates).slice(-120))
+  }
+  return true
+}
+
+function showBackgroundOrderUpdateNotification(order: OrderRow) {
+  if (!backgroundNotificationsEnabled || !document.hidden) return false
+  return showSystemNotification({
+    title: `Khách bổ sung đơn #${order.id} · ${order.customer_name}`,
+    body: `${itemCount(order)} món hiện có · ${totalLabel(order)}`,
+    tag: `skyhouse-order-update-${order.id}-${order.updated_at}`,
+    orderId: order.id,
+  })
+}
+
+function showOrderUpdateToast(order: OrderRow) {
+  const toast = ensureOrderToast()
+  toast.classList.remove('diagnostic')
+  toast.innerHTML = `
+    <button type="button" class="adminOrderToastClose" data-order-toast-close aria-label="Đóng thông báo">×</button>
+    <div class="adminOrderToastIcon">＋</div>
+    <div class="adminOrderToastCopy">
+      <small>KHÁCH VỪA BỔ SUNG ĐƠN</small>
+      <strong>#${order.id} · ${escapeHtml(order.customer_name)}</strong>
+      <span>${itemCount(order)} món hiện có · ${escapeHtml(totalLabel(order))}</span>
+    </div>
+    <button type="button" class="adminOrderToastOpen" data-order-toast-open="${order.id}">Xem đơn</button>
+  `
+  requestAnimationFrame(() => toast.classList.add('show'))
+  playOrderChime()
+  if (toastTimer != null) window.clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(hideOrderToast, 12000)
+}
+
+function announcePendingOrderUpdate(order: OrderRow) {
+  if (!rememberOrderUpdateAlert(order)) {
+    recordNotificationTrace(`Dedupe chặn cảnh báo bổ sung lặp cho đơn #${order.id}.`, 'ok')
+    return
+  }
+
+  recordNotificationTrace(`Realtime phát hiện khách bổ sung món vào đơn #${order.id}.`, 'ok')
+
+  if (panelOpen) {
+    noticeText = `Khách vừa bổ sung món vào đơn #${order.id}.`
+    noticeState = 'ok'
+    playOrderChime()
+    renderPanel()
+    return
+  }
+
+  if (showBackgroundOrderUpdateNotification(order)) {
+    playOrderChime()
+    recordNotificationTrace('Đã gửi browser system notification cho đơn vừa được bổ sung.', 'info')
+    return
+  }
+
+  showOrderUpdateToast(order)
+  recordNotificationTrace('Đã hiển thị in-page toast cho đơn vừa được bổ sung.', 'info')
 }
 
 function announceOrderArrivals(discovered: OrderRow[], source: 'realtime' | 'catch-up' = 'realtime') {
@@ -1299,6 +1369,33 @@ function handleRealtimeInsert(raw: Record<string, unknown>) {
   announceOrderArrivals([order], 'realtime')
 }
 
+function handleRealtimeUpdate(raw: Record<string, unknown>) {
+  const id = Number(raw.id)
+  if (!Number.isSafeInteger(id) || id <= 0) return
+
+  const index = orders.findIndex(order => order.id === id)
+  if (index < 0) {
+    void loadOrders(true)
+    return
+  }
+
+  const previous = orders[index]
+  const next = raw as unknown as OrderRow
+  const itemsChanged = JSON.stringify(previous.items || []) !== JSON.stringify(next.items || [])
+
+  orders = orders.map(order => order.id === id ? next : order)
+  lastSyncAt = new Date()
+
+  if (itemsChanged && previous.status === 'new' && next.status === 'new') {
+    // Customer append is new work even if this order was already read before.
+    seenOrderIds.delete(id)
+    unseenOrderIds.add(id)
+    persistSeenOrderIds()
+    renderNotificationState()
+    announcePendingOrderUpdate(next)
+  }
+}
+
 function startRealtime() {
   if (!supabase || realtimeChannel) return
   setRealtimeState(navigator.onLine ? 'connecting' : 'offline')
@@ -1306,6 +1403,9 @@ function startRealtime() {
     .channel('skyhouse-admin-order-notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
       handleRealtimeInsert(payload.new as Record<string, unknown>)
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
+      handleRealtimeUpdate(payload.new as Record<string, unknown>)
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_order_reads' }, payload => {
       handleRealtimeSeenInsert(payload.new as Record<string, unknown>)

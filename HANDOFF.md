@@ -10,29 +10,42 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 Current main at task start:
 
-`554fe5d74a5a904483629570e26a1631339f1735`
+`d94162bdc80ff630f42bb7770822c4fbaa51e853`
 
-PR #49 is merged and notification runtime acceptance is closed.
+PR #50 is merged.
 
 ## Current active task
 
-`ORDER-CHECKOUT-UX-001`
+`ORDER-PENDING-MERGE-001`
 
 Branch:
 
-`task/order-checkout-ux-001`
+`task/order-pending-merge-001`
 
-Owner direction:
-- customers should place orders directly in SkyHouse
-- remove copy-to-clipboard / automatic Zalo checkout because the app already sends the order and customer information to admin
+## Owner intent
 
-Implementation:
-- cart primary CTA is a direct `Đặt hàng` button
-- uses existing `create_storefront_order` RPC
-- retains customer validation, order confirmation, tracking link and duplicate-submit guard
-- removes `Sao chép danh sách`
-- keeps optional phone contact
-- no DB/schema changes
+If the same customer places more items while their latest order is still `new`, append those items to that pending order rather than creating another order.
+
+Once the prior order is no longer `new`, the next checkout must create a fresh order.
+
+## Implementation
+
+- new DB RPC: `submit_storefront_order`
+- same-phone pending lookup uses normalized digits
+- concurrent same-phone checkout is serialized
+- items merge by normalized name + unit for legacy compatibility
+- quantities accumulate and current product metadata wins
+- subtotal is recalculated
+- final total is invalidated after customer changes
+- customer append resets read state for that order
+- storefront shows merged-order confirmation
+- admin Realtime handles order UPDATE and announces customer append
+- DB migration is committed but not yet applied to production
+
+## Production safety
+
+Do not retroactively merge existing orders #2/#3.
+Do not apply the production migration before Owner merge.
 
 ## Merge boundary
 
