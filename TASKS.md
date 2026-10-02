@@ -9,16 +9,13 @@ Live Git evidence overrides this file if stale.
 | `ADMIN-SCROLL-PRESERVE-001` | MERGED / RUNTIME INCOMPLETE | #42 | `581a13d3d381511edc54244dd6d8eb3bba72dfd6` |
 | `ADMIN-SCROLL-PRESERVE-002` | MERGED / RUNTIME INCOMPLETE | #43 | `a5ca9dc0eff9028e40e523a969cb5963a4b75f61` |
 | `ADMIN-RESUME-NO-RERENDER-001` | MERGED / RUNTIME INCOMPLETE | #44 | `6d4ec7a4ae585b9d9e5ef14de2e02a68290af1cd` |
-| `ADMIN-RESUME-HEALTH-ONLY-001` | ACTIVE | pending | pending |
+| `ADMIN-RESUME-HEALTH-ONLY-001` | CLOSED / RUNTIME VERIFIED | #45 | `0c2922cc55e1c9e33e87170d2c7716fcf487121e` |
 
-## Active task
+## Active product acceptance
 
-`ADMIN-RESUME-HEALTH-ONLY-001`
+`ORDER-OPS-NOTIFY-008` remains partial pending a real/new order for:
+- Realtime arrival
+- dedupe
+- cross-device unread/read sync
 
-Scope:
-- remove full-panel render from Realtime state changes
-- update only health/diagnostic chrome in place
-- keep catch-up and notification behavior intact
-- preserve order/cart business logic
-
-`ORDER-OPS-NOTIFY-008` remains partial pending real-order acceptance cases.
+Do not create synthetic production orders without explicit Owner authorization.
