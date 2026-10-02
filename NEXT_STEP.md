@@ -1,23 +1,19 @@
 # SkyHouse — Next Step
 
-## Active task
+## Current state
 
-`MOBILE-PRODUCT-MODAL-UX-001`
+`MOBILE-PRODUCT-MODAL-UX-001` is CLOSED / RUNTIME VERIFIED.
 
-Implemented:
-- fixed 48px close control on mobile
-- contained modal scrolling
-- background scroll lock
-- backdrop close
-- Escape close on desktop
+No further mobile-modal work is active.
 
-Next:
-1. verify preview/build
-2. open PR
-3. stop at Owner merge gate
-4. after merge, test open → scroll → close on mobile
+## Next product acceptance step
 
-Notification acceptance:
-- Realtime arrival: PASS
-- cross-browser read-state sync: PASS
-- duplicate suppression: PENDING
+`ORDER-OPS-NOTIFY-008` has one runtime case left:
+
+**duplicate-alert suppression**
+
+The next time a genuinely new order arrives while admin is open:
+1. observe how many alert/toast/browser-notification events are produced for that one order
+2. confirm the same order is not announced multiple times through Realtime + catch-up
+
+Do not create synthetic production order data without explicit Owner authorization.
