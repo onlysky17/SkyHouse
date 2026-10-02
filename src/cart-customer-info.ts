@@ -338,7 +338,9 @@ function enhanceDrawer(drawer: HTMLElement) {
     <p class="cartCustomerSendNotice" data-customer-send-notice hidden></p>
   `
 
-  footer.insertBefore(block, footer.firstChild)
+  const customerSlot = drawer.querySelector('.cartCustomerSlot')
+  if (customerSlot) customerSlot.appendChild(block)
+  else footer.insertBefore(block, footer.firstChild)
   const zaloButton = footer.querySelector<HTMLAnchorElement>('.cartPrimary')
   if (zaloButton) {
     zaloButton.textContent = 'Sao chép đơn & mở Zalo'
