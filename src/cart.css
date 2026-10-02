@@ -36,7 +36,7 @@ html.cartOpen,html.cartOpen body{overflow:hidden!important;overscroll-behavior:n
 .cartTotal small{display:block;margin-top:4px;font-size:13px;font-weight:700}
 .cartTotal b{flex-shrink:0;font-size:28px;line-height:1.15}
 .cartFooter>p{margin:8px 0 0;padding:8px 10px;font-size:11px;line-height:1.45}
-.cartPrimary{display:flex;align-items:center;justify-content:center;min-height:50px;margin-top:12px;padding:12px 14px;font-size:14px;line-height:1.4;box-shadow:0 5px 14px rgba(37,23,15,.15)}
+.cartPrimary{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;margin-top:12px;padding:12px 14px;border:0;border-radius:999px;background:#25170f;color:#fff;font-size:14px;font-weight:900;line-height:1.4;box-shadow:0 5px 14px rgba(37,23,15,.15);cursor:pointer}.cartPrimary:disabled{opacity:.65;cursor:wait}.cartSecondarySingle{grid-template-columns:1fr}
 .cartSecondary{grid-template-columns:1fr 1fr}
 .cartSecondary button,.cartSecondary a{min-height:44px;font-size:12px}
 .clearCart{min-height:44px;margin-top:8px;padding:10px;font-size:12px}
