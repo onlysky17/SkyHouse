@@ -10,26 +10,31 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 Current main at task start:
 
-`400d5dc41726fa688828f657fc46631b1e20937e`
+`0396ad59c0f9e0f6959c4e03eb6eee46ab281bdb`
 
-That is PR #40 merge (`CART-UX-001`).
+That is PR #41 merge (`ADMIN-ORDER-PACKING-UX-001`).
 
 ## Current active task
 
-`ADMIN-ORDER-PACKING-UX-001`
+`ADMIN-SCROLL-PRESERVE-001`
 
 Branch:
 
-`task/admin-order-packing-ux-001`
+`task/admin-scroll-preserve-001`
 
-Owner requested:
-- product images in admin order item list so packing staff can identify items visually
-- settlement input alignment correction
+Owner symptom:
+- switching away from the admin tab and returning makes the open order detail jump away from its previous scroll position
 
-Implementation:
-- `src/admin-orders.ts`: consume/render `image_url` already present in order snapshots
-- `src/admin-orders.css`: thumbnail layout + responsive sizing
-- `src/admin-order-settlement.css`: top-align label grids and normalize input height
+Cause:
+- tab resume triggers silent `loadOrders(true)`
+- panel rerender replaces DOM and loses UI state
+
+Implementation in `src/admin-orders.ts`:
+- capture/restore order detail and list scroll
+- preserve filter scroller position
+- preserve diagnostic trace open/scroll state
+- preserve focused settlement field draft/focus/selection
+- only restore order-detail scroll when the same order remains selected
 
 No DB/schema/auth/order mutation.
 
@@ -39,4 +44,4 @@ No DB/schema/auth/order mutation.
 
 ## Merge boundary
 
-Sky controls merge. A green Vercel preview is not Owner visual PASS.
+Sky controls merge. A green preview is not production/runtime PASS.
