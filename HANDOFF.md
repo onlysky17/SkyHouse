@@ -8,34 +8,27 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 ## Canonical checkpoint
 
-Current main at task start:
-`0d19680d8abcf2e591b34c92e891d2fc9436bbf4`
+Current main:
 
-## Active task
+`80316bf5f5200e5ed6e7f9de2a6b66f7c9c3953f`
+
+PR #47 is merged.
+
+## Closed runtime issue
 
 `MOBILE-PRODUCT-MODAL-UX-001`
 
-Branch:
-`task/mobile-product-modal-ux-001`
+Owner confirmed the mobile product modal is now easy to dismiss after scrolling.
 
-Owner reported mobile product detail is difficult to dismiss after scrolling.
-
-Current implementation:
-- fixed 48px mobile close button
-- safe-area positioning
-- contained modal scrolling
-- background scroll lock
-- backdrop close
-- Escape close on desktop
-- accessibility labels
-
-No product/cart/order business logic changed.
+State: **CLOSED / RUNTIME VERIFIED**
 
 ## Notification acceptance
 
-- Realtime arrival: PASS
-- cross-browser read-state sync: PASS
-- duplicate suppression: PENDING
+- Realtime new-order arrival: PASS
+- Cross-browser/device read-state sync: PASS
+- Duplicate-alert suppression: PENDING
+
+No synthetic production orders without explicit Owner authorization.
 
 ## Merge boundary
 
