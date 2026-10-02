@@ -8,26 +8,33 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 ## Canonical checkpoint
 
-Main at task start:
+Current main:
 
-`6d4ec7a4ae585b9d9e5ef14de2e02a68290af1cd` — PR #44 merge.
+`0c2922cc55e1c9e33e87170d2c7716fcf487121e`
 
-## Current task
+PR #45 is merged.
 
-`ADMIN-RESUME-HEALTH-ONLY-001`
+## Closed runtime issue
 
-Branch:
+The admin order panel previously jumped when returning from another tab/window.
 
-`task/admin-resume-health-only-001`
+Final root cause:
+- Realtime status transitions still called full `renderPanel()`
+- that replaced the entire admin panel DOM even when order data had not changed
 
-## Important root-cause correction
+PR #45 changed status-only transitions to update only runtime chrome in place.
 
-PR #44 correctly prevented unchanged silent order refreshes from calling `renderPanel()`.
+Owner runtime confirmation: **PASS**.
 
-The remaining jump came from another independent path: `setRealtimeState()` still called `renderPanel()` during Realtime reconnect/status transitions.
+## Remaining acceptance
 
-Current branch changes that path to patch only the health/diagnostic UI in place.
+`ORDER-OPS-NOTIFY-008` remains partial until a real/new order is available for:
+- Realtime arrival
+- duplicate suppression
+- cross-device unread/read synchronization
 
-No DB/schema/auth/order mutation.
+Do not create synthetic production orders without explicit Owner authorization.
 
-Sky controls merge; runtime confirmation remains required.
+## Merge boundary
+
+Sky controls merge.
