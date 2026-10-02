@@ -21,14 +21,15 @@ Live Git evidence overrides this file if stale.
 | `ORDER-OPS-RECONNECT-UX-001` | CLOSED / RUNTIME VERIFIED | #38 | `f296da213eddf20a08c62265e4eff58800b9c9c4` |
 | `RUNTIME-ACCEPTANCE-RECONNECT-CLOSE-001` | CLOSED | #39 | `f228de79aa40885e535bd76e216183e1e957eed2` |
 | `CART-UX-001` | CLOSED / MERGED | #40 | `400d5dc41726fa688828f657fc46631b1e20937e` |
-| `ADMIN-ORDER-PACKING-UX-001` | ACTIVE | pending | pending |
+| `ADMIN-ORDER-PACKING-UX-001` | CLOSED / MERGED | #41 | `0396ad59c0f9e0f6959c4e03eb6eee46ab281bdb` |
+| `ADMIN-SCROLL-PRESERVE-001` | ACTIVE | pending | pending |
 
 ## Active task
 
-`ADMIN-ORDER-PACKING-UX-001`
+`ADMIN-SCROLL-PRESERVE-001`
 
 Scope:
-- show product thumbnails in admin order item list
-- provide fallback when an older order snapshot has no image
-- fix vertical alignment of `Phí giao hàng` and `Tổng chốt với khách` inputs
-- preserve order/cart business logic
+- preserve admin order detail scroll across background/tab-resume rerenders
+- preserve list/filter/diagnostic trace position
+- avoid losing the actively edited settlement field during background refresh
+- preserve current order/cart business logic

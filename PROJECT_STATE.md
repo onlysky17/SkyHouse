@@ -8,16 +8,14 @@ Live repository/runtime evidence overrides this snapshot.
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `400d5dc41726fa688828f657fc46631b1e20937e`
-- PR #40 (`CART-UX-001`) is merged at that commit.
+- Current canonical `main`: `0396ad59c0f9e0f6959c4e03eb6eee46ab281bdb`
+- PR #41 (`ADMIN-ORDER-PACKING-UX-001`) is merged at that commit.
 - No open PR existed when the current task started.
 
 ## Recent completed work
 
-- `ADMIN-RUNTIME-FREEZE-001` — CLOSED / runtime verified — PR #36
-- `ORDER-OPS-RECONNECT-UX-001` — CLOSED / runtime verified — PR #38
-- `RUNTIME-ACCEPTANCE-RECONNECT-CLOSE-001` — CLOSED — PR #39
-- `CART-UX-001` — MERGED — PR #40
+- `CART-UX-001` — CLOSED / MERGED — PR #40
+- `ADMIN-ORDER-PACKING-UX-001` — CLOSED / MERGED — PR #41
 
 ## Retained notification acceptance
 
@@ -32,24 +30,29 @@ Do not create synthetic production orders without explicit Owner authorization.
 
 ## Current active task
 
-`ADMIN-ORDER-PACKING-UX-001 — improve packing list clarity`
+`ADMIN-SCROLL-PRESERVE-001 — preserve admin order position across tab switches/background refresh`
 
 Branch:
 
-`task/admin-order-packing-ux-001`
+`task/admin-scroll-preserve-001`
 
-Owner observations:
-- admin order item list has no product image, which makes packing easier to confuse
-- `Tổng chốt với khách` input is vertically misaligned with `Phí giao hàng`
+Owner symptom:
+- scroll down inside an order detail
+- switch to another browser tab to paste/share a screenshot
+- return to SkyHouse admin
+- order detail jumps away from the previous position
 
-Root causes:
-- order snapshots already contain `image_url`, but `admin-orders.ts` did not include/render it
-- settlement labels are CSS grids with different child counts; without `align-content:start`, the taller label can distribute vertical track space differently and shift the input
+Root cause:
+- `visibilitychange` intentionally triggers a silent order refresh when the admin tab becomes visible
+- a successful refresh calls `renderPanel()`
+- `renderPanel()` replaces the whole admin panel DOM with `innerHTML`
+- replacing the detail DOM discards scroll position, trace state and focused settlement field state
 
 Implemented:
-- add `image_url` to admin order item type
-- render product thumbnail for each order item, with fallback for old/missing snapshots
-- style thumbnails for desktop/mobile packing view
-- align settlement label content to the top and give numeric inputs a consistent minimum height
+- capture list/detail scroll positions before panel rerender
+- preserve horizontal filter position and diagnostic trace open/scroll state
+- restore detail scroll only when the same order remains selected
+- preserve the currently focused settlement field value/focus/selection using `focus({ preventScroll: true })`
+- deliberate order selection still opens the newly selected order normally
 
 No DB/schema/order mutation is part of this task.
