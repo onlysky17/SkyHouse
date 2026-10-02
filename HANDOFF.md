@@ -10,27 +10,34 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 Current main at task start:
 
-`581a13d3d381511edc54244dd6d8eb3bba72dfd6`
+`a5ca9dc0eff9028e40e523a969cb5963a4b75f61`
 
-That is PR #42 merge.
+That is PR #43 merge.
 
 ## Current active task
 
-`ADMIN-SCROLL-PRESERVE-002`
+`ADMIN-RESUME-NO-RERENDER-001`
 
 Branch:
 
-`task/admin-scroll-preserve-002`
+`task/admin-resume-no-rerender-001`
 
-PR #42 preserved absolute scroll state but Owner runtime testing showed a remaining jump specifically when returning from another tab while positioned near the bottom.
+## Runtime evidence
 
-Refined implementation:
-- capture distance from bottom
-- restore near-bottom position using that gap
-- repeat restore after two animation frames so layout has settled
-- cancel stale delayed restores with a render epoch
-- disable native scroll anchoring on `.adminOrdersDetail`
-- retain list/filter/diagnostic/focused-field state preservation
+Owner supplied `2026-10-02 13-45-35.mp4`.
+
+The video shows the remaining jump happens on returning from ChatGPT to the SkyHouse admin tab. The last-sync timestamp updates at the same return, confirming the resume refresh path is active.
+
+## Root cause and fix
+
+The app was rebuilding the entire panel after every successful silent `loadOrders(true)`, even when no order/unread/notice data changed.
+
+Current fix:
+- compare UI-relevant state around the silent refresh
+- unchanged state → update only the health/last-sync block
+- changed state or explicit refresh → normal full render
+
+This intentionally replaces the previous strategy of repeatedly restoring scroll after an unnecessary DOM rebuild.
 
 No DB/schema/auth/order mutation.
 
@@ -40,4 +47,4 @@ No DB/schema/auth/order mutation.
 
 ## Merge boundary
 
-Sky controls merge. Green preview does not equal runtime PASS.
+Sky controls merge. Green preview does not equal production runtime PASS.
