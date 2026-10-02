@@ -983,6 +983,25 @@ function restoreAdminPanelViewState(state: AdminPanelViewState | null, renderEpo
   })
 }
 
+function updatePanelHealthOnly() {
+  if (!panelRoot || !panelOpen) return
+  const health = panelRoot.querySelector<HTMLElement>('.adminOrdersHealth')
+  if (!health) return
+  const realtime = realtimeMeta()
+  health.innerHTML = `
+    <span class="${realtime.tone}"><i></i>${escapeHtml(realtime.label)}</span>
+    <small>Đồng bộ gần nhất: ${escapeHtml(formatClockTime(lastSyncAt))}</small>
+  `
+}
+
+function orderDataSignature(value: OrderRow[]) {
+  return JSON.stringify(value)
+}
+
+function unseenDataSignature(value: Set<number>) {
+  return Array.from(value).sort((a, b) => a - b).join(',')
+}
+
 function renderPanel() {
   if (!panelRoot) return
   const viewState = captureAdminPanelViewState()
@@ -1069,6 +1088,10 @@ async function openPanel(preferredId?: number) {
 async function loadOrders(silent = true) {
   if (!supabase || loading) return
   const knownIds = new Set(orders.map(order => Number(order.id)))
+  const previousOrdersSignature = orderDataSignature(orders)
+  const previousUnseenSignature = unseenDataSignature(unseenOrderIds)
+  const previousNoticeText = noticeText
+  const previousNoticeState = noticeState
   const wasLoaded = loadedOnce
   loading = true
   if (!silent) {
@@ -1103,6 +1126,7 @@ async function loadOrders(silent = true) {
     ? nextOrders.filter(order => !knownIds.has(Number(order.id)))
     : []
 
+  const nextOrdersSignature = orderDataSignature(nextOrders)
   orders = nextOrders
   await syncRemoteSeenState(sessionData.session.user.id)
   lastSyncAt = new Date()
@@ -1120,7 +1144,15 @@ async function loadOrders(silent = true) {
 
   if (newlyDiscovered.length > 0) announceOrderArrivals(newlyDiscovered, 'catch-up')
 
-  if (panelOpen) renderPanel()
+  if (panelOpen) {
+    const ordersChanged = previousOrdersSignature !== nextOrdersSignature
+    const unseenChanged = previousUnseenSignature !== unseenDataSignature(unseenOrderIds)
+    const noticeChanged = previousNoticeText !== noticeText || previousNoticeState !== noticeState
+    const shouldRebuildPanel = !silent || ordersChanged || unseenChanged || noticeChanged
+
+    if (shouldRebuildPanel) renderPanel()
+    else updatePanelHealthOnly()
+  }
 }
 
 async function updateStatus(id: number, status: OrderStatus) {
