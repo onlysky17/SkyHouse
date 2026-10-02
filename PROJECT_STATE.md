@@ -8,45 +8,38 @@ Live repository/runtime evidence overrides this snapshot.
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `6d4ec7a4ae585b9d9e5ef14de2e02a68290af1cd`
-- PR #44 is merged at that commit.
-- No open PR existed when this task started.
+- Current canonical `main`: `0c2922cc55e1c9e33e87170d2c7716fcf487121e`
+- PR #45 is merged at that commit.
+- No open PR existed when this continuity closeout started.
 
-## Recent scroll-resume work
+## Recent admin UX work
 
-- PR #42 — absolute scroll preservation — runtime incomplete
-- PR #43 — bottom-gap/delayed restoration — runtime incomplete
-- PR #44 — skip full render after unchanged silent order refresh — merged, but Owner runtime still shows a jump
+- PR #40 — `CART-UX-001` — merged
+- PR #41 — admin packing thumbnails/alignment — merged
+- PR #42/#43/#44 — intermediate scroll/resume fixes — merged but runtime incomplete
+- PR #45 — remove full-panel render on Realtime state-only transitions — merged and Owner runtime verified
 
-## Current active task
+## Runtime result
 
-`ADMIN-RESUME-HEALTH-ONLY-001 — stop Realtime state transitions from rebuilding the order panel`
+Owner confirmed the tab-switch jump is resolved after PR #45.
 
-Branch:
+Verified behavior:
+- scroll inside an open admin order
+- switch to another tab/window
+- return to SkyHouse
+- order detail remains stable instead of visibly jumping/rebuilding
 
-`task/admin-resume-health-only-001`
+The final root cause was a separate full-panel render path in `setRealtimeState()`, not only the silent order refresh path.
 
-## Remaining root cause
+## Task state
 
-After PR #44, `loadOrders(true)` can skip `renderPanel()` when nothing changed.
+`ADMIN-RESUME-HEALTH-ONLY-001` — **CLOSED / RUNTIME VERIFIED**
 
-However, the Realtime lifecycle still calls:
+## Remaining notification acceptance
 
-`setRealtimeState(connecting/degraded/connected/offline)`
+`ORDER-OPS-NOTIFY-008` remains **PARTIAL RUNTIME PASS** pending real-order evidence for:
+- Realtime arrival
+- duplicate-alert suppression
+- cross-device unread/read sync
 
-and `setRealtimeState()` itself was still calling `renderPanel()`.
-
-Therefore a tab-resume/reconnect can still destroy and rebuild the full order DOM even when the order data is unchanged.
-
-## Current fix
-
-- Realtime state transitions no longer rebuild the full panel.
-- They update only the health/last-sync block.
-- If diagnostic trace is open, only its count/list are refreshed in place.
-- Order/detail DOM is left untouched, so its scroll position cannot jump from a Realtime status transition.
-
-No DB/schema/auth/order mutation.
-
-## Retained notification acceptance
-
-`ORDER-OPS-NOTIFY-008` remains partial pending real-order arrival/dedupe/cross-device evidence.
+Do not create synthetic production orders without explicit Owner authorization.
