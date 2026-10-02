@@ -8,38 +8,31 @@ Live repository/runtime evidence overrides this snapshot.
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `0c2922cc55e1c9e33e87170d2c7716fcf487121e`
-- PR #45 is merged at that commit.
-- No open PR existed when this continuity closeout started.
+- Current canonical `main`: `0d19680d8abcf2e591b34c92e891d2fc9436bbf4`
+- PR #46 is merged.
+- No open PR existed when the current task started.
 
-## Recent admin UX work
+## Recent runtime state
 
-- PR #40 — `CART-UX-001` — merged
-- PR #41 — admin packing thumbnails/alignment — merged
-- PR #42/#43/#44 — intermediate scroll/resume fixes — merged but runtime incomplete
-- PR #45 — remove full-panel render on Realtime state-only transitions — merged and Owner runtime verified
+- Admin tab-resume jump: CLOSED / RUNTIME VERIFIED after PR #45.
+- A real new order arrived while admin was open and triggered the new-order banner/count update.
+- Cross-browser read-state behavior is verified from the prior seen-state test and the new unread-state observation.
+- Duplicate-alert suppression still needs explicit runtime confirmation.
 
-## Runtime result
+## Current active task
 
-Owner confirmed the tab-switch jump is resolved after PR #45.
+`MOBILE-PRODUCT-MODAL-UX-001`
 
-Verified behavior:
-- scroll inside an open admin order
-- switch to another tab/window
-- return to SkyHouse
-- order detail remains stable instead of visibly jumping/rebuilding
+Owner symptom:
+- on phone, product detail is easy to open but hard to dismiss after scrolling
 
-The final root cause was a separate full-panel render path in `setRealtimeState()`, not only the silent order refresh path.
+Implemented on branch `task/mobile-product-modal-ux-001`:
+- mobile close control stays fixed to the viewport/safe area
+- touch target increased to 48×48
+- product modal scroll is contained
+- background page scroll is locked while modal is open
+- backdrop tap still closes
+- Escape closes on desktop
+- dialog/close accessibility labels added
 
-## Task state
-
-`ADMIN-RESUME-HEALTH-ONLY-001` — **CLOSED / RUNTIME VERIFIED**
-
-## Remaining notification acceptance
-
-`ORDER-OPS-NOTIFY-008` remains **PARTIAL RUNTIME PASS** pending real-order evidence for:
-- Realtime arrival
-- duplicate-alert suppression
-- cross-device unread/read sync
-
-Do not create synthetic production orders without explicit Owner authorization.
+No product/cart/order business logic changed.
