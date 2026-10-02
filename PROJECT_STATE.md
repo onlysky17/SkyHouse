@@ -8,66 +8,45 @@ Live repository/runtime evidence overrides this snapshot.
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `a5ca9dc0eff9028e40e523a969cb5963a4b75f61`
-- PR #43 is merged at that commit.
+- Current canonical `main`: `6d4ec7a4ae585b9d9e5ef14de2e02a68290af1cd`
+- PR #44 is merged at that commit.
 - No open PR existed when this task started.
 
-## Recent completed work
+## Recent scroll-resume work
 
-- `CART-UX-001` — CLOSED / MERGED — PR #40
-- `ADMIN-ORDER-PACKING-UX-001` — CLOSED / MERGED — PR #41
-- `ADMIN-SCROLL-PRESERVE-001` — MERGED / runtime incomplete — PR #42
-- `ADMIN-SCROLL-PRESERVE-002` — MERGED / runtime still showed a visible resume jump — PR #43
+- PR #42 — absolute scroll preservation — runtime incomplete
+- PR #43 — bottom-gap/delayed restoration — runtime incomplete
+- PR #44 — skip full render after unchanged silent order refresh — merged, but Owner runtime still shows a jump
 
 ## Current active task
 
-`ADMIN-RESUME-NO-RERENDER-001 — avoid rebuilding unchanged admin panel on tab resume`
+`ADMIN-RESUME-HEALTH-ONLY-001 — stop Realtime state transitions from rebuilding the order panel`
 
 Branch:
 
-`task/admin-resume-no-rerender-001`
+`task/admin-resume-health-only-001`
 
-## Runtime evidence
+## Remaining root cause
 
-Owner video `2026-10-02 13-45-35.mp4` confirms the remaining issue:
+After PR #44, `loadOrders(true)` can skip `renderPanel()` when nothing changed.
 
-- order detail is positioned near the lower settlement/status area
-- Owner switches to ChatGPT
-- returning to SkyHouse visibly redraws/jumps the admin panel
-- the "Đồng bộ gần nhất" timestamp advances from the pre-switch time to the return time
+However, the Realtime lifecycle still calls:
 
-This ties the jump to the resume refresh path rather than to manual scrolling.
+`setRealtimeState(connecting/degraded/connected/offline)`
 
-## Root cause
+and `setRealtimeState()` itself was still calling `renderPanel()`.
 
-`visibilitychange` intentionally calls `loadOrders(true)` when the admin tab becomes visible.
-
-Even when:
-- orders did not change
-- unread state did not change
-- notices did not change
-
-the old path still called `renderPanel()`, which replaces the entire panel DOM via `innerHTML`.
-
-PR #42/#43 attempted to restore scroll after that destructive rerender, but the user can still see the DOM replacement itself as a visual jump.
+Therefore a tab-resume/reconnect can still destroy and rebuild the full order DOM even when the order data is unchanged.
 
 ## Current fix
 
-For silent/background order refreshes:
+- Realtime state transitions no longer rebuild the full panel.
+- They update only the health/last-sync block.
+- If diagnostic trace is open, only its count/list are refreshed in place.
+- Order/detail DOM is left untouched, so its scroll position cannot jump from a Realtime status transition.
 
-- compare previous vs fetched order data
-- compare previous vs refreshed unread state
-- compare notice state
-- if nothing UI-relevant changed, do **not** rebuild the panel
-- update only the small Realtime/last-sync health block in place
-- still perform a full render when order/unread/notice data actually changed or the refresh was explicitly requested by the admin
-
-This removes the unnecessary destructive rerender instead of trying to hide it afterward.
-
-No DB/schema/order mutation is part of this task.
+No DB/schema/auth/order mutation.
 
 ## Retained notification acceptance
 
-`ORDER-OPS-NOTIFY-008` remains **PARTIAL RUNTIME PASS** pending real-order arrival/dedupe/cross-device evidence.
-
-Do not create synthetic production orders without explicit Owner authorization.
+`ORDER-OPS-NOTIFY-008` remains partial pending real-order arrival/dedupe/cross-device evidence.

@@ -2,38 +2,28 @@
 
 ## Current active task
 
-`ADMIN-RESUME-NO-RERENDER-001 — avoid full panel rebuild on unchanged tab resume`
+`ADMIN-RESUME-HEALTH-ONLY-001`
 
-Branch:
+## Exact remaining cause
 
-`task/admin-resume-no-rerender-001`
+PR #44 removed the full render from unchanged `loadOrders(true)`.
 
-## Why the direction changed
+But `setRealtimeState()` still called `renderPanel()`.
 
-Owner video proves PR #42/#43 scroll restoration is not enough: the full DOM replacement is itself visible as a jump.
-
-The cleaner fix is to stop rebuilding the panel when a resume refresh returns the same UI-relevant data.
+A resume/reconnect can emit connecting/degraded/connected transitions, so that separate path still rebuilt the entire admin panel and caused the visible jump.
 
 ## Implemented
 
-1. Capture a signature of current orders before a silent refresh.
-2. Compare it with the fetched order payload.
-3. Compare unread state before/after remote seen sync.
-4. Compare notice state.
-5. If all are unchanged, skip `renderPanel()`.
-6. Update only Realtime health / last-sync text in place.
-7. Preserve full rendering for explicit refreshes or actual data changes.
+1. `setRealtimeState()` now updates runtime chrome only.
+2. Health/last-sync is patched in place.
+3. Open diagnostic trace is refreshed in place.
+4. Order detail DOM is not replaced for Realtime status-only changes.
 
 ## Next step
 
-1. Verify branch diff.
-2. Wait for Vercel preview/build success.
-3. Open PR.
-4. Stop at Owner merge gate.
-5. After merge, runtime-test the same video sequence:
-   - scroll near the bottom of an order
-   - switch to ChatGPT
-   - return to SkyHouse
-   - confirm there is no visible redraw/jump while the sync time still updates
+- verify Vercel preview
+- open PR
+- stop at Sky merge gate
+- after merge, repeat the same tab-switch test once
 
 No synthetic production order is authorized.

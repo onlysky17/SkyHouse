@@ -8,43 +8,26 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 ## Canonical checkpoint
 
-Current main at task start:
+Main at task start:
 
-`a5ca9dc0eff9028e40e523a969cb5963a4b75f61`
+`6d4ec7a4ae585b9d9e5ef14de2e02a68290af1cd` — PR #44 merge.
 
-That is PR #43 merge.
+## Current task
 
-## Current active task
-
-`ADMIN-RESUME-NO-RERENDER-001`
+`ADMIN-RESUME-HEALTH-ONLY-001`
 
 Branch:
 
-`task/admin-resume-no-rerender-001`
+`task/admin-resume-health-only-001`
 
-## Runtime evidence
+## Important root-cause correction
 
-Owner supplied `2026-10-02 13-45-35.mp4`.
+PR #44 correctly prevented unchanged silent order refreshes from calling `renderPanel()`.
 
-The video shows the remaining jump happens on returning from ChatGPT to the SkyHouse admin tab. The last-sync timestamp updates at the same return, confirming the resume refresh path is active.
+The remaining jump came from another independent path: `setRealtimeState()` still called `renderPanel()` during Realtime reconnect/status transitions.
 
-## Root cause and fix
-
-The app was rebuilding the entire panel after every successful silent `loadOrders(true)`, even when no order/unread/notice data changed.
-
-Current fix:
-- compare UI-relevant state around the silent refresh
-- unchanged state → update only the health/last-sync block
-- changed state or explicit refresh → normal full render
-
-This intentionally replaces the previous strategy of repeatedly restoring scroll after an unnecessary DOM rebuild.
+Current branch changes that path to patch only the health/diagnostic UI in place.
 
 No DB/schema/auth/order mutation.
 
-## Retained notification acceptance
-
-`ORDER-OPS-NOTIFY-008` remains partial until a real/new order is available for arrival/dedupe/cross-device checks.
-
-## Merge boundary
-
-Sky controls merge. Green preview does not equal production runtime PASS.
+Sky controls merge; runtime confirmation remains required.
