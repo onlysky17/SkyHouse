@@ -68,10 +68,14 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
 .adminOrdersSectionTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px;color:#24160f;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
 .adminOrdersSectionTitle b{color:#d65c2c}
 .adminOrderItems{display:grid;gap:8px}
-.adminOrderItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:12px 14px;border:1px solid rgba(36,22,15,.08);border-radius:16px;background:#fff}
+.adminOrderItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:10px 12px;border:1px solid rgba(36,22,15,.08);border-radius:16px;background:#fff}
+.adminOrderItemMain{display:flex;align-items:center;gap:12px;min-width:0}
+.adminOrderItemImage{width:68px;height:68px;flex:0 0 68px;border-radius:13px;object-fit:cover;border:1px solid rgba(36,22,15,.08);background:#f4eadc}
+.adminOrderItemImageFallback{display:grid;place-items:center;color:rgba(36,22,15,.35);font-size:9px;font-style:italic}
+.adminOrderItemInfo{min-width:0}
 .adminOrderItem small,.adminOrderItem span{display:block;color:rgba(36,22,15,.48);font-size:9px}
-.adminOrderItem strong{display:block;margin:3px 0;font-size:13px;line-height:1.35}
-.adminOrderItemPrice{text-align:right}
+.adminOrderItem strong{display:block;margin:3px 0;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.adminOrderItemPrice{text-align:right;min-width:88px}
 .adminOrderItemPrice b{display:block;color:#24160f;font-size:14px}
 .adminOrderItemPrice span{margin-top:4px;color:#d65c2c;font-size:11px;font-weight:800}
 
@@ -109,7 +113,10 @@ html.adminOrdersOpen,html.adminOrdersOpen body{overflow:hidden!important}
   .adminOrderDetailHead h2{font-size:30px}
   .adminOrderCustomerGrid{grid-template-columns:1fr}
   .adminOrderCustomerGrid .wide{grid-column:auto}
-  .adminOrderItem{grid-template-columns:minmax(0,1fr) auto;padding:11px}
+  .adminOrderItem{grid-template-columns:minmax(0,1fr) auto;padding:10px}
+  .adminOrderItemMain{gap:10px}
+  .adminOrderItemImage{width:60px;height:60px;flex-basis:60px;border-radius:12px}
+  .adminOrderItemPrice{min-width:74px}
   .adminOrderManage{align-items:stretch;flex-direction:column}
   .adminOrderManage label{min-width:0}
   .adminOrderContactActions{justify-content:stretch}
