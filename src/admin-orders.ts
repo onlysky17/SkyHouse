@@ -5,6 +5,21 @@ type OrderFilter = 'all' | 'unread' | OrderStatus
 type RealtimeState = 'connecting' | 'connected' | 'degraded' | 'offline'
 type NotificationTraceTone = 'info' | 'ok' | 'warn' | 'error'
 type NotificationTrace = { at: number; tone: NotificationTraceTone; message: string }
+type AdminPanelFieldKey = 'shipping_fee' | 'final_total' | 'admin_note'
+type AdminPanelViewState = {
+  renderedOrderId: number | null
+  detailScrollTop: number
+  listScrollTop: number
+  filterScrollLeft: number
+  traceOpen: boolean
+  traceScrollTop: number
+  activeField: null | {
+    key: AdminPanelFieldKey
+    value: string
+    selectionStart: number | null
+    selectionEnd: number | null
+  }
+}
 
 type OrderItem = {
   name?: string
@@ -859,8 +874,93 @@ function orderDetailHtml() {
   `
 }
 
+function activePanelFieldKey(element: Element | null): AdminPanelFieldKey | null {
+  if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) return null
+  if (element.matches('[data-order-shipping-fee]')) return 'shipping_fee'
+  if (element.matches('[data-order-final-total]')) return 'final_total'
+  if (element.matches('[data-order-admin-note]')) return 'admin_note'
+  return null
+}
+
+function captureAdminPanelViewState(): AdminPanelViewState | null {
+  if (!panelRoot || !panelOpen) return null
+
+  const activeRow = panelRoot.querySelector<HTMLElement>('.adminOrderRow.active[data-order-id]')
+  const renderedOrderId = activeRow ? Number(activeRow.dataset.orderId) : null
+  const detail = panelRoot.querySelector<HTMLElement>('.adminOrdersDetail')
+  const list = panelRoot.querySelector<HTMLElement>('.adminOrdersList')
+  const filters = panelRoot.querySelector<HTMLElement>('.adminOrderFilterScroller')
+  const trace = panelRoot.querySelector<HTMLDetailsElement>('.adminOrdersTrace')
+  const traceList = panelRoot.querySelector<HTMLElement>('.adminOrdersTraceList')
+
+  const activeElement = document.activeElement
+  const activeFieldKey = panelRoot.contains(activeElement) ? activePanelFieldKey(activeElement) : null
+  const activeFieldElement = activeFieldKey && (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement)
+    ? activeElement
+    : null
+
+  return {
+    renderedOrderId: Number.isFinite(renderedOrderId) ? renderedOrderId : null,
+    detailScrollTop: detail?.scrollTop ?? 0,
+    listScrollTop: list?.scrollTop ?? 0,
+    filterScrollLeft: filters?.scrollLeft ?? 0,
+    traceOpen: Boolean(trace?.open),
+    traceScrollTop: traceList?.scrollTop ?? 0,
+    activeField: activeFieldKey && activeFieldElement
+      ? {
+          key: activeFieldKey,
+          value: activeFieldElement.value,
+          selectionStart: activeFieldElement.selectionStart,
+          selectionEnd: activeFieldElement.selectionEnd,
+        }
+      : null,
+  }
+}
+
+function panelFieldSelector(key: AdminPanelFieldKey) {
+  if (key === 'shipping_fee') return '[data-order-shipping-fee]'
+  if (key === 'final_total') return '[data-order-final-total]'
+  return '[data-order-admin-note]'
+}
+
+function restoreAdminPanelViewState(state: AdminPanelViewState | null) {
+  if (!panelRoot || !state) return
+
+  const trace = panelRoot.querySelector<HTMLDetailsElement>('.adminOrdersTrace')
+  const traceList = panelRoot.querySelector<HTMLElement>('.adminOrdersTraceList')
+  if (trace) trace.open = state.traceOpen
+  if (traceList) traceList.scrollTop = state.traceScrollTop
+
+  const filters = panelRoot.querySelector<HTMLElement>('.adminOrderFilterScroller')
+  const list = panelRoot.querySelector<HTMLElement>('.adminOrdersList')
+  if (filters) filters.scrollLeft = state.filterScrollLeft
+  if (list) list.scrollTop = state.listScrollTop
+
+  if (state.renderedOrderId !== selectedId) return
+
+  const detail = panelRoot.querySelector<HTMLElement>('.adminOrdersDetail')
+  if (detail) detail.scrollTop = state.detailScrollTop
+
+  if (!state.activeField) return
+  const field = panelRoot.querySelector<HTMLInputElement | HTMLTextAreaElement>(panelFieldSelector(state.activeField.key))
+  if (!field) return
+
+  field.value = state.activeField.value
+  try {
+    field.focus({ preventScroll: true })
+    if (state.activeField.selectionStart != null && state.activeField.selectionEnd != null) {
+      field.setSelectionRange(state.activeField.selectionStart, state.activeField.selectionEnd)
+    }
+  } catch {
+    // Number inputs do not support text selection in every browser.
+  }
+
+  if (detail) detail.scrollTop = state.detailScrollTop
+}
+
 function renderPanel() {
   if (!panelRoot) return
+  const viewState = captureAdminPanelViewState()
   ensureSelection()
   const realtime = realtimeMeta()
   const browserNotification = backgroundNotificationMeta()
@@ -914,6 +1014,8 @@ function renderPanel() {
       </div>
     </section>
   `
+
+  restoreAdminPanelViewState(viewState)
 }
 
 function closePanel() {
