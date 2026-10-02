@@ -8,31 +8,32 @@ Live repository/runtime evidence overrides this snapshot.
 
 - Repository: `onlysky17/SkyHouse`
 - Known Owner local workspace: `D:\PRIVATE\APP\SkyHouse`
-- Current canonical `main`: `0d19680d8abcf2e591b34c92e891d2fc9436bbf4`
-- PR #46 is merged.
-- No open PR existed when the current task started.
+- Current canonical `main`: `80316bf5f5200e5ed6e7f9de2a6b66f7c9c3953f`
+- PR #47 is merged at that commit.
+- No open PR existed when this continuity closeout started.
 
 ## Recent runtime state
 
 - Admin tab-resume jump: CLOSED / RUNTIME VERIFIED after PR #45.
-- A real new order arrived while admin was open and triggered the new-order banner/count update.
-- Cross-browser read-state behavior is verified from the prior seen-state test and the new unread-state observation.
-- Duplicate-alert suppression still needs explicit runtime confirmation.
+- Mobile product modal dismissal: CLOSED / RUNTIME VERIFIED after PR #47.
+- Realtime new-order arrival: PASS from a real production order.
+- Cross-browser/device read-state sync: PASS.
+- Duplicate-alert suppression: still pending explicit runtime confirmation.
 
-## Current active task
+## Closed task
 
-`MOBILE-PRODUCT-MODAL-UX-001`
+`MOBILE-PRODUCT-MODAL-UX-001` — **CLOSED / RUNTIME VERIFIED**
 
-Owner symptom:
-- on phone, product detail is easy to open but hard to dismiss after scrolling
+Owner confirmed on the same phone:
+- open product detail
+- scroll down
+- close control remains reachable
+- modal closes normally
 
-Implemented on branch `task/mobile-product-modal-ux-001`:
-- mobile close control stays fixed to the viewport/safe area
-- touch target increased to 48×48
-- product modal scroll is contained
-- background page scroll is locked while modal is open
-- backdrop tap still closes
-- Escape closes on desktop
-- dialog/close accessibility labels added
+## Remaining acceptance
 
-No product/cart/order business logic changed.
+`ORDER-OPS-NOTIFY-008` still has one open runtime case:
+
+- duplicate-alert suppression
+
+Do not create synthetic production orders without explicit Owner authorization.
