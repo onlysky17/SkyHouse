@@ -8,44 +8,41 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 ## Canonical checkpoint
 
-Current main at task start:
+Current main:
 
-`d94162bdc80ff630f42bb7770822c4fbaa51e853`
+`78c653c133898886b30fbffbd533311ef785eac6`
 
-PR #50 is merged.
+PR #51 is merged.
+
+Production migration `merge_pending_storefront_orders` was applied after merge, but Owner stopped runtime acceptance and selected stronger security rule A.
 
 ## Current active task
 
-`ORDER-PENDING-MERGE-001`
+`ORDER-PENDING-MERGE-SEC-001`
 
 Branch:
 
-`task/order-pending-merge-001`
+`task/order-pending-merge-sec-001`
 
-## Owner intent
+## Security decision
 
-If the same customer places more items while their latest order is still `new`, append those items to that pending order rather than creating another order.
+Pending-order merge requires:
 
-Once the prior order is no longer `new`, the next checkout must create a fresh order.
+- same normalized customer phone
+- same random browser/device merge token
+- existing order still `new`
 
-## Implementation
+The token is generated client-side and persisted locally. Production stores only SHA-256.
 
-- new DB RPC: `submit_storefront_order`
-- same-phone pending lookup uses normalized digits
-- concurrent same-phone checkout is serialized
-- items merge by normalized name + unit for legacy compatibility
-- quantities accumulate and current product metadata wins
-- subtotal is recalculated
-- final total is invalidated after customer changes
-- customer append resets read state for that order
-- storefront shows merged-order confirmation
-- admin Realtime handles order UPDATE and announces customer append
-- DB migration is committed but not yet applied to production
+A different device/browser using the same phone must create a new order.
 
-## Production safety
+Legacy orders without a merge hash are intentionally not claimed by the new browser secret.
 
-Do not retroactively merge existing orders #2/#3.
-Do not apply the production migration before Owner merge.
+## Deployment state
+
+- branch Vercel: SUCCESS
+- secure DB migration: committed, NOT yet applied to production
+- current production still has the earlier phone-only RPC until this PR is merged and migration is applied
 
 ## Merge boundary
 
