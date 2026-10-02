@@ -11,6 +11,7 @@ type CustomerInfo = {
 }
 
 type OrderItemSnapshot = {
+  product_id: number | null
   name: string
   category: string
   qty: number
@@ -31,6 +32,7 @@ const emptyInfo: CustomerInfo = { name: '', phone: '', deliveryMethod: 'delivery
 let lastSavedFingerprint = ''
 let lastSavedAt = 0
 let lastSavedOrderId: number | null = null
+let lastSavedMerged = false
 
 function loadInfo(): CustomerInfo {
   try {
@@ -148,7 +150,9 @@ function collectOrderSnapshot(drawer: Element | null): OrderSnapshot {
     const main = item.querySelector<HTMLElement>('.cartItemMain')
     const priceText = main?.querySelector<HTMLElement>(':scope > span')?.textContent?.trim() || 'Liên hệ giá'
     const qty = Number(main?.querySelector<HTMLElement>('.qtyControl b')?.textContent || '0') || 0
+    const productId = Number(item.dataset.productId || '')
     return {
+      product_id: Number.isSafeInteger(productId) && productId > 0 ? productId : null,
       name: main?.querySelector<HTMLElement>('strong')?.textContent?.trim() || 'Sản phẩm',
       category: main?.querySelector<HTMLElement>('small')?.textContent?.trim() || '',
       qty,
@@ -168,9 +172,9 @@ function collectOrderSnapshot(drawer: Element | null): OrderSnapshot {
 }
 
 async function saveOrder(drawer: Element | null, info: CustomerInfo) {
-  if (!supabase) return { saved: false, reused: false, orderId: null as number | null }
+  if (!supabase) return { saved: false, reused: false, merged: false, orderId: null as number | null }
   const snapshot = collectOrderSnapshot(drawer)
-  if (!snapshot.items.length) return { saved: false, reused: false, orderId: null as number | null }
+  if (!snapshot.items.length) return { saved: false, reused: false, merged: false, orderId: null as number | null }
 
   const payload = {
     customer_name: info.name.trim(),
@@ -183,29 +187,46 @@ async function saveOrder(drawer: Element | null, info: CustomerInfo) {
   const fingerprint = JSON.stringify(payload)
   const now = Date.now()
   if (fingerprint === lastSavedFingerprint && now - lastSavedAt < 120000 && lastSavedOrderId) {
-    return { saved: true, reused: true, orderId: lastSavedOrderId }
+    return { saved: true, reused: true, merged: lastSavedMerged, orderId: lastSavedOrderId }
   }
 
-  const { data, error } = await supabase.rpc('create_storefront_order', {
+  const rpcArgs = {
     p_customer_name: payload.customer_name,
     p_customer_phone: payload.customer_phone,
     p_customer_note: payload.customer_note,
     p_items: payload.items,
     p_subtotal_known: payload.subtotal_known,
     p_has_contact_price: payload.has_contact_price,
-  })
-  if (error) throw new Error(error.message)
+  }
 
-  const orderId = Number(data)
-  if (!Number.isSafeInteger(orderId) || orderId <= 0) throw new Error('invalid_order_id')
+  let orderId: number | null = null
+  let merged = false
+
+  const preferred = await supabase.rpc('submit_storefront_order', rpcArgs)
+  if (!preferred.error) {
+    const response = preferred.data as { order_id?: unknown; merged?: unknown } | null
+    orderId = Number(response?.order_id)
+    merged = response?.merged === true
+  } else if ((preferred.error as { code?: string }).code === 'PGRST202') {
+    // Backward-compatible rollout: keep checkout working until the DB migration is applied.
+    const fallback = await supabase.rpc('create_storefront_order', rpcArgs)
+    if (fallback.error) throw new Error(fallback.error.message)
+    orderId = Number(fallback.data)
+    merged = false
+  } else {
+    throw new Error(preferred.error.message)
+  }
+
+  if (!Number.isSafeInteger(orderId) || Number(orderId) <= 0) throw new Error('invalid_order_id')
 
   lastSavedFingerprint = fingerprint
   lastSavedAt = now
-  lastSavedOrderId = orderId
-  return { saved: true, reused: false, orderId }
+  lastSavedOrderId = Number(orderId)
+  lastSavedMerged = merged
+  return { saved: true, reused: false, merged, orderId: Number(orderId) }
 }
 
-function renderOrderConfirmation(drawer: Element | null, orderId: number) {
+function renderOrderConfirmation(drawer: Element | null, orderId: number, merged = false) {
   const customerBlock = drawer?.querySelector<HTMLElement>('[data-customer-info]')
   if (!customerBlock) return
 
@@ -219,9 +240,9 @@ function renderOrderConfirmation(drawer: Element | null, orderId: number) {
 
   confirmation.innerHTML = `
     <div>
-      <small>Đã ghi nhận đơn</small>
+      <small>${merged ? 'Đã bổ sung vào đơn đang chờ' : 'Đã ghi nhận đơn'}</small>
       <strong>Đơn #${orderId}</strong>
-      <span>Sky’s house đã lưu đơn này. Ní có thể mở trang theo dõi ngay.</span>
+      <span>${merged ? 'Sky’s house đã gộp các món mới vào đơn này vì đơn vẫn chưa được xác nhận.' : 'Sky’s house đã lưu đơn này. Ní có thể mở trang theo dõi ngay.'}</span>
     </div>
     <a href="/track?order=${encodeURIComponent(String(orderId))}">Theo dõi đơn này →</a>
   `
@@ -345,15 +366,21 @@ async function submitOrder(button: HTMLButtonElement) {
     const result = await saveOrder(drawer, info)
     if (!result.saved || !result.orderId) throw new Error('order_not_saved')
 
-    renderOrderConfirmation(drawer, result.orderId)
+    renderOrderConfirmation(drawer, result.orderId, result.merged)
     setSendNotice(
       drawer,
       result.reused
         ? `Đơn #${result.orderId} đã được gửi trước đó. Sky đã nhận được thông tin đơn này.`
-        : `Đặt hàng thành công · Đơn #${result.orderId}. Sky đã nhận được danh sách món và thông tin người đặt.`,
+        : result.merged
+          ? `Đã bổ sung vào đơn #${result.orderId}. Các món mới đã được gộp vào đơn đang chờ Sky xác nhận.`
+          : `Đặt hàng thành công · Đơn #${result.orderId}. Sky đã nhận được danh sách món và thông tin người đặt.`,
       'ok',
     )
-    button.textContent = result.reused ? 'Đơn đã được gửi ✓' : 'Đặt hàng thành công ✓'
+    button.textContent = result.reused
+      ? 'Đơn đã được gửi ✓'
+      : result.merged
+        ? `Đã gộp vào đơn #${result.orderId} ✓`
+        : 'Đặt hàng thành công ✓'
     window.setTimeout(() => {
       if (button.isConnected) button.textContent = originalText
     }, 2200)
