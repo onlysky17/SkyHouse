@@ -11,21 +11,12 @@ Live Git evidence overrides this file if stale.
 | `ADMIN-RESUME-NO-RERENDER-001` | MERGED / RUNTIME INCOMPLETE | #44 | `6d4ec7a4ae585b9d9e5ef14de2e02a68290af1cd` |
 | `ADMIN-RESUME-HEALTH-ONLY-001` | CLOSED / RUNTIME VERIFIED | #45 | `0c2922cc55e1c9e33e87170d2c7716fcf487121e` |
 | `ADMIN-RESUME-CLOSE-001` | CLOSED / MERGED | #46 | `0d19680d8abcf2e591b34c92e891d2fc9436bbf4` |
-| `MOBILE-PRODUCT-MODAL-UX-001` | ACTIVE | pending | pending |
+| `MOBILE-PRODUCT-MODAL-UX-001` | CLOSED / RUNTIME VERIFIED | #47 | `80316bf5f5200e5ed6e7f9de2a6b66f7c9c3953f` |
 
 ## Notification acceptance
 
-- Realtime new-order arrival: PASS from a real order.
-- Cross-browser/device read-state sync: PASS.
-- Duplicate-alert suppression: PENDING explicit runtime confirmation.
+- Realtime new-order arrival: PASS
+- Cross-browser/device read-state sync: PASS
+- Duplicate-alert suppression: PENDING
 
-## Active task
-
-`MOBILE-PRODUCT-MODAL-UX-001`
-
-Scope:
-- keep close control reachable on phones
-- 48×48 touch target
-- contain modal scrolling and lock background page scroll
-- preserve backdrop close and add Escape close
-- no product/cart/order business-logic changes
+No active UI bugfix task remains.
