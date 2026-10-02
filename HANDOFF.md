@@ -8,27 +8,29 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 ## Canonical checkpoint
 
-Current main:
+Current main at closeout start:
 
-`80316bf5f5200e5ed6e7f9de2a6b66f7c9c3953f`
+`aabfafbe39d7f19223cdd4a0d754bcc560582d5d`
 
-PR #47 is merged.
-
-## Closed runtime issue
-
-`MOBILE-PRODUCT-MODAL-UX-001`
-
-Owner confirmed the mobile product modal is now easy to dismiss after scrolling.
-
-State: **CLOSED / RUNTIME VERIFIED**
+PR #48 is merged.
 
 ## Notification acceptance
 
-- Realtime new-order arrival: PASS
-- Cross-browser/device read-state sync: PASS
-- Duplicate-alert suppression: PENDING
+`ORDER-OPS-NOTIFY-008` is now **CLOSED / RUNTIME VERIFIED**.
 
-No synthetic production orders without explicit Owner authorization.
+Evidence:
+- real production order #2 arrived through the live storefront while admin was open
+- admin arrival banner/counts updated
+- read/unread state synchronized across browsers
+- Owner confirmed the same new order generated one alert only, not duplicate alerts
+
+No synthetic production order was created.
+
+## Current task state
+
+No active authorized product task.
+
+Wait for Sky's next direction. Do not invent a new roadmap item.
 
 ## Merge boundary
 
