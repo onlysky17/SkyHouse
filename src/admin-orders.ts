@@ -86,6 +86,7 @@ let legacySeenThroughOrderId = loadLegacySeenThroughOrderId()
 let soundEnabled = loadSoundPreference()
 let backgroundNotificationsEnabled = loadBackgroundNotificationPreference()
 let recentlyNotifiedOrders = loadRecentNotifiedOrders()
+let recentlyAlertedOrderUpdates = new Set<string>()
 let notificationTrace = loadNotificationTrace()
 let audioContext: AudioContext | null = null
 let currentAdminUserId: string | null = null
@@ -478,18 +479,18 @@ async function syncRemoteSeenState(userId: string) {
       .filter(id => Number.isSafeInteger(id) && id > 0),
   )
 
-  if (remoteIds.size > 0) {
-    for (const id of remoteIds) seenOrderIds.add(id)
-  } else if (!hadLocalSeenState) {
-    seedSeenStateForExistingOrders()
-  }
-
-  persistSeenOrderIds()
-
   const currentOrderIds = new Set(orders.map(order => Number(order.id)))
-  const missingRemote = Array.from(seenOrderIds)
-    .filter(id => currentOrderIds.has(id) && !remoteIds.has(id))
-  if (missingRemote.length) await persistRemoteSeenOrderIds(missingRemote)
+
+  if (remoteIds.size > 0 || hadLocalSeenState) {
+    // Remote read rows are authoritative for current orders. A customer append may
+    // intentionally remove a read row so the pending order becomes unread again.
+    for (const id of currentOrderIds) seenOrderIds.delete(id)
+    for (const id of remoteIds) seenOrderIds.add(id)
+    persistSeenOrderIds()
+  } else {
+    seedSeenStateForExistingOrders()
+    await persistRemoteSeenOrderIds(Array.from(seenOrderIds).filter(id => currentOrderIds.has(id)))
+  }
 }
 
 function handleRealtimeSeenInsert(raw: Record<string, unknown>) {
