@@ -10,16 +10,17 @@ Live Git evidence overrides this file if stale.
 | `MOBILE-PRODUCT-MODAL-UX-001` | CLOSED / RUNTIME VERIFIED | #47 | `80316bf5f5200e5ed6e7f9de2a6b66f7c9c3953f` |
 | `ORDER-OPS-NOTIFY-008` | CLOSED / RUNTIME VERIFIED | #49 closeout | `554fe5d74a5a904483629570e26a1631339f1735` |
 | `ORDER-CHECKOUT-UX-001` | CLOSED / MERGED | #50 | `d94162bdc80ff630f42bb7770822c4fbaa51e853` |
-| `ORDER-PENDING-MERGE-001` | ACTIVE | pending | pending |
+| `ORDER-PENDING-MERGE-001` | MERGED / SECURITY HARDENING REQUIRED | #51 | `78c653c133898886b30fbffbd533311ef785eac6` |
+| `ORDER-PENDING-MERGE-SEC-001` | ACTIVE | pending | pending |
 
 ## Active task
 
-`ORDER-PENDING-MERGE-001`
+`ORDER-PENDING-MERGE-SEC-001`
 
-Acceptance target:
-- repeat checkout from same normalized phone merges into latest `new` order
-- same products add quantities; new products append
-- customer receives the existing order number with a merged message
-- admin receives one Realtime update alert and the order becomes unread again
-- if existing order is already confirmed/shipping/completed/cancelled, a new order is created
-- no automatic merge of historical orders is performed
+Owner security rule A:
+- same phone alone is insufficient
+- merge requires the same browser/device secret
+- secret is random and never stored server-side in plaintext
+- different browser/device with the same phone must not modify an existing pending order
+
+Runtime merge acceptance waits for this hardening to be deployed.
