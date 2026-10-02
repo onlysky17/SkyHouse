@@ -126,8 +126,25 @@ function HighlightSection({ kind, products, onSelect }: { kind: 'best' | 'signat
 }
 
 function Modal({ p, onClose, onAdd }: { p: Product | null; onClose: () => void; onAdd: (p: Product) => void }) {
+  useEffect(() => {
+    if (!p) return
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.documentElement.classList.add('productModalOpen')
+    document.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      document.documentElement.classList.remove('productModalOpen')
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [p, onClose])
+
   if (!p) return null
-  return <div className="modal"><button className="modalBack" onClick={onClose} aria-label="Đóng" /><div className="modalCard"><button className="close" onClick={onClose}>×</button><div className="modalImageWrap"><img src={p.image_url || ''} alt={p.name} /><ProductBadges p={p} /></div><div className="modalCopy"><div className="kicker">{p.category}</div><h3 className="serif">{p.name}</h3><div className="modalPrice serif">{priceText(p)}</div><p>{p.description || "Ảnh sản phẩm thật từ Sky's house. Nhắn Zalo hoặc Facebook để hỏi giá và tình trạng hàng."}</p><div className="modalActions"><button className="modalAddButton" type="button" onClick={() => onAdd(p)} disabled={!p.in_stock}>{p.in_stock ? '＋ Thêm vào giỏ' : 'Tạm hết hàng'}</button><a href={`${SHOP.zalo}?text=${encodeURIComponent(`Chào Sky's house, mình muốn hỏi ${p.name}`)}`} target="_blank">Nhắn Zalo</a><a href={`tel:${SHOP.phone}`}>Gọi đặt hàng</a><a href={SHOP.facebook} target="_blank">Facebook</a></div></div></div></div>
+
+  return <div className="modal"><button className="modalBack" type="button" onClick={onClose} aria-label="Đóng xem sản phẩm" /><div className="modalCard" role="dialog" aria-modal="true" aria-label={p.name}><button className="close" type="button" onClick={onClose} aria-label="Đóng xem sản phẩm" title="Đóng">×</button><div className="modalImageWrap"><img src={p.image_url || ''} alt={p.name} /><ProductBadges p={p} /></div><div className="modalCopy"><div className="kicker">{p.category}</div><h3 className="serif">{p.name}</h3><div className="modalPrice serif">{priceText(p)}</div><p>{p.description || "Ảnh sản phẩm thật từ Sky's house. Nhắn Zalo hoặc Facebook để hỏi giá và tình trạng hàng."}</p><div className="modalActions"><button className="modalAddButton" type="button" onClick={() => onAdd(p)} disabled={!p.in_stock}>{p.in_stock ? '＋ Thêm vào giỏ' : 'Tạm hết hàng'}</button><a href={`${SHOP.zalo}?text=${encodeURIComponent(`Chào Sky's house, mình muốn hỏi ${p.name}`)}`} target="_blank">Nhắn Zalo</a><a href={`tel:${SHOP.phone}`}>Gọi đặt hàng</a><a href={SHOP.facebook} target="_blank">Facebook</a></div></div></div></div>
 }
 
 function Catalog({ products, selected, onSelect, onClose, onAdd }: { products: Product[]; selected: Product | null; onSelect: (p: Product) => void; onClose: () => void; onAdd: (p: Product) => void }) {

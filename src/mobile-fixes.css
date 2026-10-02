@@ -54,10 +54,12 @@
   .contactLinks a{padding:16px!important;border-radius:18px!important;gap:14px!important;align-items:center!important}
   .contactLinks span{text-align:right!important}
 
-  .modal{padding:10px!important}
-  .modalCard{border-radius:22px!important;max-height:94dvh!important}
+  .productModalOpen{overflow:hidden!important;overscroll-behavior:none}
+  .modal{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))!important}
+  .modalCard{border-radius:22px!important;max-height:calc(100dvh - 20px)!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .modalCard>img{min-height:0!important;height:auto!important;aspect-ratio:4/3!important}
-  .modalCopy{padding:24px 18px!important}
+  .modal .close{position:fixed!important;top:calc(env(safe-area-inset-top) + 12px)!important;right:calc(env(safe-area-inset-right) + 12px)!important;width:48px!important;height:48px!important;display:grid!important;place-items:center!important;border:1px solid rgba(37,23,15,.12)!important;background:rgba(255,255,255,.96)!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important;font-size:28px!important;line-height:1!important;z-index:110!important;touch-action:manipulation}
+  .modalCopy{padding:24px 18px calc(24px + env(safe-area-inset-bottom))!important}
   .modalCopy h3{font-size:34px!important;line-height:1.02!important}
   .modalPrice{font-size:28px!important;overflow-wrap:anywhere}
 }

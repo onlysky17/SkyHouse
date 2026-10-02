@@ -1,18 +1,23 @@
 # SkyHouse — Next Step
 
-## Current state
+## Active task
 
-The admin tab-switch jump is resolved and runtime verified after PR #45.
+`MOBILE-PRODUCT-MODAL-UX-001`
 
-No further scroll/resume patch is active.
+Implemented:
+- fixed 48px close control on mobile
+- contained modal scrolling
+- background scroll lock
+- backdrop close
+- Escape close on desktop
 
-## Next product acceptance step
+Next:
+1. verify preview/build
+2. open PR
+3. stop at Owner merge gate
+4. after merge, test open → scroll → close on mobile
 
-`ORDER-OPS-NOTIFY-008` is waiting for a real/new production order.
-
-When a real order arrives, verify:
-1. Realtime arrival
-2. duplicate-alert suppression
-3. cross-device unread/read synchronization
-
-Until a real order exists, do not invent a substitute test and do not create synthetic production data without explicit Owner authorization.
+Notification acceptance:
+- Realtime arrival: PASS
+- cross-browser read-state sync: PASS
+- duplicate suppression: PENDING
