@@ -8,32 +8,34 @@ Known local workspace: `D:\PRIVATE\APP\SkyHouse`
 
 ## Canonical checkpoint
 
-Current main:
+Current main at task start:
+`0d19680d8abcf2e591b34c92e891d2fc9436bbf4`
 
-`0c2922cc55e1c9e33e87170d2c7716fcf487121e`
+## Active task
 
-PR #45 is merged.
+`MOBILE-PRODUCT-MODAL-UX-001`
 
-## Closed runtime issue
+Branch:
+`task/mobile-product-modal-ux-001`
 
-The admin order panel previously jumped when returning from another tab/window.
+Owner reported mobile product detail is difficult to dismiss after scrolling.
 
-Final root cause:
-- Realtime status transitions still called full `renderPanel()`
-- that replaced the entire admin panel DOM even when order data had not changed
+Current implementation:
+- fixed 48px mobile close button
+- safe-area positioning
+- contained modal scrolling
+- background scroll lock
+- backdrop close
+- Escape close on desktop
+- accessibility labels
 
-PR #45 changed status-only transitions to update only runtime chrome in place.
+No product/cart/order business logic changed.
 
-Owner runtime confirmation: **PASS**.
+## Notification acceptance
 
-## Remaining acceptance
-
-`ORDER-OPS-NOTIFY-008` remains partial until a real/new order is available for:
-- Realtime arrival
-- duplicate suppression
-- cross-device unread/read synchronization
-
-Do not create synthetic production orders without explicit Owner authorization.
+- Realtime arrival: PASS
+- cross-browser read-state sync: PASS
+- duplicate suppression: PENDING
 
 ## Merge boundary
 
