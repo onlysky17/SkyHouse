@@ -175,7 +175,7 @@ function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear
           {items.length === 0 && <div className="cartEmpty"><b>Giỏ đang trống.</b><span>Mở một sản phẩm rồi bấm “Thêm vào giỏ”.</span></div>}
           {items.map(p => {
             const qty = cart[String(p.id)] || 0
-            return <div className="cartItem" key={p.id}>
+            return <div className="cartItem" key={p.id} data-product-id={p.id}>
               <img src={p.image_url || ''} alt={p.name} />
               <div className="cartItemMain">
                 <strong>{p.name}</strong>
@@ -215,7 +215,7 @@ function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear
 }
 
 function Contact() {
-  return <section id="contact" className="contact"><div><div className="kicker">Liên hệ đặt hàng</div><h2 className="serif">Thấy món ưng ý,<br /><i>liên hệ liền ní.</i></h2><p>Không cần tài khoản, không thanh toán online. Có thể gom nhiều món vào giỏ rồi gửi danh sách một lần để Sky's house xác nhận giá và tồn kho.</p></div><div className="contactLinks"><a href={`tel:${SHOP.phone}`}><b>Gọi điện</b><span>{SHOP.phoneDisplay}</span></a><a href={SHOP.zalo} target="_blank"><b>Zalo</b><span>Thiên-Milo</span></a><a href={SHOP.facebook} target="_blank"><b>Facebook</b><span>Sky's house</span></a></div></section>
+  return <section id="contact" className="contact"><div><div className="kicker">Liên hệ đặt hàng</div><h2 className="serif">Thấy món ưng ý,<br /><i>liên hệ liền ní.</i></h2><p>Không cần tài khoản, không thanh toán online. Có thể gom nhiều món vào giỏ rồi đặt hàng trực tiếp để Sky's house xác nhận giá và tồn kho.</p></div><div className="contactLinks"><a href={`tel:${SHOP.phone}`}><b>Gọi điện</b><span>{SHOP.phoneDisplay}</span></a><a href={SHOP.zalo} target="_blank"><b>Zalo</b><span>Thiên-Milo</span></a><a href={SHOP.facebook} target="_blank"><b>Facebook</b><span>Sky's house</span></a></div></section>
 }
 
 export default function Storefront() {
