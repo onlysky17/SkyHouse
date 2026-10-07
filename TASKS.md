@@ -11,9 +11,14 @@ Live Git evidence overrides this file if stale.
 | `ORDER-OPS-NOTIFY-008` | CLOSED / RUNTIME VERIFIED | #49 closeout | `554fe5d74a5a904483629570e26a1631339f1735` |
 | `ORDER-CHECKOUT-UX-001` | CLOSED / MERGED | #50 | `d94162bdc80ff630f42bb7770822c4fbaa51e853` |
 | `ORDER-PENDING-MERGE-001` | MERGED / SECURITY HARDENING REQUIRED | #51 | `78c653c133898886b30fbffbd533311ef785eac6` |
-| `ORDER-PENDING-MERGE-SEC-001` | ACTIVE | pending | pending |
+| `ORDER-PENDING-MERGE-SEC-001` | MERGED / RUNTIME ACCEPTANCE NOT REVERIFIED | #52 | `b99ce9c7004ddad3d3b77a277de4486670392023` |
+| `ADMIN-FORM-ALIGNMENT-AUDIT-001` | IMPLEMENTED / ADMIN RUNTIME + OWNER VISUAL PENDING | #53 (draft) | not merged |
 
-## Active task
+## Active task — 2026-10-07
+
+`ADMIN-FORM-ALIGNMENT-AUDIT-001`. Build/TypeScript and public runtime verified; source-derived layout evidence is recorded in `_meta/admin-form-alignment-audit-001/validation.md`. Authenticated changed-build Admin/Orders and Sky visual acceptance remain pending. Stop before merge.
+
+## Prior security task context (preserved history)
 
 `ORDER-PENDING-MERGE-SEC-001`
 

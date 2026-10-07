@@ -1,0 +1,1051 @@
+{
+  "productionBaseline": {
+    "grids": [
+      {
+        "class": "adminFormGrid",
+        "columns": "176px 176px 176px",
+        "fields": [
+          {
+            "controlBottom": 296,
+            "height": 41,
+            "label": "Tên sản phẩm",
+            "labelTop": 233,
+            "left": 419,
+            "top": 255,
+            "width": 560
+          },
+          {
+            "controlBottom": 415,
+            "height": 61,
+            "label": "Giá",
+            "labelTop": 312,
+            "left": 419,
+            "top": 354,
+            "width": 176
+          },
+          {
+            "controlBottom": 375,
+            "height": 41,
+            "helperTop": 388,
+            "label": "Giá gốc",
+            "labelTop": 312,
+            "left": 611,
+            "top": 334,
+            "width": 176
+          },
+          {
+            "controlBottom": 415,
+            "height": 61,
+            "label": "Đơn vị",
+            "labelTop": 312,
+            "left": 803,
+            "top": 354,
+            "width": 176
+          },
+          {
+            "controlBottom": 494,
+            "height": 41,
+            "label": "Danh mục",
+            "labelTop": 431,
+            "left": 419,
+            "top": 453,
+            "width": 560
+          },
+          {
+            "controlBottom": 618,
+            "height": 86,
+            "label": "Mô tả",
+            "labelTop": 510,
+            "left": 419,
+            "top": 532,
+            "width": 560
+          },
+          {
+            "controlBottom": 731.390625,
+            "height": 58.203125,
+            "label": "Thứ tự",
+            "labelTop": 634,
+            "left": 419,
+            "top": 673.1875,
+            "width": 176
+          },
+          {
+            "controlBottom": 702,
+            "height": 46,
+            "helperTop": 716,
+            "label": "Ảnh sản phẩm",
+            "labelTop": 634,
+            "left": 611,
+            "top": 656,
+            "width": 368
+          },
+          {
+            "controlBottom": 810.390625,
+            "height": 41,
+            "label": "URL ảnh",
+            "labelTop": 747.390625,
+            "left": 419,
+            "top": 769.390625,
+            "width": 560
+          }
+        ]
+      }
+    ],
+    "overflow": false,
+    "viewport": [
+      1022,
+      884
+    ]
+  },
+  "sourceHarnessBefore": {
+    "grids": [
+      {
+        "columns": "326px 326px 326px",
+        "fields": [
+          {
+            "alignContent": "normal",
+            "controlBottom": 343.78125,
+            "fieldHeight": 65,
+            "height": 42,
+            "label": "Tên sản phẩm",
+            "labelTop": 278.78125,
+            "left": 215,
+            "top": 301.78125,
+            "width": 1010
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 451.28125,
+            "fieldHeight": 91.5,
+            "height": 55.25,
+            "label": "Giá",
+            "labelTop": 359.78125,
+            "left": 215,
+            "top": 396.03125,
+            "width": 326
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 424.78125,
+            "fieldHeight": 91.5,
+            "height": 42,
+            "helperTop": 437.78125,
+            "label": "Giá gốc",
+            "labelTop": 359.78125,
+            "left": 557,
+            "top": 382.78125,
+            "width": 326
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 451.28125,
+            "fieldHeight": 91.5,
+            "height": 55.25,
+            "label": "Đơn vị",
+            "labelTop": 359.78125,
+            "left": 899,
+            "top": 396.03125,
+            "width": 326
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 532.28125,
+            "fieldHeight": 65,
+            "height": 42,
+            "label": "Danh mục",
+            "labelTop": 467.28125,
+            "left": 215,
+            "top": 490.28125,
+            "width": 1010
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 627.28125,
+            "fieldHeight": 79,
+            "height": 56,
+            "label": "Mô tả",
+            "labelTop": 548.28125,
+            "left": 215,
+            "top": 571.28125,
+            "width": 1010
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 741.671875,
+            "fieldHeight": 98.390625,
+            "height": 58.703125,
+            "label": "Thứ tự",
+            "labelTop": 643.28125,
+            "left": 215,
+            "top": 682.96875,
+            "width": 326
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 712.28125,
+            "fieldHeight": 98.390625,
+            "height": 46,
+            "helperTop": 726.28125,
+            "label": "Ảnh sản phẩm",
+            "labelTop": 643.28125,
+            "left": 557,
+            "top": 666.28125,
+            "width": 668
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 822.671875,
+            "fieldHeight": 65,
+            "height": 42,
+            "label": "URL ảnh",
+            "labelTop": 757.671875,
+            "left": 215,
+            "top": 780.671875,
+            "width": 1010
+          }
+        ],
+        "selector": ".adminFormGrid"
+      },
+      {
+        "columns": "508px 508px",
+        "fields": [
+          {
+            "alignContent": "start",
+            "controlBottom": 1021.484375,
+            "fieldHeight": 72,
+            "height": 44,
+            "label": "Phí giao hàng",
+            "labelTop": 956.484375,
+            "left": 207,
+            "top": 977.484375,
+            "width": 508
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 1021.484375,
+            "fieldHeight": 72,
+            "height": 44,
+            "helperTop": 1028.484375,
+            "label": "Tổng chốt với khách",
+            "labelTop": 956.484375,
+            "left": 725,
+            "top": 977.484375,
+            "width": 508
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 1131.484375,
+            "fieldHeight": 93,
+            "height": 72,
+            "label": "Ghi chú nội bộ",
+            "labelTop": 1038.484375,
+            "left": 207,
+            "top": 1059.484375,
+            "width": 1026
+          }
+        ],
+        "selector": ".adminOrderSettlementGrid"
+      },
+      {
+        "columns": "235px 235px",
+        "fields": [
+          {
+            "alignContent": "normal",
+            "controlBottom": 1313.296875,
+            "fieldHeight": 58,
+            "height": 37,
+            "label": "",
+            "labelTop": 1255.296875,
+            "left": 205,
+            "top": 1276.296875,
+            "width": 235
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 1313.296875,
+            "fieldHeight": 58,
+            "height": 37,
+            "label": "",
+            "labelTop": 1255.296875,
+            "left": 450,
+            "top": 1276.296875,
+            "width": 235
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 1383.296875,
+            "fieldHeight": 60,
+            "height": 39,
+            "label": "",
+            "labelTop": 1323.296875,
+            "left": 205,
+            "top": 1344.296875,
+            "width": 235
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 1451.296875,
+            "fieldHeight": 58,
+            "height": 37,
+            "label": "",
+            "labelTop": 1393.296875,
+            "left": 205,
+            "top": 1414.296875,
+            "width": 480
+          },
+          {
+            "alignContent": "normal",
+            "controlBottom": 1548.296875,
+            "fieldHeight": 87,
+            "height": 66,
+            "label": "",
+            "labelTop": 1461.296875,
+            "left": 205,
+            "top": 1482.296875,
+            "width": 480
+          }
+        ],
+        "selector": ".cartCustomerGrid"
+      }
+    ],
+    "overflow": false,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "sourceHarnessAfter": {
+    "grids": [
+      {
+        "columns": "326px 326px 326px",
+        "fields": [
+          {
+            "alignContent": "start",
+            "controlBottom": 347.78125,
+            "fieldHeight": 69,
+            "height": 46,
+            "label": "Tên sản phẩm",
+            "labelTop": 278.78125,
+            "left": 215,
+            "top": 301.78125,
+            "width": 1010
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 432.78125,
+            "fieldHeight": 69,
+            "height": 46,
+            "label": "Giá",
+            "labelTop": 363.78125,
+            "left": 215,
+            "top": 386.78125,
+            "width": 326
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 432.78125,
+            "fieldHeight": 89.5,
+            "height": 46,
+            "helperTop": 439.78125,
+            "label": "Giá gốc",
+            "labelTop": 363.78125,
+            "left": 557,
+            "top": 386.78125,
+            "width": 326
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 432.78125,
+            "fieldHeight": 69,
+            "height": 46,
+            "label": "Đơn vị",
+            "labelTop": 363.78125,
+            "left": 899,
+            "top": 386.78125,
+            "width": 326
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 538.28125,
+            "fieldHeight": 69,
+            "height": 46,
+            "label": "Danh mục",
+            "labelTop": 469.28125,
+            "left": 215,
+            "top": 492.28125,
+            "width": 1010
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 663.28125,
+            "fieldHeight": 109,
+            "height": 86,
+            "label": "Mô tả",
+            "labelTop": 554.28125,
+            "left": 215,
+            "top": 577.28125,
+            "width": 1010
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 748.28125,
+            "fieldHeight": 69,
+            "height": 46,
+            "label": "Thứ tự",
+            "labelTop": 679.28125,
+            "left": 215,
+            "top": 702.28125,
+            "width": 326
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 748.28125,
+            "fieldHeight": 91.390625,
+            "height": 46,
+            "helperTop": 755.28125,
+            "label": "Ảnh sản phẩm",
+            "labelTop": 679.28125,
+            "left": 557,
+            "top": 702.28125,
+            "width": 668
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 855.671875,
+            "fieldHeight": 69,
+            "height": 46,
+            "label": "URL ảnh",
+            "labelTop": 786.671875,
+            "left": 215,
+            "top": 809.671875,
+            "width": 1010
+          }
+        ],
+        "selector": ".adminFormGrid"
+      },
+      {
+        "columns": "508px 508px",
+        "fields": [
+          {
+            "alignContent": "start",
+            "controlBottom": 1054.484375,
+            "fieldHeight": 65,
+            "height": 44,
+            "label": "Phí giao hàng",
+            "labelTop": 989.484375,
+            "left": 207,
+            "top": 1010.484375,
+            "width": 508
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 1054.484375,
+            "fieldHeight": 72,
+            "height": 44,
+            "helperTop": 1061.484375,
+            "label": "Tổng chốt với khách",
+            "labelTop": 989.484375,
+            "left": 725,
+            "top": 1010.484375,
+            "width": 508
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 1164.484375,
+            "fieldHeight": 93,
+            "height": 72,
+            "label": "Ghi chú nội bộ",
+            "labelTop": 1071.484375,
+            "left": 207,
+            "top": 1092.484375,
+            "width": 1026
+          }
+        ],
+        "selector": ".adminOrderSettlementGrid"
+      },
+      {
+        "columns": "235px 235px",
+        "fields": [
+          {
+            "alignContent": "start",
+            "controlBottom": 1355.296875,
+            "fieldHeight": 67,
+            "height": 46,
+            "label": "",
+            "labelTop": 1288.296875,
+            "left": 205,
+            "top": 1309.296875,
+            "width": 235
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 1355.296875,
+            "fieldHeight": 67,
+            "height": 46,
+            "label": "",
+            "labelTop": 1288.296875,
+            "left": 450,
+            "top": 1309.296875,
+            "width": 235
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 1432.296875,
+            "fieldHeight": 67,
+            "height": 46,
+            "label": "",
+            "labelTop": 1365.296875,
+            "left": 205,
+            "top": 1386.296875,
+            "width": 235
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 1509.296875,
+            "fieldHeight": 67,
+            "height": 46,
+            "label": "",
+            "labelTop": 1442.296875,
+            "left": 205,
+            "top": 1463.296875,
+            "width": 480
+          },
+          {
+            "alignContent": "start",
+            "controlBottom": 1606.296875,
+            "fieldHeight": 87,
+            "height": 66,
+            "label": "",
+            "labelTop": 1519.296875,
+            "left": 205,
+            "top": 1540.296875,
+            "width": 480
+          }
+        ],
+        "selector": ".cartCustomerGrid"
+      }
+    ],
+    "overflow": false,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "sourceHarnessResponsive": [
+    {
+      "viewport": [
+        901,
+        900
+      ],
+      "overflow": false,
+      "productColumns": "259.656px 259.672px 259.656px",
+      "productControlHeights": [
+        46,
+        46,
+        46,
+        46,
+        46,
+        46,
+        46,
+        46
+      ],
+      "helperBelow": true,
+      "cartHeights": [
+        46,
+        46,
+        46
+      ]
+    },
+    {
+      "viewport": [
+        768,
+        1024
+      ],
+      "overflow": false,
+      "productColumns": "678px",
+      "productControlHeights": [
+        46,
+        46,
+        46,
+        46,
+        46,
+        46,
+        46,
+        46
+      ],
+      "helperBelow": true,
+      "cartHeights": [
+        46,
+        46,
+        46
+      ]
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "overflow": false,
+      "productColumns": "312px",
+      "productControlHeights": [
+        46,
+        46,
+        46,
+        46,
+        46,
+        46,
+        46,
+        46
+      ],
+      "helperBelow": true,
+      "cartHeights": [
+        46,
+        46,
+        46
+      ]
+    },
+    {
+      "viewport": [
+        320,
+        700
+      ],
+      "overflow": false,
+      "productColumns": "242px",
+      "productControlHeights": [
+        46,
+        46,
+        46,
+        46,
+        46,
+        46,
+        46,
+        46
+      ],
+      "helperBelow": true,
+      "cartHeights": [
+        46,
+        46,
+        46
+      ]
+    }
+  ],
+  "tracking": [
+    {
+      "columns": "452.234px 452.25px 137.516px",
+      "controls": [
+        {
+          "height": 48,
+          "top": 465.59375
+        },
+        {
+          "height": 48,
+          "top": 465.59375
+        },
+        {
+          "height": 48,
+          "top": 465.59375
+        }
+      ],
+      "error": "Nhập đúng tên người đặt và số điện thoại để tra cứu nhé.",
+      "errorBelow": true,
+      "overflow": false,
+      "viewport": [
+        1440,
+        900
+      ]
+    },
+    {
+      "columns": "259.516px 259.531px 137.516px",
+      "controls": [
+        {
+          "height": 48,
+          "top": 403.65625
+        },
+        {
+          "height": 48,
+          "top": 403.65625
+        },
+        {
+          "height": 48,
+          "top": 403.65625
+        }
+      ],
+      "error": "Nhập đúng tên người đặt và số điện thoại để tra cứu nhé.",
+      "errorBelow": true,
+      "overflow": false,
+      "viewport": [
+        768,
+        1024
+      ]
+    },
+    {
+      "columns": "264px",
+      "controls": [
+        {
+          "height": 48,
+          "top": 368.53125
+        },
+        {
+          "height": 48,
+          "top": 445.53125
+        },
+        {
+          "height": 48,
+          "top": 503.53125
+        }
+      ],
+      "error": "Nhập đúng tên người đặt và số điện thoại để tra cứu nhé.",
+      "errorBelow": true,
+      "overflow": false,
+      "viewport": [
+        320,
+        700
+      ]
+    }
+  ],
+  "login": [
+    {
+      "buttonHeight": 44,
+      "fields": [
+        {
+          "height": 46,
+          "width": 262,
+          "withinLabel": true
+        },
+        {
+          "height": 46,
+          "width": 262,
+          "withinLabel": true
+        }
+      ],
+      "overflow": false,
+      "viewport": [
+        320,
+        700
+      ]
+    },
+    {
+      "buttonHeight": 44,
+      "fields": [
+        {
+          "height": 46,
+          "width": 442,
+          "withinLabel": true
+        },
+        {
+          "height": 46,
+          "width": 442,
+          "withinLabel": true
+        }
+      ],
+      "overflow": false,
+      "viewport": [
+        768,
+        1024
+      ]
+    },
+    {
+      "buttonHeight": 44,
+      "fields": [
+        {
+          "height": 46,
+          "width": 442,
+          "withinLabel": true
+        },
+        {
+          "height": 46,
+          "width": 442,
+          "withinLabel": true
+        }
+      ],
+      "overflow": false,
+      "viewport": [
+        1440,
+        900
+      ]
+    }
+  ],
+  "cart": [
+    {
+      "cta": [
+        {
+          "bottom": 1008,
+          "text": "Đặt hàng",
+          "top": 958
+        }
+      ],
+      "fields": [
+        {
+          "empty": true,
+          "height": 46,
+          "left": 293,
+          "tag": "INPUT",
+          "top": 522.15625,
+          "width": 207.5
+        },
+        {
+          "empty": true,
+          "height": 46,
+          "left": 510.5,
+          "tag": "INPUT",
+          "top": 522.15625,
+          "width": 207.5
+        },
+        {
+          "empty": null,
+          "height": 46,
+          "left": 293,
+          "tag": "SELECT",
+          "top": 598.15625,
+          "width": 207.5
+        },
+        {
+          "empty": true,
+          "height": 46,
+          "left": 293,
+          "tag": "INPUT",
+          "top": 674.15625,
+          "width": 425
+        },
+        {
+          "empty": true,
+          "height": 66,
+          "left": 293,
+          "tag": "TEXTAREA",
+          "top": 750.15625,
+          "width": 425
+        }
+      ],
+      "overflow": false,
+      "scrollers": [
+        {
+          "class": "cartDrawer",
+          "overflow": "hidden"
+        },
+        {
+          "class": "cartBody",
+          "overflow": "auto"
+        },
+        {
+          "class": "cartCustomerGrid",
+          "overflow": "visible"
+        }
+      ],
+      "viewport": [
+        768,
+        1024
+      ]
+    },
+    {
+      "cta": [
+        {
+          "bottom": 828,
+          "text": "Đặt hàng",
+          "top": 778
+        }
+      ],
+      "fields": [
+        {
+          "empty": true,
+          "height": 46,
+          "left": 27,
+          "tag": "INPUT",
+          "top": 538.9375,
+          "width": 321
+        },
+        {
+          "empty": true,
+          "height": 46,
+          "left": 27,
+          "tag": "INPUT",
+          "top": 614.9375,
+          "width": 321
+        },
+        {
+          "empty": null,
+          "height": 46,
+          "left": 27,
+          "tag": "SELECT",
+          "top": 690.9375,
+          "width": 321
+        },
+        {
+          "empty": true,
+          "height": 46,
+          "left": 27,
+          "tag": "INPUT",
+          "top": 766.9375,
+          "width": 321
+        },
+        {
+          "empty": true,
+          "height": 70.375,
+          "left": 27,
+          "tag": "TEXTAREA",
+          "top": 842.9375,
+          "width": 321
+        }
+      ],
+      "overflow": false,
+      "scrollers": [
+        {
+          "class": "cartDrawer",
+          "overflow": "hidden"
+        },
+        {
+          "class": "cartBody",
+          "overflow": "auto"
+        },
+        {
+          "class": "cartCustomerGrid",
+          "overflow": "visible"
+        }
+      ],
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "cta": [
+        {
+          "bottom": 684,
+          "text": "Đặt hàng",
+          "top": 634
+        }
+      ],
+      "fields": [
+        {
+          "empty": true,
+          "height": 46,
+          "left": 27,
+          "tag": "INPUT",
+          "top": 581.9375,
+          "width": 251
+        },
+        {
+          "empty": true,
+          "height": 46,
+          "left": 27,
+          "tag": "INPUT",
+          "top": 657.9375,
+          "width": 251
+        },
+        {
+          "empty": null,
+          "height": 46,
+          "left": 27,
+          "tag": "SELECT",
+          "top": 733.9375,
+          "width": 251
+        },
+        {
+          "empty": true,
+          "height": 46,
+          "left": 27,
+          "tag": "INPUT",
+          "top": 809.9375,
+          "width": 251
+        },
+        {
+          "empty": true,
+          "height": 70.375,
+          "left": 27,
+          "tag": "TEXTAREA",
+          "top": 885.9375,
+          "width": 251
+        }
+      ],
+      "overflow": false,
+      "scrollers": [
+        {
+          "class": "cartDrawer",
+          "overflow": "hidden"
+        },
+        {
+          "class": "cartBody",
+          "overflow": "auto"
+        },
+        {
+          "class": "cartCustomerGrid",
+          "overflow": "visible"
+        }
+      ],
+      "viewport": [
+        320,
+        700
+      ]
+    }
+  ],
+  "catalog": [
+    {
+      "controls": [
+        {
+          "height": 48,
+          "left": 927,
+          "tag": "INPUT",
+          "top": 6521.28125,
+          "width": 260
+        },
+        {
+          "height": 48,
+          "left": 1197,
+          "tag": "SELECT",
+          "top": 6521.28125,
+          "width": 171
+        }
+      ],
+      "overflow": false,
+      "viewport": [
+        1440,
+        900
+      ]
+    },
+    {
+      "controls": [
+        {
+          "height": 48,
+          "left": 288.609375,
+          "tag": "INPUT",
+          "top": 7425.234375,
+          "width": 260
+        },
+        {
+          "height": 48,
+          "left": 558.609375,
+          "tag": "SELECT",
+          "top": 7425.234375,
+          "width": 171
+        }
+      ],
+      "overflow": false,
+      "viewport": [
+        768,
+        1024
+      ]
+    },
+    {
+      "controls": [
+        {
+          "height": 48,
+          "left": 14,
+          "tag": "INPUT",
+          "top": 7191.328125,
+          "width": 292
+        },
+        {
+          "height": 48,
+          "left": 14,
+          "tag": "SELECT",
+          "top": 7249.328125,
+          "width": 292
+        }
+      ],
+      "overflow": false,
+      "viewport": [
+        320,
+        700
+      ]
+    }
+  ]
+}
