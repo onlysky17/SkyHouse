@@ -1,6 +1,13 @@
 # INVENTORY-001 validation — 2026-10-07
 
-Owner: Sky. Repository/runtime evidence is canonical. Implementation and local acceptance are verified; authenticated Admin visual, Owner visual acceptance and production inventory rollout are pending. No merge performed.
+Owner: Sky. Repository/runtime evidence is canonical. Implementation and local acceptance are verified. Sky explicitly stated `Owner visual acceptance: PASS` for INVENTORY-001 / PR #54 on 2026-10-07; Owner visual gate is satisfied. Independent agent authenticated Admin coverage and production inventory runtime/rollout are not established by that approval. No merge performed or authorized.
+
+## Owner acceptance follow-up
+
+- Direct Owner message: **Owner visual acceptance: PASS**. Recorded after verifying live state on `2026-10-07 04:40 UTC`.
+- Reviewed branch HEAD at acceptance: `fc5986efc3a4ed1e5ab61df942e03be8f51aa442`; application/SQL/test implementation remains `422cc2f00c9a23db6a504587f41e919589e37c5e`. Both Vercel checks SUCCESS. Main remains `e454dbd39722abed413a54876f96534e73065d20`, PR #54 OPEN/unmerged.
+- PR moves from draft to ready for review after explicit Owner visual approval. This is not automatic merge authorization or production runtime acceptance. No scenario-level coverage was supplied by Owner; do not invent it.
+- Read-only Supabase schema recheck: inventory columns absent; inventory_movements absent. No production migration/stock/order/test-data mutation. Only four continuity files, this evidence note and PR review metadata change; prior build/type/SQL test evidence remains valid because application source is unchanged.
 
 ## Preflight and boundaries
 
@@ -81,11 +88,11 @@ Changed local app `http://127.0.0.1:5183/` reads actual public Supabase catalog 
 
 Actual cart inspected at 1440×900, 768×1024, 320×700. Controls/selects remained 46px high; desktop/tablet name/phone top edges matched; mobile used one column; CTA visible/enabled; no horizontal overflow. Product51 stock metadata reflects unmanaged fallback. Evidence: `inventory-legacy-cart-mobile.jpg`, `inventory-ui-measurements.json`.
 
-Admin `http://127.0.0.1:5183/admin` is visibly at login; Owner sign-in requested once and pending. No logout/data clearing. Existing PR #53 field grid remains unchanged in source; new inventory fields use their own consistent grid. Authenticated add/edit/filters/history, managed zero/low-stock browser states, and Owner visual PASS are NOT claimed. Opening order details may persist read markers; avoided under the no-production-write boundary.
+At the agent's last browser inspection Admin `http://127.0.0.1:5183/admin` was at login; independent authenticated add/edit/filters/history and managed zero/low-stock browser coverage were not completed. No logout/data clearing. Existing PR #53 field grid remains unchanged in source; new inventory fields use their own consistent grid. Sky subsequently explicitly accepted the visual result (see Owner acceptance follow-up); that does not invent additional agent runtime observations. Opening order details may persist read markers; avoided under the no-production-write boundary.
 
 ## Production rollout / Owner gates
 
-1. Owner reviews draft/visual evidence; finish authenticated UI verification on an authorized environment. Explicit Sky instruction required to merge.
+1. Owner visual gate is satisfied; PR #54 ready for review and waiting for explicit Sky merge instruction. Independent agent authenticated coverage is recorded as unverified, not inferred from approval. Do not repeat the Owner visual gate.
 2. Production migration is NOT applied. Before an authorized application, re-audit live schema/orders and exact row counts. Proposed schema changes add NULL stock + default threshold5 to current products, inventory_state/backfill to current orders, empty ledger + functions/triggers/grants/Realtime publication. Do not enter synthetic counts or orders.
 3. Real initial stock must come from Owner counts via audited adjustment; exact IDs/counts/reasons require authorization before any agent-performed production change.
 4. Runtime inventory validation should use natural real order flow or a separately authorized test plan specifying every product/order/status write. Local SQL results do not prove production runtime acceptance.
@@ -100,7 +107,7 @@ Admin `http://127.0.0.1:5183/admin` is visibly at login; Owner sign-in requested
 ## Publication evidence
 
 - Implementation commit: `422cc2f00c9a23db6a504587f41e919589e37c5e`, pushed to `task/inventory-001`. Committed tree contains the new modules, migration, tests and evidence; no dependency on unstaged application files.
-- Draft PR #54: https://github.com/onlysky17/SkyHouse/pull/54, OPEN/unmerged, mergeable at verification. Attached to this Codex task.
+- PR #54: https://github.com/onlysky17/SkyHouse/pull/54, OPEN/unmerged, ready for review after Owner visual acceptance. Attached to this Codex task.
 - GitHub Vercel status SUCCESS + Preview Comments SUCCESS on that commit. Preview deployment ID 6901625462, status success at `2026-10-07T04:23:07Z`.
 - Preview https://sky-house-ociw854ay-tiansky1917-7468s-projects.vercel.app/admin was actually opened: application Admin login, no provider login. Navigated through the visible storefront link; rendered 110 real catalog cards, no catalog error or horizontal overflow. Did not submit forms or alter records. Authenticated preview Admin remains pending.
 - Subsequent publication/handoff documentation commit changes no application/SQL/test source. Main remains at PR #53 merge. No inventory production application or merge.
