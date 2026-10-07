@@ -13,11 +13,13 @@ Live Git evidence overrides this file if stale.
 | `ORDER-PENDING-MERGE-001` | MERGED / SECURITY HARDENING REQUIRED | #51 | `78c653c133898886b30fbffbd533311ef785eac6` |
 | `ORDER-PENDING-MERGE-SEC-001` | MERGED / RUNTIME ACCEPTANCE NOT REVERIFIED | #52 | `b99ce9c7004ddad3d3b77a277de4486670392023` |
 | `ADMIN-FORM-ALIGNMENT-AUDIT-001` | MERGED / OWNER VISUAL NOT REVERIFIED | #53 | `e454dbd39722abed413a54876f96534e73065d20` |
-| `INVENTORY-001` | IMPLEMENTED / LOCAL ACCEPTANCE VERIFIED / ADMIN VISUAL + PRODUCTION ROLLOUT PENDING | PR publication pending | not merged |
+| `INVENTORY-001` | IMPLEMENTED / LOCAL ACCEPTANCE + VERCEL VERIFIED / ADMIN VISUAL + PRODUCTION ROLLOUT PENDING | #54 (draft) | not merged |
 
 ## Active task — 2026-10-07
 
 `INVENTORY-001`. PostgreSQL acceptance A-H, permissions, retries, atomic rollback and two-session concurrency verified locally; build/TypeScript passed. Public runtime verified with real catalog data and pre-migration NULL compatibility. Inventory migration NOT applied to production; authenticated Admin/managed-stock visual and Owner acceptance remain pending. Evidence: `_meta/inventory-001/validation.md`. Stop at Owner review/merge gate.
+
+Draft PR #54: https://github.com/onlysky17/SkyHouse/pull/54. Implementation commit `422cc2f00c9a23db6a504587f41e919589e37c5e` Vercel SUCCESS; actual preview application opens and reads 110 catalog cards without provider login.
 
 Read-only live Supabase verification confirms PR #52 secure migration already applied; its prior SQL-application uncertainty is obsolete. Production end-to-end pending-merge acceptance remains separately unverified.
 

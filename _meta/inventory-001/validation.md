@@ -99,4 +99,8 @@ Admin `http://127.0.0.1:5183/admin` is visibly at login; Owner sign-in requested
 
 ## Publication evidence
 
-Pending branch/PR publication; replace with exact verified commit/check/URL evidence before final handoff.
+- Implementation commit: `422cc2f00c9a23db6a504587f41e919589e37c5e`, pushed to `task/inventory-001`. Committed tree contains the new modules, migration, tests and evidence; no dependency on unstaged application files.
+- Draft PR #54: https://github.com/onlysky17/SkyHouse/pull/54, OPEN/unmerged, mergeable at verification. Attached to this Codex task.
+- GitHub Vercel status SUCCESS + Preview Comments SUCCESS on that commit. Preview deployment ID 6901625462, status success at `2026-10-07T04:23:07Z`.
+- Preview https://sky-house-ociw854ay-tiansky1917-7468s-projects.vercel.app/admin was actually opened: application Admin login, no provider login. Navigated through the visible storefront link; rendered 110 real catalog cards, no catalog error or horizontal overflow. Did not submit forms or alter records. Authenticated preview Admin remains pending.
+- Subsequent publication/handoff documentation commit changes no application/SQL/test source. Main remains at PR #53 merge. No inventory production application or merge.

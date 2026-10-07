@@ -2,7 +2,7 @@
 
 ## Current active task — INVENTORY-001 — 2026-10-07
 
-1. Review INVENTORY-001 draft PR and `_meta/inventory-001/validation.md`; implementation/local database acceptance are verified, authenticated Admin visual remains pending. Do not merge without explicit Sky instruction.
+1. Review draft PR #54 (https://github.com/onlysky17/SkyHouse/pull/54) and `_meta/inventory-001/validation.md`; implementation/local database acceptance and Vercel deployment are verified, authenticated Admin visual remains pending. Preview https://sky-house-ociw854ay-tiansky1917-7468s-projects.vercel.app/admin opens application login directly without Vercel account login. Do not merge without explicit Sky instruction.
 2. Local changed Admin is `http://127.0.0.1:5183/admin`. Owner must sign in on this origin; keep authenticated sessions. Read-only inspect product add/edit, stock helpers/actions and filters across desktop/tablet/mobile. Preserve PR #53 alignment: Giá / Giá gốc / Đơn vị and Thứ tự / Ảnh controls align; helpers stay below.
 3. Production has no inventory columns yet, so local/preview uses the compatible pre-migration fallback. Do not save/delete/upload/adjust stock or change status in production merely to validate UI. Do not alter Giá gốc: its existing handler can autosave. Opening orders may write read markers; avoid that under the current boundary.
 4. Managed-stock UI/runtime needs an authorized non-production Supabase environment, or explicit Owner production rollout/test authorization. Local SQL acceptance covers accounting, but is not a substitute for authenticated UI/Owner visual acceptance.

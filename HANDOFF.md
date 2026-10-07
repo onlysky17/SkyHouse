@@ -12,8 +12,9 @@
 - Actual local storefront loaded 110 real catalog products. Cart of real public product #51 at 1440/768/320 widths retained its controls/CTA without horizontal overflow. No checkout submitted; no product/order/status/read-marker/stock production writes.
 - Local task-owned headless Vite session 46005: `http://127.0.0.1:5183/admin` (Owner login pending). Existing alignment port 5182/process/session and previous production sessions left intact. Public connector configuration supplied only to process environment; no .env/secrets read or changed.
 - Authenticated changed-build Admin and managed-stock visual/runtime remain unverified; do not mark Owner visual PASS. Owner login requested once, no credentials requested. Browser Admin tab retained for handoff; storefront tab retained with actual cart evidence.
-- GitHub connector unavailable; authenticated gh used for remote evidence/publication. Vercel connector returned 403; use GitHub Vercel commit/deployment status without provider dashboard login. Preview evidence will be recorded after branch publication.
-- Evidence and matrix: `_meta/inventory-001/validation.md`, actual cart screenshot/measurements. Update PR/check links before final handoff.
+- GitHub connector unavailable; authenticated gh used for remote evidence/publication. Vercel connector returned 403; GitHub Vercel commit/deployment evidence used without provider dashboard login.
+- Draft PR #54: https://github.com/onlysky17/SkyHouse/pull/54, OPEN/unmerged. Implementation `422cc2f00c9a23db6a504587f41e919589e37c5e`: Vercel SUCCESS, Preview deployment 6901625462. Actual preview https://sky-house-ociw854ay-tiansky1917-7468s-projects.vercel.app/admin opens application login; storefront loads 110 real cards, no error/overflow. Authenticated Admin still pending.
+- Evidence and matrix: `_meta/inventory-001/validation.md`, actual cart screenshot/measurements. Implementation + evidence/tests are committed; later continuity-only publication evidence does not change application code.
 - Next: Owner draft review and authenticated UI/visual coverage. Merge only on explicit Sky instruction. Production schema/stock/test-data changes require separate authorization; exact proposed changes are in NEXT_STEP.md. No automatic migration or synthetic production orders.
 
 ## Prior alignment handoff (superseded by PR #53 merge; validation gaps retained)

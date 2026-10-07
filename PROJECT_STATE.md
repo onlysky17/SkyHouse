@@ -11,7 +11,7 @@
 - Local PostgreSQL acceptance A-H, role/permission checks, atomic shortage rollback and real concurrent sessions passed. Build, TypeScript and strict checks for the two new TypeScript modules passed. No new dependencies.
 - Actual storefront runtime uses 110 real production catalog rows; legacy/unmanaged compatibility and responsive cart were inspected without submitting an order. Authenticated changed-build Admin, managed-stock visual acceptance and Owner visual acceptance remain pending.
 - Migration `supabase/migrations/20261007_inventory_management.sql` is source-only, NOT applied to production. Existing products remain NULL/unmanaged until actual Owner counts are entered. No production test/order/stock mutations performed.
-- Evidence: `_meta/inventory-001/validation.md`. PR publication/check evidence will be recorded before handoff. Stop at Owner review/merge gate; do not merge automatically.
+- Draft PR #54: https://github.com/onlysky17/SkyHouse/pull/54. Vercel SUCCESS on implementation `422cc2f00c9a23db6a504587f41e919589e37c5e`; preview https://sky-house-ociw854ay-tiansky1917-7468s-projects.vercel.app/admin opens application login directly without provider login; storefront loads 110 real catalog cards. Evidence: `_meta/inventory-001/validation.md`. Stop at Owner review/merge gate; do not merge automatically.
 
 ## Carried-forward security boundary
 
