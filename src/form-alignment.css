@@ -1,0 +1,66 @@
+/* Helpers add space below a control, never inside stretched label/control rows. */
+.adminFormGrid,
+.adminOrderSettlementGrid,
+.cartCustomerGrid{
+  align-items:start;
+}
+
+.adminFormGrid>label,
+.adminOrderSettlementGrid>label,
+.cartCustomerGrid>label,
+.adminLogin>label,
+.trackForm>label{
+  min-width:0;
+  align-content:start;
+  grid-auto-rows:max-content;
+}
+
+.adminFormGrid>label>input,
+.adminLogin>label>input,
+.adminListHead>input,
+.adminListHead>button,
+.cartCustomerGrid input,
+.cartCustomerGrid select{
+  min-width:0;
+  box-sizing:border-box;
+  height:46px;
+  min-height:46px;
+}
+
+.adminFormGrid>label>textarea,
+.adminOrderSettlementGrid textarea,
+.cartCustomerGrid textarea{
+  min-width:0;
+  max-width:100%;
+}
+
+.adminFormGrid>label>input[type="file"]{
+  max-width:100%;
+  overflow:hidden;
+}
+
+.adminFormGrid>label>small{
+  margin-top:0;
+  overflow-wrap:anywhere;
+}
+
+.adminOrderSettlementGrid input{
+  min-width:0;
+  height:44px;
+}
+
+.adminListHead{
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:start;
+}
+
+.tools input,
+.tools select{
+  box-sizing:border-box;
+  height:48px;
+  min-height:48px;
+}
+
+@media(max-width:560px){
+  .adminListHead{grid-template-columns:1fr}
+}

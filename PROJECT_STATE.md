@@ -1,5 +1,25 @@
 # SkyHouse — Project State
 
+## Current checkpoint — 2026-10-07
+
+- Live main / origin/main: `b99ce9c7004ddad3d3b77a277de4486670392023`.
+- PR #52 is MERGED at that actual merge commit (live GitHub verification).
+- Active task: `ADMIN-FORM-ALIGNMENT-AUDIT-001`; branch `task/admin-form-alignment-audit-001`.
+- Worktree: `C:\Users\NHAT THIEN\.codex\worktrees\admin-form-alignment-audit-001\SkyHouse`.
+- Original `D:\PRIVATE\APP\SkyHouse` checkout and its five unrelated continuity/rule edits are preserved.
+- Shared CSS aligns field wrappers at the top, keeps helper text below controls, and equalizes controls within each form context. No business logic or production data changes.
+- Local build and TypeScript compile passed. Browser evidence covers source-derived product layout plus actual Cart, Tracking, Login and catalog controls.
+- Production authenticated Admin confirms the original misalignment. Authenticated Admin on the changed build and Sky visual acceptance remain pending; this is not a visual PASS for all Admin forms.
+- Evidence: `_meta/admin-form-alignment-audit-001/validation.md`.
+- PR/check URL will be recorded after creation. Do not merge without Sky's explicit instruction.
+
+## Carried-forward security boundary
+
+PR #52 implementation is merged; its previous merge gate is obsolete. Production application of the secure SQL migration and pending-order runtime acceptance were not reverified in this UI task. Preserve that gap; do not apply migrations or generate orders here.
+
+## Historical checkpoint (2026-10-02; superseded by live state above)
+
+
 Snapshot date: **2026-10-02**
 
 Live repository/runtime evidence overrides this snapshot.
