@@ -4,7 +4,7 @@
 
 `ADMIN-FORM-ALIGNMENT-AUDIT-001`
 
-1. Review the alignment PR and its evidence; authenticated changed-build Admin validation and Sky visual acceptance are still required.
+1. Review draft PR #53 (https://github.com/onlysky17/SkyHouse/pull/53) and its evidence. Vercel implementation check SUCCESS. Open https://sky-house-2xk3qq64e-tiansky1917-7468s-projects.vercel.app/admin; it is reachable without provider login, but Admin needs Owner sign-in on this preview origin. Authenticated changed-build Admin validation and Sky visual acceptance are still required.
 2. Use the existing authenticated production /admin session for read-only baseline inspection. The changed local build is at `http://127.0.0.1:5182/admin`; its separate origin requires Owner sign-in. Keep both sessions.
 3. On the changed build inspect Admin → Quản lý sản phẩm → + Thêm, then an existing product: Giá / Giá gốc / Đơn vị and Thứ tự / Ảnh sản phẩm must have matching top edges; helper text stays below. Inspect toggles and action rows at desktop/tablet/mobile.
 4. Do not modify original price: its change handler can autosave. Do not save/delete/upload or change order status/settlement.

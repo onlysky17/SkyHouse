@@ -11,7 +11,7 @@
 - Local build and TypeScript compile passed. Browser evidence covers source-derived product layout plus actual Cart, Tracking, Login and catalog controls.
 - Production authenticated Admin confirms the original misalignment. Authenticated Admin on the changed build and Sky visual acceptance remain pending; this is not a visual PASS for all Admin forms.
 - Evidence: `_meta/admin-form-alignment-audit-001/validation.md`.
-- PR/check URL will be recorded after creation. Do not merge without Sky's explicit instruction.
+- Draft PR #53: https://github.com/onlysky17/SkyHouse/pull/53. Vercel SUCCESS for implementation commit d83ae3aaaa48b9a485a9b44df57c0d7149a898b2; Preview: https://sky-house-2xk3qq64e-tiansky1917-7468s-projects.vercel.app/admin. No Vercel account login required. Preview Admin requires its own Owner sign-in. Do not merge without Sky's explicit instruction.
 
 ## Carried-forward security boundary
 

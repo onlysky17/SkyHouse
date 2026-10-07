@@ -13,7 +13,7 @@
 - Production Admin session is retained. Changed local /admin needs separate Owner sign-in. Headless local Vite runs on port 5182 (task-owned session 12536); public connection settings supplied only to process environment, no .env read/change.
 - Admin Orders viewing may persist read markers; avoid it under no-production-writes scope. No status/settlement/product data mutation was performed.
 - Evidence/reproduction generator: `_meta/admin-form-alignment-audit-001/`; generated HTML is local-only and intentionally unstaged.
-- Remaining: authenticated changed-build Admin + permitted Orders runtime inspection, then Sky visual acceptance. PR/check links will be recorded after creation. No merge.
+- Remaining: authenticated changed-build Admin + permitted Orders runtime inspection, then Sky visual acceptance. Draft PR #53: https://github.com/onlysky17/SkyHouse/pull/53. Vercel SUCCESS on d83ae3aaaa48b9a485a9b44df57c0d7149a898b2; preview https://sky-house-2xk3qq64e-tiansky1917-7468s-projects.vercel.app/admin opens the app Admin login directly. No merge.
 - Prior secure merge implementation: PR #52 MERGED; SQL application/runtime acceptance not reverified here.
 
 ## Historical handoff (2026-10-02; superseded by the current checkpoint)
