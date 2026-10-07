@@ -1,6 +1,23 @@
 # SkyHouse — Agent Handoff
 
-## Current handoff — 2026-10-07
+## Current handoff — INVENTORY-001 — 2026-10-07
+
+- Owner Sky; repo `onlysky17/SkyHouse`; verified original workspace `D:\PRIVATE\APP\SkyHouse`. Original branch/HEAD `task/order-ops-notify-008-runtime-acceptance` / `af71874517eba99604630ecc2a41b360a022cb1e`, with five unrelated tracked document edits, preserved.
+- Actual main/origin/main `e454dbd39722abed413a54876f96534e73065d20`: PR #53 merged, Vercel SUCCESS. No open PR at task start. Prior alignment merge gate is obsolete; visual acceptance is not inferred from merge.
+- Isolated managed worktree `C:\Users\NHAT THIEN\.codex\worktrees\inventory-001\SkyHouse`, branch `task/inventory-001`. Stage exact task paths only, exclude dist/node_modules and all original/other-task WIP.
+- Implemented nullable physical stock and thresholds, authenticated audited adjustments/history/filters, stable product locks + unique per-order/product movements, final pending-snapshot accounting, legacy exemption, storefront limits and stale checkout cache status verification. Managed units are immutable; preserve history by hiding products with ledger records rather than deleting them.
+- Build and TypeScript passed, including strict standalone compile of new InventoryEditor/inventory helpers. Local PostgreSQL 17.6 acceptance A-H + security/retry/atomic rollback/concurrent confirmations passed. No package/test/lint scripts added; existing bundle-size warning remains.
+- Latest isolated SQL evidence database: `skyhouse_inventory_1791346736686`, container `skyhouse-inventory-001-db`, label `skyhouse.task=INVENTORY-001`, network none, no exposed ports. Run local SQL with PowerShell 7 `./tests/inventory/run-local.ps1`; it rejects other containers. Test-only fixtures never touched production. Retain container/databases for review.
+- Read-only live Supabase: project `bophfdnkncirvsknvnho`, 110 products, 6 orders, 3 order snapshots missing product IDs. Secure pending merge migration is applied; only seven-argument token RPC exists. Inventory columns/movements absent. Inventory source migration NOT applied to production.
+- Actual local storefront loaded 110 real catalog products. Cart of real public product #51 at 1440/768/320 widths retained its controls/CTA without horizontal overflow. No checkout submitted; no product/order/status/read-marker/stock production writes.
+- Local task-owned headless Vite session 46005: `http://127.0.0.1:5183/admin` (last agent observation was login). Existing alignment port 5182/process/session and previous production sessions left intact. Public connector configuration supplied only to process environment; no .env/secrets read or changed.
+- Sky explicitly stated `Owner visual acceptance: PASS` on 2026-10-07 for INVENTORY-001 / PR #54. Owner visual gate is satisfied; do not ask for that approval again. Agent independently observed authenticated Admin/managed-stock runtime coverage remains unverified; no login or specific scenario is invented. Browser Admin/storefront tabs retained, no logout/data clearing.
+- GitHub connector unavailable; authenticated gh used for remote evidence/publication. Vercel connector returned 403; GitHub Vercel commit/deployment evidence used without provider dashboard login.
+- PR #54: https://github.com/onlysky17/SkyHouse/pull/54, OPEN/unmerged, ready for review after Owner visual PASS. Implementation `422cc2f00c9a23db6a504587f41e919589e37c5e` and pre-acceptance documentation HEAD `fc5986efc3a4ed1e5ab61df942e03be8f51aa442`: Vercel SUCCESS. Actual implementation preview https://sky-house-ociw854ay-tiansky1917-7468s-projects.vercel.app/admin opens application login; storefront loads 110 real cards, no error/overflow. Independent agent authenticated coverage not claimed.
+- Evidence and matrix: `_meta/inventory-001/validation.md`, actual cart screenshot/measurements. Implementation + evidence/tests are committed; later continuity-only publication evidence does not change application code.
+- Next: explicit Owner merge gate. Visual PASS does not authorize merge. Follow-up changed documentation/PR readiness only, no application code. Read-only Supabase recheck on 2026-10-07 confirms inventory columns/table remain absent. Production schema/stock/test-data changes require separate authorization; exact proposed changes are in NEXT_STEP.md. No automatic migration or synthetic production orders.
+
+## Prior alignment handoff (superseded by PR #53 merge; validation gaps retained)
 
 - Active task: `ADMIN-FORM-ALIGNMENT-AUDIT-001`.
 - Branch: `task/admin-form-alignment-audit-001`, based on live main `b99ce9c7004ddad3d3b77a277de4486670392023` (PR #52 actual merge commit).

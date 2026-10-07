@@ -2,8 +2,9 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { supabase } from './lib/supabase'
+import { InventoryFields, cartLimit, inventoryColumns, isSoldOut, missingInventoryColumns } from './lib/inventory'
 
-type Product = {
+type Product = InventoryFields & {
   id: number
   name: string
   price: number | null
@@ -144,7 +145,7 @@ function Modal({ p, onClose, onAdd }: { p: Product | null; onClose: () => void; 
 
   if (!p) return null
 
-  return <div className="modal"><button className="modalBack" type="button" onClick={onClose} aria-label="Đóng xem sản phẩm" /><div className="modalCard" role="dialog" aria-modal="true" aria-label={p.name}><button className="close" type="button" onClick={onClose} aria-label="Đóng xem sản phẩm" title="Đóng">×</button><div className="modalImageWrap"><img src={p.image_url || ''} alt={p.name} /><ProductBadges p={p} /></div><div className="modalCopy"><div className="kicker">{p.category}</div><h3 className="serif">{p.name}</h3><div className="modalPrice serif">{priceText(p)}</div><p>{p.description || "Ảnh sản phẩm thật từ Sky's house. Nhắn Zalo hoặc Facebook để hỏi giá và tình trạng hàng."}</p><div className="modalActions"><button className="modalAddButton" type="button" onClick={() => onAdd(p)} disabled={!p.in_stock}>{p.in_stock ? '＋ Thêm vào giỏ' : 'Tạm hết hàng'}</button><a href={`${SHOP.zalo}?text=${encodeURIComponent(`Chào Sky's house, mình muốn hỏi ${p.name}`)}`} target="_blank">Nhắn Zalo</a><a href={`tel:${SHOP.phone}`}>Gọi đặt hàng</a><a href={SHOP.facebook} target="_blank">Facebook</a></div></div></div></div>
+  return <div className="modal"><button className="modalBack" type="button" onClick={onClose} aria-label="Đóng xem sản phẩm" /><div className="modalCard" role="dialog" aria-modal="true" aria-label={p.name}><button className="close" type="button" onClick={onClose} aria-label="Đóng xem sản phẩm" title="Đóng">×</button><div className="modalImageWrap"><img src={p.image_url || ''} alt={p.name} /><ProductBadges p={p} /></div><div className="modalCopy"><div className="kicker">{p.category}</div><h3 className="serif">{p.name}</h3><div className="modalPrice serif">{priceText(p)}</div><p>{p.description || "Ảnh sản phẩm thật từ Sky's house. Nhắn Zalo hoặc Facebook để hỏi giá và tình trạng hàng."}</p><div className="modalActions"><button className="modalAddButton" type="button" onClick={() => onAdd(p)} disabled={cartLimit(p) < 1}>{cartLimit(p) >= 1 ? '＋ Thêm vào giỏ' : 'Tạm hết hàng'}</button><a href={`${SHOP.zalo}?text=${encodeURIComponent(`Chào Sky's house, mình muốn hỏi ${p.name}`)}`} target="_blank">Nhắn Zalo</a><a href={`tel:${SHOP.phone}`}>Gọi đặt hàng</a><a href={SHOP.facebook} target="_blank">Facebook</a></div></div></div></div>
 }
 
 function Catalog({ products, selected, onSelect, onClose, onAdd }: { products: Product[]; selected: Product | null; onSelect: (p: Product) => void; onClose: () => void; onAdd: (p: Product) => void }) {
@@ -152,7 +153,7 @@ function Catalog({ products, selected, onSelect, onClose, onAdd }: { products: P
   const [cat, setCat] = useState('Tất cả')
   const cats = useMemo(() => ['Tất cả', ...Array.from(new Set(products.map(p => p.category))).sort()], [products])
   const shown = products.filter(p => (cat === 'Tất cả' || p.category === cat) && (`${p.name} ${p.category}`.toLowerCase().includes(q.toLowerCase())))
-  return <section id="catalog" className="catalog"><div className="catalogHead"><div><div className="over">The collection</div><h2 className="serif">Tất cả món ngon<br /><i>của Sky's house.</i></h2><p>Ảnh thật, giá bán lẻ hiện tại và liên hệ trực tiếp. Món chưa có giá sẽ hiển thị “Liên hệ giá” để tránh niêm yết sai.</p></div><div className="tools"><input value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm sản phẩm..." /><select value={cat} onChange={e => setCat(e.target.value)}>{cats.map(c => <option key={c}>{c}</option>)}</select></div></div><div className="grid">{shown.map(p => <button className="card" key={p.id} onClick={() => onSelect(p)}><div className="cardImg"><img src={p.image_url || ''} loading="lazy" alt={p.name} /><span>{p.in_stock ? 'Còn hàng' : 'Liên hệ'}</span><em>Sky's house</em><ProductBadges p={p} /></div><div className="cardBody"><small>{p.category}</small><h3 className="serif">{p.name}</h3><div className="cardBottom"><b>{priceText(p)}</b><span>Xem →</span></div></div></button>)}</div><Modal p={selected} onClose={onClose} onAdd={onAdd} /></section>
+  return <section id="catalog" className="catalog"><div className="catalogHead"><div><div className="over">The collection</div><h2 className="serif">Tất cả món ngon<br /><i>của Sky's house.</i></h2><p>Ảnh thật, giá bán lẻ hiện tại và liên hệ trực tiếp. Món chưa có giá sẽ hiển thị “Liên hệ giá” để tránh niêm yết sai.</p></div><div className="tools"><input value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm sản phẩm..." /><select value={cat} onChange={e => setCat(e.target.value)}>{cats.map(c => <option key={c}>{c}</option>)}</select></div></div><div className="grid">{shown.map(p => <button className="card" data-sold-out={cartLimit(p) < 1} key={p.id} onClick={() => onSelect(p)}><div className="cardImg"><img src={p.image_url || ''} loading="lazy" alt={p.name} /><span>{isSoldOut(p) || cartLimit(p) < 1 ? 'Tạm hết hàng' : 'Còn hàng'}</span><em>Sky's house</em><ProductBadges p={p} /></div><div className="cardBody"><small>{p.category}</small><h3 className="serif">{p.name}</h3><div className="cardBottom"><b>{priceText(p)}</b><span>Xem →</span></div></div></button>)}</div><Modal p={selected} onClose={onClose} onAdd={onAdd} /></section>
 }
 
 function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear }: { open: boolean; products: Product[]; cart: CartMap; onClose: () => void; onChange: (id: number, qty: number) => void; onRemove: (id: number) => void; onClear: () => void }) {
@@ -175,7 +176,7 @@ function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear
           {items.length === 0 && <div className="cartEmpty"><b>Giỏ đang trống.</b><span>Mở một sản phẩm rồi bấm “Thêm vào giỏ”.</span></div>}
           {items.map(p => {
             const qty = cart[String(p.id)] || 0
-            return <div className="cartItem" key={p.id} data-product-id={p.id}>
+            return <div className="cartItem" key={p.id} data-product-id={p.id} data-stock-quantity={p.stock_quantity ?? undefined} data-stock-available={!isSoldOut(p)}>
               <img src={p.image_url || ''} alt={p.name} />
               <div className="cartItemMain">
                 <strong>{p.name}</strong>
@@ -188,12 +189,13 @@ function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear
                     <div className="qtyControl" role="group" aria-label={`Số lượng ${p.name}`}>
                       <button type="button" aria-label={`Giảm số lượng ${p.name}`} onClick={() => onChange(p.id, qty - 1)}>−</button>
                       <b aria-live="polite">{qty}</b>
-                      <button type="button" aria-label={`Tăng số lượng ${p.name}`} disabled={qty >= 99} onClick={() => onChange(p.id, qty + 1)}>＋</button>
+                      <button type="button" aria-label={`Tăng số lượng ${p.name}`} disabled={qty >= cartLimit(p)} onClick={() => onChange(p.id, qty + 1)}>＋</button>
                     </div>
                   </div>
                   <button className="removeCartItem" type="button" aria-label={`Xóa ${p.name} khỏi giỏ`} onClick={() => onRemove(p.id)}>Xóa</button>
                 </div>
               </div>
+              {qty > cartLimit(p) && <p className="cartStockWarning">Không đủ tồn: còn {p.stock_quantity ?? 0} {p.unit}. Giảm số lượng hoặc xóa món trước khi đặt hàng.</p>}
               {p.price == null && <p className="cartUnpricedMessage">Chưa niêm yết giá — Sky sẽ xác nhận khi chốt đơn</p>}
               <div className="cartItemTotal"><span>Thành tiền</span><b>{p.price == null ? 'Chờ xác nhận' : money(p.price * qty)}</b></div>
             </div>
@@ -208,7 +210,7 @@ function CartDrawer({ open, products, cart, onClose, onChange, onRemove, onClear
       {items.length > 0 && <div className="cartFooter">
         <div className="cartTotal"><div><span>{hasUnknown ? 'Tạm tính món đã có giá' : 'Tạm tính'}</span><small>{itemCount} món · {items.length} sản phẩm</small></div><b className="serif">{hasUnknown && total === 0 ? 'Chờ chốt giá' : money(total)}</b></div>
         {hasUnknown && <p>Chưa gồm món chưa niêm yết giá. Tổng cuối có thể thay đổi khi Sky chốt đơn.</p>}
-        <button className="cartPrimary" type="button" data-place-order>Đặt hàng</button>
+        <button className="cartPrimary" type="button" disabled={items.some(p => (cart[String(p.id)] || 0) > cartLimit(p))} data-place-order>Đặt hàng</button>
       </div>}
     </motion.aside>
   </motion.div>}</AnimatePresence>
@@ -241,24 +243,36 @@ export default function Storefront() {
     let alive = true
     async function load() {
       if (!supabase) { setError('Storefront chưa kết nối Supabase.'); return }
-      const { data, error } = await supabase.from('products').select('id,name,price,price_label,unit,category,description,image_url,in_stock,visible,best_seller,signature,sort_order').eq('visible', true).order('sort_order', { ascending: true }).order('id', { ascending: true })
+      const columns = 'id,name,price,price_label,unit,category,description,image_url,in_stock,visible,best_seller,signature,sort_order'
+      let { data, error } = await supabase.from('products').select(columns + inventoryColumns).eq('visible', true).order('sort_order').order('id').returns<Product[]>()
+      if (error && missingInventoryColumns(error)) {
+        const fallback = await supabase.from('products').select(columns).eq('visible', true).order('sort_order').order('id').returns<Product[]>()
+        data = fallback.data; error = fallback.error
+      }
       if (!alive) return
       if (error) setError(error.message)
-      else setProducts((data ?? []) as Product[])
+      else {
+        const fresh = (data ?? []) as Product[]
+        setProducts(fresh)
+        setSelected(current => current ? fresh.find(p => p.id === current.id) ?? null : null)
+      }
     }
     load()
-    return () => { alive = false }
+    const channel = supabase?.channel('storefront-inventory').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'products' }, () => void load()).subscribe()
+    const poll = window.setInterval(() => { if (!document.hidden) void load() }, 30000)
+    return () => { alive = false; window.clearInterval(poll); if (channel) void supabase?.removeChannel(channel) }
   }, [])
 
   const addToCart = (p: Product) => {
-    if (!p.in_stock) return
-    setCart(current => ({ ...current, [String(p.id)]: Math.min((current[String(p.id)] || 0) + 1, 99) }))
+    if (cartLimit(p) < 1) return
+    setCart(current => ({ ...current, [String(p.id)]: Math.min((current[String(p.id)] || 0) + 1, cartLimit(p)) }))
   }
   const changeCartQty = (id: number, qty: number) => {
     setCart(current => {
       const next = { ...current }
       if (qty <= 0) delete next[String(id)]
-      else next[String(id)] = Math.min(qty, 99)
+      else next[String(id)] = Math.min(qty, cartLimit(products.find(p => p.id === id) ?? { in_stock: false }))
       return next
     })
   }

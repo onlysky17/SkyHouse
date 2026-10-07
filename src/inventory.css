@@ -1,0 +1,15 @@
+.inventoryEditor{margin:18px 0;padding:16px;border:1px solid rgba(36,22,15,.12);border-radius:16px}
+.inventoryEditor p{font-size:12px;line-height:1.5;margin:8px 0;color:rgba(36,22,15,.65)}
+.inventoryActions{display:flex;flex-wrap:wrap;gap:10px}
+.inventoryActions button,.inventoryAdjustment>button{border:1px solid rgba(36,22,15,.15);background:white;color:#24160f;border-radius:12px;min-height:44px;padding:10px 14px;cursor:pointer}
+.inventoryAdjustment{margin-top:16px}
+.inventoryFields{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px}
+@media(max-width:900px){.inventoryFields{grid-template-columns:1fr}}
+.inventoryEditor button:disabled{opacity:.5;cursor:not-allowed}
+.inventoryHistory{list-style:none;padding:0;margin:14px 0 0}
+.inventoryHistory li{display:grid;gap:4px;padding:10px 0;border-top:1px solid rgba(36,22,15,.1);font-size:12px;overflow-wrap:anywhere}
+.inventoryHistory small{opacity:.65}
+.stockIndicator{display:block;font-size:11px;line-height:1.5;margin-top:5px}
+.stockIndicator.low,.stockIndicator.out,.cartStockWarning{color:#a33e1f}
+.cartStockWarning{grid-column:1/-1;font-size:12px;line-height:1.5;margin:0}
+.quickAddControl[aria-disabled="true"]{opacity:.55;cursor:not-allowed}

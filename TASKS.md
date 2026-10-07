@@ -12,11 +12,16 @@ Live Git evidence overrides this file if stale.
 | `ORDER-CHECKOUT-UX-001` | CLOSED / MERGED | #50 | `d94162bdc80ff630f42bb7770822c4fbaa51e853` |
 | `ORDER-PENDING-MERGE-001` | MERGED / SECURITY HARDENING REQUIRED | #51 | `78c653c133898886b30fbffbd533311ef785eac6` |
 | `ORDER-PENDING-MERGE-SEC-001` | MERGED / RUNTIME ACCEPTANCE NOT REVERIFIED | #52 | `b99ce9c7004ddad3d3b77a277de4486670392023` |
-| `ADMIN-FORM-ALIGNMENT-AUDIT-001` | IMPLEMENTED / ADMIN RUNTIME + OWNER VISUAL PENDING | #53 (draft) | not merged |
+| `ADMIN-FORM-ALIGNMENT-AUDIT-001` | MERGED / OWNER VISUAL NOT REVERIFIED | #53 | `e454dbd39722abed413a54876f96534e73065d20` |
+| `INVENTORY-001` | OWNER VISUAL PASS / LOCAL ACCEPTANCE + VERCEL VERIFIED / OWNER MERGE GATE / PRODUCTION ROLLOUT PENDING | #54 | not merged |
 
 ## Active task — 2026-10-07
 
-`ADMIN-FORM-ALIGNMENT-AUDIT-001`. Build/TypeScript and public runtime verified; source-derived layout evidence is recorded in `_meta/admin-form-alignment-audit-001/validation.md`. Authenticated changed-build Admin/Orders and Sky visual acceptance remain pending. Stop before merge.
+`INVENTORY-001`. PostgreSQL acceptance A-H, permissions, retries, atomic rollback and two-session concurrency verified locally; build/TypeScript passed. Public runtime verified with real catalog data and pre-migration NULL compatibility. Sky explicitly stated `Owner visual acceptance: PASS` on 2026-10-07; Owner visual gate satisfied. Agent-observed authenticated Admin coverage and production inventory runtime are not inferred from that statement. Inventory migration NOT applied to production. Evidence: `_meta/inventory-001/validation.md`. Stop at Owner merge gate.
+
+PR #54: https://github.com/onlysky17/SkyHouse/pull/54, ready for review after Owner visual PASS. Implementation commit `422cc2f00c9a23db6a504587f41e919589e37c5e` and pre-acceptance documentation HEAD `fc5986efc3a4ed1e5ab61df942e03be8f51aa442` Vercel SUCCESS; actual preview application opens and reads 110 catalog cards without provider login. No merge instruction received.
+
+Read-only live Supabase verification confirms PR #52 secure migration already applied; its prior SQL-application uncertainty is obsolete. Production end-to-end pending-merge acceptance remains separately unverified.
 
 ## Prior security task context (preserved history)
 
@@ -28,4 +33,4 @@ Owner security rule A:
 - secret is random and never stored server-side in plaintext
 - different browser/device with the same phone must not modify an existing pending order
 
-Runtime merge acceptance waits for this hardening to be deployed.
+Historical note: hardening is now deployed, verified through schema/migration/RPC evidence. Runtime merge acceptance is not claimed by that verification.

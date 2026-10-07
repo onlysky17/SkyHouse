@@ -24,6 +24,7 @@ type AdminPanelViewState = {
 }
 
 type OrderItem = {
+  product_id?: number | null
   name?: string
   category?: string
   qty?: number
@@ -45,6 +46,7 @@ type OrderRow = {
   final_total: number | null
   admin_note: string
   status: OrderStatus
+  inventory_state?: 'unprocessed' | 'deducted' | 'restored' | 'legacy'
   source: string
   created_at: string
   updated_at: string
@@ -903,6 +905,7 @@ function orderDetailHtml() {
     </div>
 
     <div class="adminOrderCustomerGrid">
+      ${order.inventory_state === 'legacy' || order.items.some(item => !item.product_id) ? '<p class="wide cartStockWarning">Đơn cũ chưa có hạch toán tồn tự động. Không đoán sản phẩm để trừ/hoàn tồn; kiểm kê và điều chỉnh tồn thủ công nếu cần.</p>' : ''}
       <div><small>Số điện thoại</small><strong>${escapeHtml(order.customer_phone)}</strong></div>
       <div><small>Tạm tính đã có giá</small><strong>${escapeHtml(subtotalLabel(order))}</strong></div>
       <div><small>Phí giao hàng</small><strong>${shippingFee > 0 ? escapeHtml(money(shippingFee)) : 'Chưa nhập'}</strong></div>
@@ -1191,11 +1194,17 @@ async function loadOrders(silent = true) {
     return
   }
 
-  const { data, error } = await supabase
+  const columns = 'id,customer_name,customer_phone,customer_note,items,subtotal_known,has_contact_price,shipping_fee,final_total,admin_note,status,source,created_at,updated_at'
+  let { data, error } = await supabase
     .from('orders')
-    .select('id,customer_name,customer_phone,customer_note,items,subtotal_known,has_contact_price,shipping_fee,final_total,admin_note,status,source,created_at,updated_at')
+    .select(columns + ',inventory_state')
     .order('created_at', { ascending: false })
     .limit(300)
+    .returns<OrderRow[]>()
+  if (error?.code === '42703' && /inventory_state/.test(error.message)) {
+    const fallback = await supabase.from('orders').select(columns).order('created_at', { ascending: false }).limit(300).returns<OrderRow[]>()
+    data = fallback.data; error = fallback.error
+  }
 
   if (error) {
     loading = false
@@ -1246,7 +1255,10 @@ async function updateStatus(id: number, status: OrderStatus) {
   noticeState = ''
   renderPanel()
 
-  const { error } = await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+  const result = await supabase.rpc('update_order_status_with_inventory', { p_order_id: id, p_status: status })
+  const { error } = result.error?.code === 'PGRST202'
+    ? await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+    : result
   if (error) {
     noticeText = `Không cập nhật được: ${error.message}`
     noticeState = 'error'

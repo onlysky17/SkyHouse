@@ -1,0 +1,128 @@
+[
+  {
+    "cartFields": [
+      {
+        "height": 46,
+        "top": 522.15625,
+        "width": 207.5
+      },
+      {
+        "height": 46,
+        "top": 522.15625,
+        "width": 207.5
+      },
+      {
+        "height": 46,
+        "top": 598.15625,
+        "width": 207.5
+      },
+      {
+        "height": 46,
+        "top": 674.15625,
+        "width": 425
+      }
+    ],
+    "cta": [
+      {
+        "disabled": false,
+        "visible": true
+      }
+    ],
+    "overflow": false,
+    "stockMetadata": [
+      {
+        "available": "true",
+        "id": "51",
+        "quantity": null
+      }
+    ],
+    "viewport": [
+      1440,
+      900
+    ]
+  },
+  {
+    "cartFields": [
+      {
+        "height": 46,
+        "top": 522.15625,
+        "width": 207.5
+      },
+      {
+        "height": 46,
+        "top": 522.15625,
+        "width": 207.5
+      },
+      {
+        "height": 46,
+        "top": 598.15625,
+        "width": 207.5
+      },
+      {
+        "height": 46,
+        "top": 674.15625,
+        "width": 425
+      }
+    ],
+    "cta": [
+      {
+        "disabled": false,
+        "visible": true
+      }
+    ],
+    "overflow": false,
+    "stockMetadata": [
+      {
+        "available": "true",
+        "id": "51",
+        "quantity": null
+      }
+    ],
+    "viewport": [
+      768,
+      1024
+    ]
+  },
+  {
+    "cartFields": [
+      {
+        "height": 46,
+        "top": 581.9375,
+        "width": 251
+      },
+      {
+        "height": 46,
+        "top": 657.9375,
+        "width": 251
+      },
+      {
+        "height": 46,
+        "top": 733.9375,
+        "width": 251
+      },
+      {
+        "height": 46,
+        "top": 809.9375,
+        "width": 251
+      }
+    ],
+    "cta": [
+      {
+        "disabled": false,
+        "visible": true
+      }
+    ],
+    "overflow": false,
+    "stockMetadata": [
+      {
+        "available": "true",
+        "id": "51",
+        "quantity": null
+      }
+    ],
+    "viewport": [
+      320,
+      700
+    ]
+  }
+]

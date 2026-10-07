@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase'
+import InventoryEditor from './InventoryEditor'
+import { InventoryFields, inventoryColumns, isLowStock, isSoldOut, missingInventoryColumns, stockLabel } from './lib/inventory'
 
-type ProductRow = {
+type ProductRow = InventoryFields & {
   id?: number
   name: string
   price: number | null
@@ -21,7 +23,7 @@ type UploadedImage = {
   path: string
 }
 
-type CatalogFilter = 'all' | 'placeholder' | 'no-price' | 'needs-work' | 'best-seller' | 'signature'
+type CatalogFilter = 'all' | 'placeholder' | 'no-price' | 'needs-work' | 'best-seller' | 'signature' | 'sold-out' | 'low-stock'
 
 const emptyProduct: ProductRow = {
   name: '',
@@ -79,16 +81,26 @@ export default function Admin() {
 
   async function loadProducts() {
     if (!supabase) return
-    const { data, error } = await supabase
+    const columns = 'id,name,price,unit,category,description,image_url,in_stock,visible,best_seller,signature,sort_order'
+    let { data, error } = await supabase
       .from('products')
-      .select('id,name,price,unit,category,description,image_url,in_stock,visible,best_seller,signature,sort_order')
+      .select(columns + inventoryColumns)
       .order('sort_order', { ascending: true })
       .order('id', { ascending: true })
+      .returns<ProductRow[]>()
+    if (error && missingInventoryColumns(error)) {
+      const fallback = await supabase.from('products').select(columns).order('sort_order').order('id').returns<ProductRow[]>()
+      data = fallback.data; error = fallback.error
+    }
     if (error) {
       setMessage(`Không tải được sản phẩm: ${error.message}`)
       return
     }
     setProducts((data ?? []) as ProductRow[])
+    setDraft(current => {
+      const fresh = (data ?? []).find(p => p.id === current.id) as ProductRow | undefined
+      return fresh ? { ...current, stock_quantity: fresh.stock_quantity } : current
+    })
   }
 
   useEffect(() => {
@@ -106,6 +118,13 @@ export default function Admin() {
     })
     return () => listener.subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!supabase || !userEmail) return
+    const channel = supabase.channel('admin-product-inventory').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'products' }, () => void loadProducts()).subscribe()
+    return () => { void supabase?.removeChannel(channel) }
+  }, [userEmail])
 
   const catalogCounts = useMemo(() => {
     const placeholder = products.filter((p) => isPlaceholderName(p.name)).length
@@ -132,7 +151,9 @@ export default function Admin() {
         (catalogFilter === 'no-price' && p.price == null) ||
         (catalogFilter === 'needs-work' && (isPlaceholderName(p.name) || p.price == null)) ||
         (catalogFilter === 'best-seller' && p.best_seller) ||
-        (catalogFilter === 'signature' && p.signature)
+        (catalogFilter === 'signature' && p.signature) ||
+        (catalogFilter === 'sold-out' && isSoldOut(p)) ||
+        (catalogFilter === 'low-stock' && isLowStock(p))
 
       if (!matchesFilter) return false
       if (!q) return true
@@ -249,9 +270,13 @@ export default function Admin() {
         nextImageUrl = uploaded.url
       }
 
-      const { id, ...rest } = draft
+      const { id, stock_quantity, low_stock_threshold, ...rest } = draft
+      if (low_stock_threshold != null && (!Number.isFinite(low_stock_threshold) || low_stock_threshold < 0)) {
+        throw new Error('Ngưỡng sắp hết phải không âm.')
+      }
       const payload = {
         ...rest,
+        ...(stock_quantity !== undefined ? { low_stock_threshold: low_stock_threshold ?? 5 } : {}),
         name: draft.name.trim(),
         unit: draft.unit.trim() || 'kg',
         category: draft.category.trim() || 'Sản phẩm khác',
@@ -352,6 +377,8 @@ export default function Admin() {
           </div>
 
           <div className="adminCatalogFilters" aria-label="Lọc catalog">
+            <button type="button" className={catalogFilter === 'sold-out' ? 'active' : ''} aria-pressed={catalogFilter === 'sold-out'} onClick={() => setCatalogFilter('sold-out')}>Hết hàng</button>
+            <button type="button" className={catalogFilter === 'low-stock' ? 'active' : ''} aria-pressed={catalogFilter === 'low-stock'} onClick={() => setCatalogFilter('low-stock')}>Sắp hết</button>
             <button type="button" className={catalogFilter === 'all' ? 'active' : ''} aria-pressed={catalogFilter === 'all'} onClick={() => setCatalogFilter('all')}>
               <span>Tất cả</span><b>{catalogCounts.all}</b>
             </button>
@@ -383,6 +410,7 @@ export default function Admin() {
                 <div>
                   <b>{p.name}</b>
                   <small>{p.category} · {p.price == null ? 'Liên hệ giá' : `${p.price.toLocaleString('vi-VN')}đ/${p.unit}`}</small>
+                  <small className={`stockIndicator ${isSoldOut(p) ? 'out' : isLowStock(p) ? 'low' : ''}`}>{stockLabel(p, p.unit)}</small>
                   {(p.best_seller || p.signature) && <small className="adminItemFlags">{p.best_seller ? '★ Best Seller' : ''}{p.best_seller && p.signature ? ' · ' : ''}{p.signature ? '◆ Signature' : ''}</small>}
                 </div>
               </button>
@@ -403,7 +431,7 @@ export default function Admin() {
           <div className="adminFormGrid">
             <label className="wide">Tên sản phẩm<input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></label>
             <label>Giá<input type="number" min="0" value={draft.price ?? ''} onChange={(e) => setDraft({ ...draft, price: e.target.value === '' ? null : Number(e.target.value) })} placeholder="Để trống = Liên hệ giá" /></label>
-            <label>Đơn vị<input value={draft.unit} onChange={(e) => setDraft({ ...draft, unit: e.target.value })} placeholder="kg / gói 500g / hũ…" /></label>
+            <label>Đơn vị<input disabled={draft.stock_quantity != null} value={draft.unit} onChange={(e) => setDraft({ ...draft, unit: e.target.value })} placeholder="kg / gói 500g / hũ…" /></label>
             <label className="wide">Danh mục<input value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} /></label>
             <label className="wide">Mô tả<textarea rows={4} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
             <label>Thứ tự<input type="number" value={draft.sort_order} onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })} /></label>
@@ -415,6 +443,8 @@ export default function Admin() {
               <input value={draft.image_url} onChange={(e) => changeImageUrl(e.target.value)} placeholder="Có thể dán URL ảnh trực tiếp" />
             </label>
           </div>
+
+          <InventoryEditor product={draft} onChanged={loadProducts} onThresholdChange={value => setDraft({ ...draft, low_stock_threshold: value })} />
 
           <section className="adminImagePanel">
             <div className="adminImageMeta">
