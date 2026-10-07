@@ -12,7 +12,14 @@ function cardCategory(card: Element) {
 
 function addQuickControls() {
   document.querySelectorAll<HTMLElement>('.card').forEach(card => {
-    if (card.querySelector('[data-quick-add]')) return
+    const existing = card.querySelector<HTMLElement>('[data-quick-add]')
+    const soldOut = card.dataset.soldOut === 'true'
+    if (existing) {
+      existing.setAttribute('aria-disabled', String(soldOut))
+      const label = soldOut ? 'Tạm hết hàng' : '+ Thêm nhanh'
+      if (!existing.classList.contains('isBusy') && existing.textContent !== label) existing.textContent = label
+      return
+    }
     const body = card.querySelector<HTMLElement>('.cardBody')
     if (!body) return
 
@@ -22,13 +29,14 @@ function addQuickControls() {
     control.setAttribute('role', 'button')
     control.setAttribute('tabindex', '0')
     control.setAttribute('aria-label', `Thêm nhanh ${cardName(card)} vào giỏ`)
-    control.textContent = '+ Thêm nhanh'
+    control.setAttribute('aria-disabled', String(soldOut))
+    control.textContent = soldOut ? 'Tạm hết hàng' : '+ Thêm nhanh'
     body.appendChild(control)
   })
 }
 
 function addToCartFromCard(card: HTMLElement, control: HTMLElement) {
-  if (control.classList.contains('isBusy')) return
+  if (control.classList.contains('isBusy') || card.dataset.soldOut === 'true') return
   const original = control.textContent || '+ Thêm nhanh'
   control.classList.add('isBusy')
   document.documentElement.classList.add('quickAddInProgress')

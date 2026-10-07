@@ -26,6 +26,7 @@ import './admin-order-settlement.css'
 import './admin-order-ops.css'
 import './track-order.css'
 import './form-alignment.css'
+import './inventory.css'
 
 const root = document.getElementById('root')!
 const isAdmin = location.pathname.startsWith('/admin')

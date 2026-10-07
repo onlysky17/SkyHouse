@@ -198,6 +198,14 @@ async function saveOrder(drawer: Element | null, info: CustomerInfo) {
   const snapshot = collectOrderSnapshot(drawer)
   if (!snapshot.items.length) return { saved: false, reused: false, merged: false, orderId: null as number | null }
 
+  for (const row of drawer?.querySelectorAll<HTMLElement>('.cartItem') ?? []) {
+    const rawStock = row.dataset.stockQuantity
+    const qty = Number(row.querySelector('.qtyControl b')?.textContent ?? 0)
+    if (row.dataset.stockAvailable === 'false' || (rawStock != null && qty > Number(rawStock))) {
+      throw new Error(`Không đủ tồn: ${row.querySelector('strong')?.textContent ?? 'sản phẩm'}. Giảm số lượng hoặc xóa món trước khi đặt hàng.`)
+    }
+  }
+
   const payload = {
     customer_name: info.name.trim(),
     customer_phone: info.phone.trim(),
@@ -209,7 +217,12 @@ async function saveOrder(drawer: Element | null, info: CustomerInfo) {
   const fingerprint = JSON.stringify(payload)
   const now = Date.now()
   if (fingerprint === lastSavedFingerprint && now - lastSavedAt < 120000 && lastSavedOrderId) {
-    return { saved: true, reused: true, merged: lastSavedMerged, orderId: lastSavedOrderId }
+    // A confirmed order must not be reused by the local double-click cache.
+    const tracked = await supabase.rpc('track_order', { p_order_id: lastSavedOrderId, p_phone: payload.customer_phone }).returns<{ status: string }[]>()
+    if (tracked.error) throw new Error('Chưa kiểm tra được trạng thái đơn trước. Thử lại trước khi gửi thêm đơn nhé.')
+    if (tracked.data?.[0]?.status === 'new') {
+      return { saved: true, reused: true, merged: lastSavedMerged, orderId: lastSavedOrderId }
+    }
   }
 
   const rpcArgs = {

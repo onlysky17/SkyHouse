@@ -1,6 +1,18 @@
 # SkyHouse — Next Step
 
-## Current active task — 2026-10-07
+## Current active task — INVENTORY-001 — 2026-10-07
+
+1. Review INVENTORY-001 draft PR and `_meta/inventory-001/validation.md`; implementation/local database acceptance are verified, authenticated Admin visual remains pending. Do not merge without explicit Sky instruction.
+2. Local changed Admin is `http://127.0.0.1:5183/admin`. Owner must sign in on this origin; keep authenticated sessions. Read-only inspect product add/edit, stock helpers/actions and filters across desktop/tablet/mobile. Preserve PR #53 alignment: Giá / Giá gốc / Đơn vị and Thứ tự / Ảnh controls align; helpers stay below.
+3. Production has no inventory columns yet, so local/preview uses the compatible pre-migration fallback. Do not save/delete/upload/adjust stock or change status in production merely to validate UI. Do not alter Giá gốc: its existing handler can autosave. Opening orders may write read markers; avoid that under the current boundary.
+4. Managed-stock UI/runtime needs an authorized non-production Supabase environment, or explicit Owner production rollout/test authorization. Local SQL acceptance covers accounting, but is not a substitute for authenticated UI/Owner visual acceptance.
+5. After review and explicit Owner merge instruction, merge remains Owner-controlled. Before a separately authorized production migration, re-audit schema/status/snapshots and counts. Proposed migration adds stock/threshold columns to real products, leaves every stock NULL (no fake counts), backfills inventory_state for existing orders, creates an empty movement table/functions/triggers/permissions and publishes products to Realtime. No synthetic order is needed to apply schema.
+6. After authorized migration, Owner enters actual counted stock through audited adjustment. That writes products.stock_quantity + one initial movement per chosen product; list exact product IDs/counts/reasons before any agent-performed production adjustment. Verify real order flow naturally, or stop for explicit test-data authorization listing exact rows/status changes.
+7. Retain original checkout WIP and local evidence/container. Update continuity with each new verified runtime/deploy result, then stop at the appropriate Owner gate.
+
+PR #53 is already merged at `e454dbd39722abed413a54876f96534e73065d20`. PR #52 secure SQL is deployed, verified read-only; historical next steps below are not active merge/migration instructions.
+
+## Prior alignment next step (superseded by PR #53 merge; retained validation gaps)
 
 `ADMIN-FORM-ALIGNMENT-AUDIT-001`
 

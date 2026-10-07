@@ -2,20 +2,20 @@
 
 ## Current checkpoint — 2026-10-07
 
-- Live main / origin/main: `b99ce9c7004ddad3d3b77a277de4486670392023`.
-- PR #52 is MERGED at that actual merge commit (live GitHub verification).
-- Active task: `ADMIN-FORM-ALIGNMENT-AUDIT-001`; branch `task/admin-form-alignment-audit-001`.
-- Worktree: `C:\Users\NHAT THIEN\.codex\worktrees\admin-form-alignment-audit-001\SkyHouse`.
+- Live main / origin/main: `e454dbd39722abed413a54876f96534e73065d20`.
+- PR #53 is MERGED at that actual merge commit, mergedAt `2026-10-07T03:20:04Z`; GitHub Vercel status SUCCESS. Its former merge gate is obsolete. Owner visual acceptance is not inferred from merge.
+- Active task: `INVENTORY-001`; branch `task/inventory-001`.
+- Worktree: `C:\Users\NHAT THIEN\.codex\worktrees\inventory-001\SkyHouse`.
 - Original `D:\PRIVATE\APP\SkyHouse` checkout and its five unrelated continuity/rule edits are preserved.
-- Shared CSS aligns field wrappers at the top, keeps helper text below controls, and equalizes controls within each form context. No business logic or production data changes.
-- Local build and TypeScript compile passed. Browser evidence covers source-derived product layout plus actual Cart, Tracking, Login and catalog controls.
-- Production authenticated Admin confirms the original misalignment. Authenticated Admin on the changed build and Sky visual acceptance remain pending; this is not a visual PASS for all Admin forms.
-- Evidence: `_meta/admin-form-alignment-audit-001/validation.md`.
-- Draft PR #53: https://github.com/onlysky17/SkyHouse/pull/53. Vercel SUCCESS for implementation commit d83ae3aaaa48b9a485a9b44df57c0d7149a898b2; Preview: https://sky-house-2xk3qq64e-tiansky1917-7468s-projects.vercel.app/admin. No Vercel account login required. Preview Admin requires its own Owner sign-in. Do not merge without Sky's explicit instruction.
+- Implementation: nullable physical stock, low-stock filters, audited Admin adjustments, DB-transaction order accounting with row locks and unique movements, pending-merge product-ID validation, storefront stock limits. Existing form alignment is retained.
+- Local PostgreSQL acceptance A-H, role/permission checks, atomic shortage rollback and real concurrent sessions passed. Build, TypeScript and strict checks for the two new TypeScript modules passed. No new dependencies.
+- Actual storefront runtime uses 110 real production catalog rows; legacy/unmanaged compatibility and responsive cart were inspected without submitting an order. Authenticated changed-build Admin, managed-stock visual acceptance and Owner visual acceptance remain pending.
+- Migration `supabase/migrations/20261007_inventory_management.sql` is source-only, NOT applied to production. Existing products remain NULL/unmanaged until actual Owner counts are entered. No production test/order/stock mutations performed.
+- Evidence: `_meta/inventory-001/validation.md`. PR publication/check evidence will be recorded before handoff. Stop at Owner review/merge gate; do not merge automatically.
 
 ## Carried-forward security boundary
 
-PR #52 implementation is merged; its previous merge gate is obsolete. Production application of the secure SQL migration and pending-order runtime acceptance were not reverified in this UI task. Preserve that gap; do not apply migrations or generate orders here.
+PR #52 implementation is merged. Read-only Supabase verification in INVENTORY-001 confirms migration `20261002093235 harden_pending_order_merge_key`, the hash column and secure seven-argument RPC are deployed; the phone-only RPC is absent. Previous "SQL application unknown" snapshots below are superseded. End-to-end production pending-merge acceptance is not inferred from schema presence or local tests.
 
 ## Historical checkpoint (2026-10-02; superseded by live state above)
 
